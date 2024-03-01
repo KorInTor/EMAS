@@ -11,11 +11,7 @@ namespace EMAS.Model.HistoryEntry
     /// </summary>
     public class ReservedHistoryEntry : HistoryEntryBase
     {
-        public ReservedHistoryEntry(Employee e) : base(e)
-        {
-        }
-
-        public ReservedHistoryEntry(Employee e, DateTime date) : base(e, date)
+        public ReservedHistoryEntry(Employee e, DateOnly date) : base(e, date)
         {
         }
 

@@ -4,24 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMAS.Model.HistoryEntry
+namespace EMAS.Model
 {
-    /// <summary>
-    /// Stores history entry of decommision.
-    /// </summary>
-    public class DecommissionedHistoryEntrycs : HistoryEntryBase
+    public class ReceivedHistoryEntry : HistoryEntryBase
     {
-        public DecommissionedHistoryEntrycs(Employee e) : base(e)
-        {
-        }
-
-        public DecommissionedHistoryEntrycs(Employee e, DateTime date) : base(e, date)
+        public ReceivedHistoryEntry(Employee e, DateOnly date) : base(e, date)
         {
         }
 
         public override string ToString()
         {
-            return ($"Дата: {this.Date} Списан. Ответственный: {this.Responcible.Fullname}");
+            return ($"Дата: {this.Date} Принят. Ответственный: {this.Responcible.Fullname}");
         }
     }
 }

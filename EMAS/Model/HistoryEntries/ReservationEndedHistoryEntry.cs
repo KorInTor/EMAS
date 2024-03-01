@@ -9,11 +9,7 @@ namespace EMAS.Model.HistoryEntry
 {
     public class ReservationEndedHistoryEntry : HistoryEntryBase
     {
-        public ReservationEndedHistoryEntry(Employee e) : base(e)
-        {
-        }
-
-        public ReservationEndedHistoryEntry(Employee e, DateTime date) : base(e, date)
+        public ReservationEndedHistoryEntry(Employee e, DateOnly date) : base(e, date)
         {
         }
 
