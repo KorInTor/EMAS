@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using EMAS.Model;
 using Npgsql;
 
-namespace EMAS
+namespace EMAS.Service.Connection
 {
     public static class DataBaseClient
     {
@@ -15,7 +15,7 @@ namespace EMAS
 
         private static string _port = "5432";
 
-        private static string _dataBse = "EquipmentMovement";
+        private static string _dataBase = "EquipmentMovement";
 
         private static string _DBMSlogin = "praktikant";
 
@@ -27,35 +27,35 @@ namespace EMAS
         {
             get
             {
-                return $"Host={_host};Port={_port};Username={_DBMSlogin};Password={_DBMSpassword};Database={_dataBse}";
+                return $"Host={_host};Port={_port};Username={_DBMSlogin};Password={_DBMSpassword};Database={_dataBase}";
             }
         }
 
-        private static string _currentSessionUsername;
+        private static string _username;
 
-        private static string _currentSessionPassword;
+        private static string _password;
 
-        public static string CurrentSessionUsername
-        {
-            get 
-            { 
-                return _currentSessionUsername; 
-            }
-            set 
-            { 
-                _currentSessionUsername = value; 
-            }
-        }
-
-        public static string CurrentSessionPassword
+        public static string Username
         {
             get
             {
-                return _currentSessionPassword;
+                return _username;
             }
             set
             {
-                _currentSessionPassword = value;
+                _username = value;
+            }
+        }
+
+        public static string Password
+        {
+            get
+            {
+                return _password;
+            }
+            set
+            {
+                _password = value;
             }
         }
 
@@ -80,7 +80,7 @@ namespace EMAS
 
             string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.username = @username) AS subquery;";
             using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@username", CurrentSessionUsername);
+            command.Parameters.AddWithValue("@username", Username);
 
             int count = (int)command.ExecuteScalar();
 
@@ -96,9 +96,9 @@ namespace EMAS
             string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.passwordHash = @password AND employee.username = @username) AS subquery;";
             using var command = new NpgsqlCommand(sql, connection);
 
-            var hashOfEnteredPassword = HashPassword(CurrentSessionPassword);
+            var hashOfEnteredPassword = HashPassword(Password);
 
-            command.Parameters.AddWithValue("@username", CurrentSessionUsername);
+            command.Parameters.AddWithValue("@username", Username);
             command.Parameters.AddWithValue("@password", hashOfEnteredPassword);
 
             int count = (int)command.ExecuteScalar();
