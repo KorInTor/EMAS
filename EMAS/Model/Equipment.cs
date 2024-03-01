@@ -67,12 +67,6 @@ namespace EMAS.Model
         /// </summary>
         private string _description;
 
-
-        /// <summary>
-        /// List of event for this equipment.
-        /// </summary>
-        private List<HistoryEntryBase> _equipmentHistory;
-
         /// <summary>
         /// List of tags.
         /// </summary>
@@ -83,7 +77,6 @@ namespace EMAS.Model
             Status = status;
             RegistrationNumber = registrationNumber;
             Description = description;
-            History = [];
             Tags = [];
         }
 
@@ -144,21 +137,6 @@ namespace EMAS.Model
             set
             {
                 _description = value;
-            }
-        }
-
-        /// <summary>
-        /// Returns and sets list of event for this equipment.
-        /// </summary>
-        public List<HistoryEntryBase> History
-        {
-            get
-            {
-                return _equipmentHistory;
-            }
-            set
-            {
-                _equipmentHistory = value;
             }
         }
 
