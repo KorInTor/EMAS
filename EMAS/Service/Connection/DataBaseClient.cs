@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using EMAS.Exceptions;
+using EMAS.Model;
+using EMAS.Model.HistoryEntry;
+using Npgsql;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using EMAS.Model;
-using Npgsql;
 
 namespace EMAS.Service.Connection
 {
@@ -22,6 +21,8 @@ namespace EMAS.Service.Connection
         private static string _DBMSpassword = "hPS2lwTK0XaE";
 
         private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
+
+        private static int _currentEmployeeId = SetCurrentSessionEmployeeId(Username);
 
         public static string ConnectionString
         {
@@ -43,6 +44,10 @@ namespace EMAS.Service.Connection
             }
             set
             {
+                if (value == null || value == string.Empty)
+                {
+                    throw new InvalidUsernameException("Некоректное имя пользователя.");
+                }
                 _username = value;
             }
         }
@@ -55,16 +60,114 @@ namespace EMAS.Service.Connection
             }
             set
             {
+                if (value == null || value == string.Empty)
+                {
+                    throw new InvalidPasswordException("Некоректный пароль.");
+                }
                 _password = value;
             }
+        }
+
+        public static int CurrentEmployeeId
+        {
+            get
+            {
+                return _currentEmployeeId;
+            }
+            private set
+            {
+                if (value == 0)
+                {
+                    throw new ArgumentException("Получен неправильный id сотрудника");
+                }
+                _currentEmployeeId = value;
+            }
+        }
+
+        public static void Login()
+        {
+            if (!ConnectionSuccesfull())
+            {
+                throw new ConnectionFailedException();
+            }
+            if (!IsUsernameCorrect())
+            {
+                throw new InvalidUsernameException();
+            }
+            if (!IsPasswordCorrect())
+            {
+                throw new InvalidPasswordException();
+            }
+            SetCurrentSessionEmployeeId();
+            CreateNewSession();
+        }
+
+        private static void CreateNewSession()
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string query = "INSERT INTO \"session\".active_session (employee_id) VALUES (@employeeId) ";
+
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+            command.ExecuteNonQuery();
+
+            connection.Close();
+
+            Debug.WriteLine($"Успешно установлена сессия в базе данных для сотрудника с Id = {CurrentEmployeeId}");
+        }
+
+        public static void CloseSession()
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string query = "DELETE FROM \"session\".active_session WHERE employee_id = @employeeId";
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+            command.ExecuteNonQuery();
+
+            connection.Close();
+
+            Debug.WriteLine($"Успешно закрыта активная сессия в базе данных для сотрудника с Id = {CurrentEmployeeId}");
+        }
+
+        private static void SetCurrentSessionEmployeeId()
+        {
+            if (!IsUsernameCorrect())
+            {
+                throw new InvalidUsernameException();
+            }
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string query = "SELECT id FROM public.employee WHERE employee.username = @username";
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@username", Username);
+
+            int employeeId = 0;
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    employeeId = reader.GetInt32(0);
+                }
+            }
+
+            connection.Close();
+
+            CurrentEmployeeId = CurrentEmployeeId;
         }
 
         public static bool ConnectionSuccesfull()
         {
             try
             {
-                using var con = new NpgsqlConnection(ConnectionString);
-                con.Open();
+                using var conection = new NpgsqlConnection(ConnectionString);
+                conection.Open();
+                conection.Close();
                 return true;
             }
             catch (NpgsqlException)
@@ -93,17 +196,16 @@ namespace EMAS.Service.Connection
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.passwordHash = @password AND employee.username = @username) AS subquery;";
+            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.passwordHash = @passwordHash AND employee.username = @username) AS subquery;";
             using var command = new NpgsqlCommand(sql, connection);
 
-            var hashOfEnteredPassword = HashPassword(Password);
-
             command.Parameters.AddWithValue("@username", Username);
-            command.Parameters.AddWithValue("@password", hashOfEnteredPassword);
+            command.Parameters.AddWithValue("@passwordHash", HashPassword(Password));
 
-            int count = (int)command.ExecuteScalar();
+            int? count = (int?)command.ExecuteScalar();
 
             connection.Close();
+
             return count == 1;
         }
 
@@ -116,7 +218,34 @@ namespace EMAS.Service.Connection
 
         public static List<Location> GetLocationData()
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT * FROM public.location";
+            using var command = new NpgsqlCommand(sql, connection);
+
+            var hashOfEnteredPassword = HashPassword(Password);
+
+            command.Parameters.AddWithValue("@username", Username);
+            command.Parameters.AddWithValue("@password", hashOfEnteredPassword);
+
+            var list = new List<Location>();
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(new Location(reader.GetInt32(0), reader.GetString(1)));
+                }
+
+                foreach (var data in list)
+                {
+                    Debug.WriteLine($"Получена локация:{data.Id}-{data.Name}");
+                }
+
+            }
+            connection.Close();
+            return list;
         }
 
         public static List<Equipment> GetEquipmentOnLocation(int locationId)
@@ -124,12 +253,62 @@ namespace EMAS.Service.Connection
             throw new NotImplementedException();
         }
 
-        public static List<Employee> GetEmployeeData()
+        public static List<Employee> GetAllEmployeeData()
         {
             throw new NotImplementedException();
         }
 
-        public static List<HistoryEntryBase> GetHistoryDataForEquipment(Equipment equipment)
+        public static List<HistoryEntryBase> GetEquipmentHistory(int equipmentId)
+        {
+            var list = new List<HistoryEntryBase>();
+            var eventConstructors = new Dictionary<string, Func<Employee, DateOnly, HistoryEntryBase>>
+            {
+                { "Addition", (responcible, date) => new AdditionHistoryEntry(responcible, date) },
+                { "Departure", (responcible, date) => new SentHistoryEntry(responcible, date) },
+                { "Arrival", (responcible, date) => new ReceivedHistoryEntry(responcible, date) },
+                { "Decomission", (responcible, date) => new DecommissionedHistoryEntry(responcible, date) },
+                { "StartReservation", (responcible, date) => new ReservedHistoryEntry(responcible, date) },
+                { "EndReservation", (responcible, date) => new ReservationEndedHistoryEntry(responcible, date) }
+            };
+
+            using (var connection = new NpgsqlConnection(ConnectionString))
+            {
+                connection.Open();
+                string query = "SELECT event.date, event.employee_id, event_type.\"name\" " +
+                       "FROM public.\"event\" AS event " +
+                       "JOIN public.equipment_event AS equipmenEvent " +
+                       "JOIN public.event_type AS event_type ON event_type.id = event.event_type " +
+                       "AND event.id = equipmenEvent.event_id AND equipmenEvent.equipment_id = @id";
+
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@id", equipmentId);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    Employee responcible = GetEmployeeInfoById(reader.GetInt32(1));
+                    DateOnly date = DateOnly.FromDateTime(reader.GetDateTime(0));
+                    string eventType = reader.GetString(2);
+
+                    if (eventConstructors.TryGetValue(eventType, out var constructor))
+                    {
+                        list.Add(constructor(responcible, date));
+                    }
+                    else
+                    {
+                        throw new UnknownEventTypeException($"Полученый тип события = '{eventType}' оказался неизвестным");
+                    }
+                }
+            }
+
+            foreach (var entry in list)
+            {
+                Debug.WriteLine("Полученны данные: " + entry.ToString());
+            }
+
+            return list;
+        }
+
+        private static Employee GetEmployeeInfoById(int employeeId)
         {
             throw new NotImplementedException();
         }
@@ -156,7 +335,23 @@ namespace EMAS.Service.Connection
 
         public static void AddNewLocation(Location location)
         {
-            throw new NotImplementedException();
+            if (location.Name == string.Empty)
+            {
+                throw new ArgumentNullException(nameof(location));
+            }
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string query = "INSERT INTO public.location (name) VALUES (@name)";
+
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@name", location.Name);
+            command.ExecuteNonQuery();
+
+            Debug.WriteLine($"Успешно вставлено: Id: {location.Id}, Name: {location.Name}");
+
+            connection.Close();
         }
 
         public static void UpdateEquipmentData(Equipment equipment)
