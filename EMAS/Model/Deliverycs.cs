@@ -15,13 +15,13 @@ namespace EMAS.Model
         /// <summary>
         /// Stores event from Dispatch event from dataBase.
         /// </summary>
-        private int _eventDispatchId;
+        private long _eventDispatchId;
 
 
         /// <summary>
         /// Date when delivery is dispatched.
         /// </summary>
-        private DateOnly _dispatchDate;
+        private DateTime _dispatchDate;
 
         /// <summary>
         /// What equipment is in delivery.
@@ -36,7 +36,7 @@ namespace EMAS.Model
         /// <summary>
         /// 
         /// </summary>
-        public int EventDispatchId
+        public long EventDispatchId
         {
             get
             {
@@ -52,7 +52,7 @@ namespace EMAS.Model
         /// <summary>
         /// Returns date of dispatch.
         /// </summary>
-        public DateOnly DispatchDate
+        public DateTime DispatchDate
         {
             get
             {
@@ -100,7 +100,7 @@ namespace EMAS.Model
         /// <param name="EquipmentList">Equipment that will be sended.</param>
         public Delivery(Equipment Equipment, int destinationId)
         {
-            DateOnly DispatchDate = DateOnly.FromDateTime(DateTime.Now);
+            DispatchDate = DateTime.Now;
 
             this.Equipment = Equipment;
 
@@ -112,7 +112,7 @@ namespace EMAS.Model
         /// <param name="EquipmentList">Equipment that will be sended.</param>
         public Delivery(Delivery d)
         {
-            DateOnly DispatchDate = d.DispatchDate;
+            DispatchDate = d.DispatchDate;
 
             this.Equipment = d.Equipment;
             this.DestinationId = null;
@@ -121,7 +121,7 @@ namespace EMAS.Model
 
         public Delivery(DateTime date, int destinationId, Equipment equipment)
         {
-            DateTime DispatchDate = date;
+            DispatchDate = date;
 
             this.Equipment = equipment;
 
