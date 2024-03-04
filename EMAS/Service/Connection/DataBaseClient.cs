@@ -48,7 +48,8 @@ namespace EMAS.Service.Connection
             {
                 if (value == null || value == string.Empty)
                 {
-                    throw new InvalidUsernameException("Некоректное имя пользователя.");
+                    //throw new InvalidUsernameException("Некоректное имя пользователя.");
+                    return;
                 }
                 _username = value;
             }
@@ -64,7 +65,8 @@ namespace EMAS.Service.Connection
             {
                 if (value == null || value == string.Empty)
                 {
-                    throw new InvalidPasswordException("Некоректный пароль.");
+                    //throw new InvalidPasswordException("Некоректный пароль.");
+                    return;
                 }
                 _password = value;
             }
