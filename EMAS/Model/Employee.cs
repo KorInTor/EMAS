@@ -34,15 +34,20 @@ namespace EMAS.Model
 
         private string _username;
 
-        
-
-        public Employee(int id, string fullname, string department)
+        public Employee(int id, string fullname, string username, string email)
         {
             Id = id;
             Fullname = fullname;
-            Department = department;
+            Username = username;
+            Email = email;
         }
 
+        public Employee(string fullname, string email, string username)
+        {
+            Fullname = fullname;
+            Email = email;
+            Username = username;
+        }
         /// <summary>
         /// Returns id of employee.
         /// </summary>
@@ -52,7 +57,7 @@ namespace EMAS.Model
             {
                 return _id;
             }
-            private set
+            set
             {
                 _id = value;
             }
