@@ -1,6 +1,8 @@
-﻿using EMAS.Service.Connection;
-using EMAS.View;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -11,18 +13,15 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace EMAS
+namespace EMAS.View.Control
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Логика взаимодействия для LocationControl.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class LocationControl : UserControl
     {
-        public MainWindow()
+        public LocationControl()
         {
-            DataBaseClient.Login();
-            AdminWindow adminWindow = new AdminWindow();
-            adminWindow.Show();
             InitializeComponent();
         }
     }
