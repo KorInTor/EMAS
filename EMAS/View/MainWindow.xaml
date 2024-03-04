@@ -6,8 +6,23 @@
         xmlns:local="clr-namespace:EMAS.View"
         mc:Ignorable="d"
         Title="СУДО" Height="580" Width="1000">
+    
     <Grid Name="MainGrid">
-             
-     </Grid>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="4*"/>
+        </Grid.ColumnDefinitions>
+
+
+        <StackPanel Name="ToolBoxStackPanel" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0">
+            <Button Name="a" Content="Dat' Lescha" Width="50" />
+            <Button Name="b" Content="Dat' Lescha" Width="50"/>
+            <Button Name="c" Content="Dat' Lescha" Width="50"/>
+            <Button Name="d" Content="Dat' Lescha" Width="50"/>
+            <Button Name="e" Content="Dat' Lescha" Width="50"/>
+        </StackPanel>
+    </Grid>
+
     
 </Window>

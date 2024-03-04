@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS"
+        xmlns:properties="clr-namespace:EMAS.Properties"
         mc:Ignorable="d"
         Title="СУДО (Авторизация)" Height="400" Width="300">
     <Grid>
@@ -25,7 +26,11 @@
         </Grid.RowDefinitions>
 
 
-       
+        <Image Name="LogoImage"  Source="{Binding Source={x:Static properties:Resources.OilTeamLogo}}" Height="100" Grid.Column="1" HorizontalAlignment="Stretch"/>
+
+        <TextBox Name="LoginTextBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        <TextBox Name="PasswordTextBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        <Button Name="InitiateAuthorizationButton" Content="Войти" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch"/>
 
     </Grid>
 </Window>
