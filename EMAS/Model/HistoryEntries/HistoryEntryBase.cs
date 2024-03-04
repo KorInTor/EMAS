@@ -14,7 +14,7 @@ namespace EMAS.Model
         /// <summary>
         /// When happend.
         /// </summary>
-        private DateTime _date;
+        private DateOnly _date;
 
         /// <summary>
         /// Who responcible.
@@ -24,7 +24,7 @@ namespace EMAS.Model
         /// <summary>
         /// Returns date when event happend.
         /// </summary>
-        public DateTime Date
+        public DateOnly Date
         {
             get
             {
@@ -52,21 +52,11 @@ namespace EMAS.Model
         }
 
         /// <summary>
-        /// Creates new instane of History Entry.
-        /// </summary>
-        /// <param name="e">Employee that are responcible for entry.</param>
-        public HistoryEntryBase(Employee e)
-        {
-            this.Responcible = e;
-            Date = DateTime.Now;
-        }
-
-        /// <summary>
-        /// For Testing Purpose Only Delete on Release. <inheritdoc cref="HistoryEntryBase"/>.
+        /// 
         /// </summary>
         /// <param name="e">Employee that are responcible for entry.</param>
         /// <param name="date">Custom date.</param>
-        public HistoryEntryBase(Employee e, DateTime date)
+        public HistoryEntryBase(Employee e, DateOnly date)
         {
             Responcible = e;
             Date = date;

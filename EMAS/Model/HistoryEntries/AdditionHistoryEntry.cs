@@ -8,11 +8,7 @@ namespace EMAS.Model.HistoryEntry
 {
     public class AdditionHistoryEntry : HistoryEntryBase
     {
-        public AdditionHistoryEntry(Employee e) : base(e)
-        {
-        }
-
-        public AdditionHistoryEntry(Employee e, DateTime date) : base(e, date)
+        public AdditionHistoryEntry(Employee e, DateOnly date) : base(e, date)
         {
         }
 
