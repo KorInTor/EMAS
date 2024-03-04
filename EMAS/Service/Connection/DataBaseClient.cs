@@ -14,7 +14,7 @@ namespace EMAS.Service.Connection
 
         private static string _port = "5432";
 
-        private static string _dataBase = "EquipmentMovement";
+        private static string _dataBase = "postgres";
 
         private static string _DBMSlogin = "praktikant";
 
@@ -22,7 +22,7 @@ namespace EMAS.Service.Connection
 
         private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
 
-        private static int _currentEmployeeId = SetCurrentSessionEmployeeId(Username);
+        private static int _currentEmployeeId;
 
         public static string ConnectionString
         {
@@ -32,9 +32,9 @@ namespace EMAS.Service.Connection
             }
         }
 
-        private static string _username;
+        private static string _username = "Пряхин Д.С.";
 
-        private static string _password;
+        private static string _password = "ps123123";
 
         public static string Username
         {
@@ -86,10 +86,7 @@ namespace EMAS.Service.Connection
 
         public static void Login()
         {
-            if (!ConnectionSuccesfull())
-            {
-                throw new ConnectionFailedException();
-            }
+            TryConnectToserver();
             if (!IsUsernameCorrect())
             {
                 throw new InvalidUsernameException();
@@ -146,33 +143,31 @@ namespace EMAS.Service.Connection
             using var command = new NpgsqlCommand(query, connection);
             command.Parameters.AddWithValue("@username", Username);
 
-            int employeeId = 0;
+            int? EmployeeId = (int?)command.ExecuteScalar();
 
-            using (var reader = command.ExecuteReader())
+            if (EmployeeId == null)
             {
-                while (reader.Read())
-                {
-                    employeeId = reader.GetInt32(0);
-                }
+                throw new ArgumentNullException(nameof(EmployeeId));
+            }
+            else
+            {
+                CurrentEmployeeId = (int)EmployeeId;
             }
 
             connection.Close();
-
-            CurrentEmployeeId = CurrentEmployeeId;
         }
 
-        public static bool ConnectionSuccesfull()
+        public static void TryConnectToserver()
         {
+            using var conection = new NpgsqlConnection(ConnectionString);
             try
             {
-                using var conection = new NpgsqlConnection(ConnectionString);
                 conection.Open();
                 conection.Close();
-                return true;
             }
-            catch (NpgsqlException)
+            catch (Exception ex)
             {
-                return false;
+                throw new ConnectionFailedException(ex.Message);
             }
         }
 
@@ -185,10 +180,10 @@ namespace EMAS.Service.Connection
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("@username", Username);
 
-            int count = (int)command.ExecuteScalar();
+            int? count = (int?)(long?)command.ExecuteScalar();
 
             connection.Close();
-            return count == 1 ? true : false;
+            return count == 1;
         }
 
         public static bool IsPasswordCorrect()
@@ -196,13 +191,15 @@ namespace EMAS.Service.Connection
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.passwordHash = @passwordHash AND employee.username = @username) AS subquery;";
+            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.password_hash = @passwordHash AND employee.username = @username) AS subquery;";
             using var command = new NpgsqlCommand(sql, connection);
 
             command.Parameters.AddWithValue("@username", Username);
             command.Parameters.AddWithValue("@passwordHash", HashPassword(Password));
 
-            int? count = (int?)command.ExecuteScalar();
+            Debug.WriteLine($"Хэш для {Password} = {HashPassword(Password)}");
+
+            int? count = (int?)(long?)command.ExecuteScalar();
 
             connection.Close();
 
