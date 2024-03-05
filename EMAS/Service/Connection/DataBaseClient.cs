@@ -26,6 +26,10 @@ namespace EMAS.Service.Connection
 
         private static int _currentEmployeeId;
 
+        private static Dictionary<int, List<string>> _permissions;
+
+        private static bool? _isCurrentEmployeeAdmin;
+
         public static string ConnectionString
         {
             get
@@ -85,6 +89,22 @@ namespace EMAS.Service.Connection
                     throw new ArgumentException("Получен неправильный id сотрудника");
                 }
                 _currentEmployeeId = value;
+            }
+        }
+
+        public static Dictionary<int, List<string>> Permissions
+        {
+            get
+            {
+                return _permissions ??= GetCurrentSessionPermissions();
+            }
+        }
+
+        public static bool IsCurrentEmployeeAdmin
+        {
+            get
+            {
+                return _isCurrentEmployeeAdmin ??= IsCurrentSessionAdmin();
             }
         }
 
@@ -325,6 +345,71 @@ namespace EMAS.Service.Connection
             }
 
             return list;
+        }
+
+        private static Dictionary<int, List<string>> GetCurrentSessionPermissions()
+        {
+            Dictionary<int, List<string>> permissions = [];
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT location_id FROM \"permission\".employee_permissions " +
+                         "JOIN \"permission\".permission_type.name ON permission_type.id = permission_type " +
+                         "WHERE employee_id = @employeeId ";
+            
+
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    int locationId = reader.GetInt32(0);
+                    string permissionType = reader.GetString(1);
+
+                    if (!permissions.TryGetValue(locationId, out List<string>? value))
+                    {
+                        value = [];
+                        permissions[locationId] = value;
+                    }
+                    value.Add(permissionType);
+                }
+            }
+            return permissions;
+            connection.Close();
+        }
+
+        private static bool IsCurrentSessionAdmin()
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT employee_id FROM \"permission\".\"admin\" WHERE employee_id = @employeeId";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    if (reader.GetString(0) is not null)
+                    {
+                        connection.Close();
+                        return true;
+                    }
+                }
+            }
+            connection.Close();
+
+            return false;
+        } 
+
+        public static Dictionary<int, List<string>> GetPermissions()
+        {
+            throw new NotImplementedException();
         }
 
         private static Employee GetEmployeeInfoById(int employeeId)

@@ -16,7 +16,7 @@ namespace EMAS.ViewModel
         public event PropertyChangedEventHandler? PropertyChanged;
         private RelayCommand _loginCommand;
 
-        private string _username = Properties.Resources.Username;
+        private string _username;
         private string _password;
 
         public RelayCommand LoginCommand => _loginCommand ??= new RelayCommand(param => Login());
