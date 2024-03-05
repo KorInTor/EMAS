@@ -8,21 +8,31 @@
         Title="СУДО" Height="580" Width="1000">
     
     <Grid Name="MainGrid">
-        
+
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="8*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="1">
+            
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition Width="4*"/>
         </Grid.ColumnDefinitions>
 
+        
+        
 
         <StackPanel Name="ToolBoxStackPanel" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.Column="0">
-            <Button Name="a" Content="Dat' Lescha" Width="50" />
-            <Button Name="b" Content="Dat' Lescha" Width="50"/>
-            <Button Name="c" Content="Dat' Lescha" Width="50"/>
-            <Button Name="d" Content="Dat' Lescha" Width="50"/>
-            <Button Name="e" Content="Dat' Lescha" Width="50"/>
+            <Button Name="a" HorizontalAlignment="Stretch" Content="Объекты" Background="Transparent" BorderBrush="Transparent"/>
+            <Button Name="b" HorizontalAlignment="Stretch" Content="Меню администратора" Background="Transparent" BorderBrush="Transparent"/>
+            <Button Name="c" HorizontalAlignment="Stretch" Content="Дать Леща" Background="Transparent" BorderBrush="Transparent"/>
+            <Button Name="d" HorizontalAlignment="Stretch" Content="Сломать Колени" Background="Transparent" BorderBrush="Transparent"/>
+            <Button Name="e" HorizontalAlignment="Stretch" Content="Сделать Бочку" Background="Transparent" BorderBrush="Transparent"/>
         </StackPanel>
+        
+    </Grid>
     </Grid>
 
-    
 </Window>

@@ -22,6 +22,7 @@ namespace EMAS.View
         public MainWindow()
         {
             InitializeComponent();
+            
         }
     }
 }

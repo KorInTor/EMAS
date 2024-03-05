@@ -28,8 +28,8 @@
 
         <Image Name="LogoImage"  Source="{Binding Source={x:Static properties:Resources.OilTeamLogo}}" Height="100" Grid.Column="1" HorizontalAlignment="Stretch"/>
 
-        <TextBox Name="LoginTextBox" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"/>
-        <TextBox Name="PasswordTextBox" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        <TextBox Name="LoginTextBox" Height="20" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        <TextBox Name="PasswordTextBox" Height="20" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch"/>
         <Button Name="InitiateAuthorizationButton" Content="Войти" Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch"/>
 
     </Grid>
