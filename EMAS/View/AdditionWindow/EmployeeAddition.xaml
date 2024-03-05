@@ -1,0 +1,22 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EMAS.View.AdditionWindow"
+        xmlns:ViewModel="clr-namespace:EMAS.ViewModel" x:Class="EMAS.View.AdditionWindow.EmployeeAddition"
+        mc:Ignorable="d"
+        Title="EmployeeAddition" ResizeMode="NoResize" Height="202" Width="270">
+    <Window.DataContext>
+        <ViewModel:EmployeeAdditionVM/>
+    </Window.DataContext>
+    <StackPanel VerticalAlignment="Bottom">
+        <Label Content="Полное имя"/>
+        <TextBox Text="{Binding Fullname}"/>
+        <Label Content="E-Mail"/>
+        <TextBox Text="{Binding Email}"/>
+        <Label Content="Имя пользователся для входа"/>
+        <TextBox Text="{Binding Username}"/>
+        <Button Content="Добавить" Margin="3,3,3,3" Command="{Binding ConfirmAddition, Mode=OneWay}"/>
+    </StackPanel>
+</Window>
