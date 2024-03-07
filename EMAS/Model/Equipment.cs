@@ -9,7 +9,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about equipment.
     /// </summary>
-    public class Equipment
+    public class Equipment : IEquatable<Equipment>
     {
         /// <summary>
         /// Unique id of Equipment.
@@ -78,6 +78,22 @@ namespace EMAS.Model
             RegistrationNumber = registrationNumber;
             Description = description;
             Tags = [];
+        }
+
+        public Equipment(string status, string registrationNumber, string description, string? accuracyClass, string units, string limit, int id, string name, string manufacturer, string type, string factoryNumber, List<string> tags)
+        {
+            Status = status;
+            RegistrationNumber = registrationNumber;
+            Description = description;
+            AccuracyClass = accuracyClass;
+            Units = units;
+            Limit = limit;
+            Id = id;
+            Name = name;
+            Manufacturer = manufacturer;
+            Type = type;
+            FactoryNumber = factoryNumber;
+            Tags = tags;
         }
 
         /// <summary>
@@ -258,6 +274,27 @@ namespace EMAS.Model
             {
                 _factoryNumber = value;
             }
+        }
+
+        public bool Equals(Equipment? other)
+        {
+            if (other == null || GetType() != other.GetType())
+            {
+                return false;
+            }
+
+            return Id == other.Id &&
+                   Type == other.Type &&
+                   Name == other.Name &&
+                   Units == other.Units &&
+                   AccuracyClass == other.AccuracyClass &&
+                   Limit == other.Limit &&
+                   Manufacturer == other.Manufacturer &&
+                   FactoryNumber == other.FactoryNumber &&
+                   Status == other.Status &&
+                   Description == other.Description &&
+                   RegistrationNumber == other.RegistrationNumber &&
+                   (Tags == other.Tags || Tags.SequenceEqual(other.Tags));
         }
     }
 }

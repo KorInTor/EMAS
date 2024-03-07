@@ -12,21 +12,11 @@ namespace EMAS.Service.Connection
 {
     public static class DataBaseClient
     {
-        private static string _host = "26.34.196.234";
-
-        private static string _port = "5432";
-
-        private static string _dataBase = "postgres";
-
-        private static string _DBMSlogin = "praktikant";
-
-        private static string _DBMSpassword = "hPS2lwTK0XaE";
-
         private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
 
         private static int _currentEmployeeId;
 
-        private static Dictionary<int, List<string>> _permissions;
+        private static Dictionary<int, List<string>>? _permissions;
 
         private static bool? _isCurrentEmployeeAdmin;
 
@@ -34,7 +24,7 @@ namespace EMAS.Service.Connection
         {
             get
             {
-                return $"Host={_host};Port={_port};Username={_DBMSlogin};Password={_DBMSpassword};Database={_dataBase}";
+                return ConnectionOptions.ConnectionString;
             }
         }
 
@@ -377,8 +367,8 @@ namespace EMAS.Service.Connection
                     value.Add(permissionType);
                 }
             }
-            return permissions;
             connection.Close();
+            return permissions;
         }
 
         private static bool IsCurrentSessionAdmin()
