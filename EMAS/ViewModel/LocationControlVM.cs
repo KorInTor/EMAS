@@ -1,9 +1,12 @@
-﻿using EMAS.Model;
+﻿using EMAS.EventArgs;
+using EMAS.Events;
+using EMAS.Model;
 using EMAS.Service.Command;
 using EMAS.Service.Connection;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
+using System.Xaml.Schema;
 
 namespace EMAS.ViewModel
 {
@@ -57,6 +60,8 @@ namespace EMAS.ViewModel
 
         public LocationControlVM()
         {
+            MiscellaneousEvents.LocationPackageIsReady += AssertValues;
+            MiscellaneousEvents.InvokeLocationPackageIsRequested();
         }
 
         private void AddNewLocation()
@@ -68,12 +73,18 @@ namespace EMAS.ViewModel
             }
             DataBaseClient.AddNewLocation(new Location(0, NewLocationName));
             MessageBox.Show("Добавление нового объекта успешно", "Успех!", MessageBoxButton.OK, MessageBoxImage.Information);
-            UpdateLocationsList();
+            MiscellaneousEvents.InvokeLocationPackageIsRequested();
+            //UpdateLocationsList();
         }
 
         private void UpdateLocationsList()
         {
             Locations = new(DataBaseClient.GetLocationData());
+        }
+
+        private void AssertValues(LocationListEventArgs e)
+        {
+            Locations = new ObservableCollection<Location>(e.Locations);
         }
     }
 

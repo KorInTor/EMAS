@@ -14,10 +14,8 @@ namespace EMAS.Service.Events
         public delegate void LaunchAdminMenu();
         public static event LaunchAdminMenu? OnLaunchAdminMenu;
 
-        public delegate void AddEquipmentPiece();
-        public static event AddEquipmentPiece? OnAddEquipmentPiece;
+        public delegate void LaunchEmployeeAdditionMenu();
+        public static event LaunchEmployeeAdditionMenu? OnLaunchEmployeeAdditionMenu;
 
-        public delegate void DeleteEquipmentPiece();
-        public static event DeleteEquipmentPiece? OnDeleteEquipmentPiece;
     }
 }

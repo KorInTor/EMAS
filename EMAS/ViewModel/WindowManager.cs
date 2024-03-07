@@ -1,6 +1,9 @@
 ﻿using EMAS.Service.Events;
+using EMAS.View;
+using EMAS.View.AdditionWindow;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +16,12 @@ namespace EMAS.ViewModel
         public WindowManager()
         {
             CommandEvents.OnLaunchAdminMenu += LaunchAdminMenuWindow;
+            CommandEvents.OnLaunchEmployeeAdditionMenu += LaunchEmployeeAdditionWindow;
+        }
+        
+        public void LaunchAuthorizationWindow()
+        {
+            
         }
 
         public void LaunchMainWindow()
@@ -22,12 +31,12 @@ namespace EMAS.ViewModel
 
         public void LaunchAdminMenuWindow()
         {
-            // Add admin menu window
+            AdminWindow adminWindow = new AdminWindow();
         }
 
-        public void LaunchEquipmentAdditionWindow()
+        public void LaunchEmployeeAdditionWindow()
         {
-
+            EmployeeAddition employeeAdditionWindow = new EmployeeAddition();
         }
     }
 }

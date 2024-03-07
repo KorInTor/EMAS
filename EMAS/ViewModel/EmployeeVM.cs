@@ -1,4 +1,6 @@
-﻿using EMAS.Model;
+﻿using EMAS.EventArgs;
+using EMAS.Events;
+using EMAS.Model;
 using EMAS.Service.Command;
 using EMAS.Service.Connection;
 using EMAS.Service.Security;
@@ -69,7 +71,8 @@ namespace EMAS.ViewModel
             DataBaseClient.UpdateEmployeeData(SelectedEmployee, password);
             Clipboard.SetText(password);
             MessageBox.Show($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.", "Смена пароля.", MessageBoxButton.OK, MessageBoxImage.Information);
-            UpdateEmployeeInfo();
+           // MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
+             UpdateEmployeeInfo();
         }
 
         private void EditEmployee()
@@ -81,6 +84,7 @@ namespace EMAS.ViewModel
             }
             DataBaseClient.UpdateEmployeeData(SelectedEmployee);
             MessageBox.Show("Данные изменены!", "Успех!", MessageBoxButton.OK, MessageBoxImage.Information);
+            //MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
             UpdateEmployeeInfo();
         }
 
@@ -88,17 +92,26 @@ namespace EMAS.ViewModel
         {
             EmployeeAddition dialogue = new();
             dialogue.ShowDialog();
+            //MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
             UpdateEmployeeInfo();
         }
 
         public EmployeeVM() 
         {
-            UpdateEmployeeInfo();
+            //UpdateEmployeeInfo();
+            MiscellaneousEvents.EmployeePackageIsReady += AssertValues;
+            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
         }
 
+        
         private void UpdateEmployeeInfo()
         {
             EmployeeList = new(DataBaseClient.GetAllEmployeeData());
+        }
+
+        private void AssertValues(EmployeeListEventArgs e)
+        {
+            EmployeeList = new ObservableCollection<Employee>(e.EmployeeList);
         }
     }
 }
