@@ -12,6 +12,11 @@ namespace EMAS.Service.Connection
 {
     public static class DataBaseClient
     {
+        public static List<int> IdsOfLocations()
+        {
+            return null; /// <- dis motherfocker
+        }
+
         private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
 
         private static int _currentEmployeeId;

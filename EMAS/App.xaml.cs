@@ -15,6 +15,7 @@ namespace EMAS
         {
             ContentDispenser cd = new ContentDispenser();
             WindowManager wm = new WindowManager();
+            //DataChangeChecker dCC = new DataChangeChecker();
         }
         protected override void OnExit(ExitEventArgs e)
         {

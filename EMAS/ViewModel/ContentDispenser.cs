@@ -12,9 +12,12 @@ namespace EMAS.ViewModel
 {
     class ContentDispenser
     {
+
+        private DataChangeChecker _checker;
         
         public ContentDispenser()
         {
+            //_checker = new DataChangeChecker();
             MiscellaneousEvents.LocationPackageIsRequested += AssembleLocationsInfoPack;
             MiscellaneousEvents.EmployeeInfoIsRequested += AssembleEmployeeInfoPack;
         }
