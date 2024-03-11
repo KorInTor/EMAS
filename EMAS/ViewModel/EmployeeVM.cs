@@ -5,6 +5,7 @@ using EMAS.Service.Command;
 using EMAS.Service.Connection;
 using EMAS.Service.Security;
 using EMAS.View.AdditionWindow;
+using EMAS.ViewModel.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,14 +20,25 @@ namespace EMAS.ViewModel
     public class EmployeeVM : INotifyPropertyChanged
     {
         private ObservableCollection<Employee> _employeeList;
+
+
+
         private Employee _selectedEmployee;
-        private RelayCommand _addEmployeeCommand;
-        private RelayCommand _editEmployeeCommand;
+        //private RelayCommand _addEmployeeCommand;
+        //private RelayCommand _editEmployeeCommand;
         private RelayCommand _changePasswordCommand;
+
+        private AddEmployeeCommand _addEmployeeCommandN;
+        private EditEmployeeCommand _editEmployeeCommandN;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public RelayCommand AddEmployeeCommand => _addEmployeeCommand ??= new RelayCommand(param => AddNewEmployee());
-        public RelayCommand EditEmployeeCommand => _editEmployeeCommand ??= new RelayCommand(param => EditEmployee());
+
+        public AddEmployeeCommand AddEmployeeCommand => _addEmployeeCommandN ??= new AddEmployeeCommand();
+        // public RelayCommand AddEmployeeCommand => _addEmployeeCommand ??= new RelayCommand(param => AddNewEmployee());
+
+        public EditEmployeeCommand EditEmployeeCommand => _editEmployeeCommandN ??= new EditEmployeeCommand();
+       // public RelayCommand EditEmployeeCommand => _editEmployeeCommand ??= new RelayCommand(param => EditEmployee());
         public RelayCommand ChangePasswordCommand => _changePasswordCommand ??= new RelayCommand(param => ChangeEmployeePassword());
 
         public ObservableCollection<Employee> EmployeeList
@@ -71,8 +83,7 @@ namespace EMAS.ViewModel
             DataBaseClient.UpdateEmployeeData(SelectedEmployee, password);
             Clipboard.SetText(password);
             MessageBox.Show($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.", "Смена пароля.", MessageBoxButton.OK, MessageBoxImage.Information);
-           // MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
-             UpdateEmployeeInfo();
+            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
         }
 
         private void EditEmployee()
@@ -82,31 +93,23 @@ namespace EMAS.ViewModel
                 MessageBox.Show("Не Выбран сотрудник.", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            DataBaseClient.UpdateEmployeeData(SelectedEmployee);
+            DataBaseClient.UpdateEmployeeData(SelectedEmployee); // <-
             MessageBox.Show("Данные изменены!", "Успех!", MessageBoxButton.OK, MessageBoxImage.Information);
-            //MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
-            UpdateEmployeeInfo();
+            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
         }
 
         private void AddNewEmployee()
         {
-            EmployeeAddition dialogue = new();
-            dialogue.ShowDialog();
-            //MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
-            UpdateEmployeeInfo();
+            EmployeeRelatedEvents.InvokeEmployeeAdditionIsPerformed();
+            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
         }
 
         public EmployeeVM() 
         {
-            //UpdateEmployeeInfo();
             MiscellaneousEvents.EmployeePackageIsReady += AssertValues;
+            EmployeeRelatedEvents.EmployeeAdditionIsPerformed += AddNewEmployee;
+            EmployeeRelatedEvents.EmployeeEditionIsPerformed += EditEmployee;
             MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
-        }
-
-        
-        private void UpdateEmployeeInfo()
-        {
-            EmployeeList = new(DataBaseClient.GetAllEmployeeData());
         }
 
         private void AssertValues(EmployeeListEventArgs e)

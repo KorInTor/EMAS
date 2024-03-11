@@ -74,7 +74,6 @@ namespace EMAS.ViewModel
             DataBaseClient.AddNewLocation(new Location(0, NewLocationName));
             MessageBox.Show("Добавление нового объекта успешно", "Успех!", MessageBoxButton.OK, MessageBoxImage.Information);
             MiscellaneousEvents.InvokeLocationPackageIsRequested();
-            //UpdateLocationsList();
         }
 
         private void UpdateLocationsList()
