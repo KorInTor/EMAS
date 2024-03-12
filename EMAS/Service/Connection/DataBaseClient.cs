@@ -14,7 +14,29 @@ namespace EMAS.Service.Connection
     {
         public static List<int> IdsOfLocations()
         {
-            return null; /// <- dis motherfocker
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT id FROM public.location";
+            using var command = new NpgsqlCommand(sql, connection);
+
+            var list = new List<int>();
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(reader.GetInt32(0));
+                }
+
+                foreach (var data in list)
+                {
+                    Debug.WriteLine($"Получено id локации:{data}");
+                }
+
+            }
+            connection.Close();
+            return list;
         }
 
         private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
