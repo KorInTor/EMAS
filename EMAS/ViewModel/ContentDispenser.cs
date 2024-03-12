@@ -33,5 +33,25 @@ namespace EMAS.ViewModel
             List<Location> locations = DataBaseClient.GetLocationData();
             MiscellaneousEvents.InvokeLocationPackageIsReady(new LocationListEventArgs(locations));
         }
+
+        public void AssembleBinInfoPack()
+        {
+
+        }
+
+        public void AssembleDeliveryInfoPack()
+        {
+
+        }
+
+        public void AssembleEquipmentInfoPack()
+        {
+
+        }
+
+        public void AssembleFiltrationChemaPack()
+        {
+
+        }
     }
 }
