@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EMAS.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,12 @@ namespace EMAS.Events
         public delegate void EditEmployee();
         public static event EditEmployee? EmployeeEditionIsPerformed;
 
+        public delegate void ReceiveEmployeeInfo(List<Employee> employees);
+        public static event ReceiveEmployeeInfo? EmployeeInfoIsReady;
+
+        public delegate void PackEmployeeInfo();
+        public static event PackEmployeeInfo? EmployeeInfoPackRequested;
+
 
         public static void InvokePasswordChangeIsPerformed()
         {
@@ -30,6 +37,16 @@ namespace EMAS.Events
         public static void InvokeEmployeeEditionIsPerformed()
         {
             EmployeeEditionIsPerformed?.Invoke();
+        }
+
+        public static void InvokeEmployeeInfoIsReady(List<Employee> employees)
+        {
+            EmployeeInfoIsReady?.Invoke(employees);
+        }
+
+        public static void InvokeEmployeeInfoPackRequested()
+        {
+            EmployeeInfoPackRequested?.Invoke();
         }
 
     }

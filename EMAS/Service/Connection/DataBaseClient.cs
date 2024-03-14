@@ -12,7 +12,7 @@ namespace EMAS.Service.Connection
 {
     public static class DataBaseClient
     {
-        public static List<int> IdsOfLocations()
+        public static List<int> GetLocationsId()
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();

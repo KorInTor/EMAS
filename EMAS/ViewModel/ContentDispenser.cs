@@ -1,6 +1,8 @@
-﻿using EMAS.EventArgs;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using EMAS.EventArgs;
 using EMAS.Events;
 using EMAS.Model;
+using EMAS.Service;
 using EMAS.Service.Connection;
 using System;
 using System.Collections.Generic;
@@ -13,45 +15,38 @@ namespace EMAS.ViewModel
     class ContentDispenser
     {
 
-        private DataChangeChecker _checker;
-        
+        private DataChangeChecker _monitor;
+
         public ContentDispenser()
-        {
-            //_checker = new DataChangeChecker();
-            MiscellaneousEvents.LocationPackageIsRequested += AssembleLocationsInfoPack;
-            MiscellaneousEvents.EmployeeInfoIsRequested += AssembleEmployeeInfoPack;
+        { 
+            _monitor = new DataChangeChecker(DataBaseClient.GetLocationsId());
+            GeneralEvents.PermissionsOnLocationAreRequested += PackPermissionsInfo;
+            GeneralEvents.LocationChanged += HandleLocationChanged;
         }
 
-        public void AssembleEmployeeInfoPack()
+        public void PackEquipmentInfo()
         {
-            List<Employee> employees = DataBaseClient.GetAllEmployeeData();
-            MiscellaneousEvents.InvokeEmployeePackageIsReady(new EmployeeListEventArgs(employees));
+            List<Equipment> equipment = DataBaseClient.GetEquipmentOnLocation(LocationManager.CurrentLocation.Id);
+
+        }
+
+        public void PackEmployeeInfo()
+        {
+            List <Employee>  employees= DataBaseClient.GetAllEmployeeData();
+            EmployeeRelatedEvents.InvokeEmployeeInfoIsReady(employees);
+        }
+
+        public void PackPermissionsInfo()
+        {
+            List<string> permissions = DataBaseClient.GetPermissions()[LocationManager.CurrentLocation.Id]; // <- Will not work due to it's implementation, and yet other method similar to it is private for some reason
+            GeneralEvents.InvokePermissionsOnLocationAreReady(permissions);
         }
         
-        public void AssembleLocationsInfoPack()
+        public void HandleLocationChanged()
         {
-            List<Location> locations = DataBaseClient.GetLocationData();
-            MiscellaneousEvents.InvokeLocationPackageIsReady(new LocationListEventArgs(locations));
+            _monitor.InitListener(LocationManager.CurrentLocation.Id);
         }
-
-        public void AssembleBinInfoPack()
-        {
-
-        }
-
-        public void AssembleDeliveryInfoPack()
-        {
-
-        }
-
-        public void AssembleEquipmentInfoPack()
-        {
-
-        }
-
-        public void AssembleFiltrationChemaPack()
-        {
-
-        }
+        
+        
     }
 }
