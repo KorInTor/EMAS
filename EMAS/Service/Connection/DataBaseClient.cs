@@ -468,10 +468,33 @@ namespace EMAS.Service.Connection
             throw new NotImplementedException();
         }
 
-        public static void AddNewEquipment(Equipment equipment)
+        public static void AddNewEquipment(Equipment equipment, int locationId)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "INSERT INTO public.equipment (\"name\", manufacturer, \"type\", measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, tags, location_id, status, description) VALUES (@name, @manufacturer, @type, @measurment_units, @accuracy_class, @measurment_limit, @serial_number, @inventory_number, @tags, @location_id, @status, @description);";
+
+            using var command = new NpgsqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@name", equipment.Name);
+            command.Parameters.AddWithValue("@manufacturer", equipment.Manufacturer);
+            command.Parameters.AddWithValue("@type", equipment.Type);
+            command.Parameters.AddWithValue("@measurment_units", equipment.Units);
+            command.Parameters.AddWithValue("@accuracy_class", equipment.AccuracyClass);
+            command.Parameters.AddWithValue("@measurment_limit", equipment.Limit);
+            command.Parameters.AddWithValue("@serial_number", equipment.FactoryNumber);
+            command.Parameters.AddWithValue("@inventory_number", equipment.RegistrationNumber);
+            command.Parameters.AddWithValue("@tags", equipment.Tags);
+            command.Parameters.AddWithValue("@location_id", locationId);
+            command.Parameters.AddWithValue("@status", equipment.Status);
+            command.Parameters.AddWithValue("@description", equipment.Description);
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
         }
+
 
         public static void AddNewDelivery(Delivery delivery)
         {
@@ -519,9 +542,32 @@ namespace EMAS.Service.Connection
             connection.Close();
         }
 
-        public static void UpdateEquipmentData(Equipment equipment)
+        public static void UpdateEquipmentData(Equipment equipment, int locationId)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "UPDATE public.equipment SET \"name\" = @name, manufacturer = @manufacturer, \"type\" = @type, measurment_units = @measurment_units, accuracy_class = @accuracy_class, measurment_limit = @measurment_limit, serial_number = @serial_number, inventory_number = @inventory_number, tags = @tags, location_id = @location_id, status = @status, description = @description WHERE id = @id;";
+
+            using var command = new NpgsqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@id", equipment.Id);
+            command.Parameters.AddWithValue("@name", equipment.Name);
+            command.Parameters.AddWithValue("@manufacturer", equipment.Manufacturer);
+            command.Parameters.AddWithValue("@type", equipment.Type);
+            command.Parameters.AddWithValue("@measurment_units", equipment.Units);
+            command.Parameters.AddWithValue("@accuracy_class", equipment.AccuracyClass);
+            command.Parameters.AddWithValue("@measurment_limit", equipment.Limit);
+            command.Parameters.AddWithValue("@serial_number", equipment.FactoryNumber);
+            command.Parameters.AddWithValue("@inventory_number", equipment.RegistrationNumber);
+            command.Parameters.AddWithValue("@tags", equipment.Tags);
+            command.Parameters.AddWithValue("@location_id", locationId);
+            command.Parameters.AddWithValue("@status", equipment.Status);
+            command.Parameters.AddWithValue("@description", equipment.Description);
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
         }
 
         public static void UpdateEquipmentData(ref List<Equipment> equipment)
@@ -567,7 +613,18 @@ namespace EMAS.Service.Connection
 
         public static void RemoveEquipment(Equipment equipment)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "DELETE FROM public.equipment WHERE id = @id;";
+
+            using var command = new NpgsqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@id", equipment.Id);
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
         }
 
         public static void RemoveEmployee(Employee employee)
@@ -575,6 +632,57 @@ namespace EMAS.Service.Connection
             throw new NotImplementedException();
         }
 
-        
+        public static List<string> GetDistinctValues(string columnName)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = $"SELECT DISTINCT {columnName} FROM public.equipment;";
+
+            using var command = new NpgsqlCommand(sql, connection);
+
+            var list = new List<string>();
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(reader.GetString(0));
+                }
+            }
+
+            connection.Close();
+            return list;
+        }
+
+        public static List<string> GetDistincEquipmentNames()
+        {
+            return GetDistinctValues("\"name\"");
+        }
+
+        public static List<string> GetDistincEquipmentTypes()
+        {
+            return GetDistinctValues("\"type\"");
+        }
+
+        public static List<string> GetDistincEquipmentMeasurmentUnits()
+        {
+            return GetDistinctValues("measurment_units");
+        }
+
+        public static List<string> GetDistincEquipmentAccuracyClasses()
+        {
+            return GetDistinctValues("accuracy_class");
+        }
+
+        public static List<string> GetDistincEquipmentMeasurmentLimits()
+        {
+            return GetDistinctValues("measurment_limit");
+        }
+
+        public static List<string> GetDistincEquipmentManufacturers()
+        {
+            return GetDistinctValues("manufacturer");
+        }
     }
 }
