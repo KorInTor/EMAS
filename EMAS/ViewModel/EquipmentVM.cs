@@ -1,10 +1,10 @@
 ﻿using EMAS.Model;
 using EMAS.Service.Command;
 using EMAS.Service.Connection;
-using EMAS.Service.Events;
+using EMAS.Events;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using static EMAS.Service.Events.CommandEvents;
+using System.Windows.Input;
 
 namespace EMAS.ViewModel
 {
@@ -285,6 +285,11 @@ namespace EMAS.ViewModel
                 _filteredEquipmnetList = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FilteredEquipmnetList)));
             }
+        }
+
+        public ObservableCollection<Tool> AllowedTools
+        {
+            get;
         }
 
         public EquipmentVM()
