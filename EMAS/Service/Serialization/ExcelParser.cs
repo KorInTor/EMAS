@@ -42,10 +42,10 @@ namespace EMAS.Service.Serialization
             return equipments;
         }
 
-        public static void ExportToExcel(List<Equipment> equipments, string filePath)
+        public static void ExportToExcel(List<Equipment> equipments, string filePath, string locationName)
         {
             using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Equipment");
+            var worksheet = workbook.Worksheets.Add($"{locationName}");
 
             // Заголовки столбцов
             worksheet.Cell(1, 1).Value = "Уникальный идентификатор";
@@ -58,7 +58,7 @@ namespace EMAS.Service.Serialization
             worksheet.Cell(1, 8).Value = "Описание";
             worksheet.Cell(1, 9).Value = "Производитель";
             worksheet.Cell(1, 10).Value = "Регистрационный номер";
-            worksheet.Cell(1, 11).Value = "Серийный (Заводской) Номер";
+            worksheet.Cell(1, 11).Value = "Серийный (Заводской) Номер"; 
             worksheet.Cell(1, 12).Value = "Тэги (Через запятую!)";
 
             int rowNumber = 2;
@@ -83,11 +83,19 @@ namespace EMAS.Service.Serialization
 
             workbook.SaveAs(filePath);
         }
-
+		
+		public static void ExportToExcel(Dictionary<string,List<Equipment>> equipmentListsOnLocatinos, string filePath)
+		{
+			foreach (string locationName in equipmentListsOnLocatinos.Keys)
+			{
+                ExportToExcel(equipmentListsOnLocatinos[locationName], filePath, locationName);
+			}
+		}
+		
         public static void CreateBlankExcel(string filePath)
         {
             using var workbook = new XLWorkbook();
-            var worksheet = workbook.Worksheets.Add("Equipment");
+            var worksheet = workbook.Worksheets.Add("Наименование местоположения");
 
             // Заголовки столбцов
             worksheet.Cell(1, 1).Value = "Уникальный идентификатор";
