@@ -21,10 +21,12 @@ namespace EMAS.Service.Connection
         /// </summary>
         private Dictionary<int,DateTime> lastModificationTimes = [];
 
+
+        public delegate void HandleDataChange(int ID);
         /// <summary>
         /// Invokes when equipment data in location has updated.
         /// </summary>
-        public static event Action<int>? DataChanged;
+        public static event HandleDataChange? DataChanged;
 
         /// <summary>
         /// CancelationToken for stoping listeners.

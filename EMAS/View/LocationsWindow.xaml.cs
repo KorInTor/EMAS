@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace EMAS.View
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for LocationsWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class LocationsWindow : Window
     {
-        public MainWindow()
+        public LocationsWindow()
         {
             InitializeComponent();
         }

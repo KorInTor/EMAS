@@ -6,15 +6,29 @@
              xmlns:local="clr-namespace:EMAS.View.Control"
              xmlns:ViewModel="clr-namespace:EMAS.ViewModel" x:Class="EMAS.View.Control.EquipmentControl"
              mc:Ignorable="d" Height="819" Width="1032">
+    
     <UserControl.DataContext>
         <ViewModel:EquipmentVM/>
     </UserControl.DataContext>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
         <DataGrid ItemsSource="{Binding FilteredEquipmnetList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0">
+           
+            <DataGrid.ContextMenu>
+                <ContextMenu ItemsSource="{Binding}">
+                    <ContextMenu.ItemContainerStyle>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Header" Value="{Binding YourPropertyForHeader}"/>
+                            <Setter Property="Command" Value="{Binding YourCommand}"/>
+                        </Style>
+                    </ContextMenu.ItemContainerStyle>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="">
                     <DataGridTemplateColumn.CellTemplate>
