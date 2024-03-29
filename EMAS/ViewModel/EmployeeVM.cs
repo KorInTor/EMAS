@@ -1,120 +1,94 @@
-﻿using EMAS.EventArgs;
-using EMAS.Events;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
-using EMAS.Service.Command;
 using EMAS.Service.Connection;
 using EMAS.Service.Security;
-using EMAS.View.AdditionWindow;
-using EMAS.ViewModel.Commands;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace EMAS.ViewModel
 {
-    public class EmployeeVM : INotifyPropertyChanged
+    public partial class EmployeeVM : ObservableObject
     {
+        public event Action AdditionWindowRequested;
+        public event Action<string,string> PasswordChangedSuccsesfull;
+        public event Action<string> DataChnageSuccesfull;
+        public event Action<string> DataChangeFailed;
+
+        [ObservableProperty]
         private ObservableCollection<Employee> _employeeList;
 
-
-
+        [ObservableProperty]
         private Employee _selectedEmployee;
-        //private RelayCommand _addEmployeeCommand;
-        //private RelayCommand _editEmployeeCommand;
+
+        [ObservableProperty]
         private RelayCommand _changePasswordCommand;
 
-        private AddEmployeeCommand _addEmployeeCommandN;
-        private EditEmployeeCommand _editEmployeeCommandN;
+        [ObservableProperty]
+        private RelayCommand _addEmployeeCommand;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        [ObservableProperty]
+        private RelayCommand _editEmployeeCommand;
 
+        [ObservableProperty]
+        private bool _isEmployeeSelected;
 
-        public AddEmployeeCommand AddEmployeeCommand => _addEmployeeCommandN ??= new AddEmployeeCommand();
-        // public RelayCommand AddEmployeeCommand => _addEmployeeCommand ??= new RelayCommand(param => AddNewEmployee());
-
-        public EditEmployeeCommand EditEmployeeCommand => _editEmployeeCommandN ??= new EditEmployeeCommand();
-       // public RelayCommand EditEmployeeCommand => _editEmployeeCommand ??= new RelayCommand(param => EditEmployee());
-        public RelayCommand ChangePasswordCommand => _changePasswordCommand ??= new RelayCommand(param => ChangeEmployeePassword());
-
-        public ObservableCollection<Employee> EmployeeList
+        partial void OnSelectedEmployeeChanged(Employee value)
         {
-            get 
-            { 
-                return _employeeList; 
+            if (value != null)
+            {
+                IsEmployeeSelected = true;
             }
-            set 
-            { 
-                _employeeList = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EmployeeList)));
+            else
+            {
+                IsEmployeeSelected = false;
             }
         }
 
-        public Employee SelectedEmployee
+        partial void OnIsEmployeeSelectedChanged(bool value)
         {
-            get
-            {
-                return _selectedEmployee;
-            }
-            set
-            {
-                if (value == null)
-                {
-                    return;
-                }
-                _selectedEmployee = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedEmployee)));
-            }
+            ChangePasswordCommand.NotifyCanExecuteChanged();
+            AddEmployeeCommand.NotifyCanExecuteChanged();
+            EditEmployeeCommand.NotifyCanExecuteChanged();
         }
 
         private void ChangeEmployeePassword()
         {
-            if (SelectedEmployee == null)
-            {
-                MessageBox.Show("Не Выбран сотрудник.", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
             string password = PasswordGenerator.RandomString(10);
 
             DataBaseClient.UpdateEmployeeData(SelectedEmployee, password);
-            Clipboard.SetText(password);
-            MessageBox.Show($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.", "Смена пароля.", MessageBoxButton.OK, MessageBoxImage.Information);
-            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
+
+            PasswordChangedSuccsesfull?.Invoke($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.", password);
         }
 
         private void EditEmployee()
         {
-            if (SelectedEmployee == null)
+            try
             {
-                MessageBox.Show("Не Выбран сотрудник.", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DataBaseClient.UpdateEmployeeData(SelectedEmployee);
+            }
+            catch (Exception ex)
+            {
+                DataChangeFailed?.Invoke($"Ошибка изменения данных: \n\r{ex.Message}");
                 return;
             }
-            DataBaseClient.UpdateEmployeeData(SelectedEmployee); // <-
-            MessageBox.Show("Данные изменены!", "Успех!", MessageBoxButton.OK, MessageBoxImage.Information);
-            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
+            DataChnageSuccesfull?.Invoke("Данные изменены!");
         }
 
-        private void AddNewEmployee()
+        private void RequestAdditionWindow()
         {
-            EmployeeRelatedEvents.InvokeEmployeeAdditionIsPerformed();
-            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
+            AdditionWindowRequested?.Invoke();
+            EmployeeList = new ObservableCollection<Employee>(DataBaseClient.GetAllEmployeeData());
         }
 
-        public EmployeeVM() 
+        public EmployeeVM()
         {
-            MiscellaneousEvents.EmployeePackageIsReady += AssertValues;
-            EmployeeRelatedEvents.EmployeeAdditionIsPerformed += AddNewEmployee;
-            EmployeeRelatedEvents.EmployeeEditionIsPerformed += EditEmployee;
-            MiscellaneousEvents.InvokeEmployeeInfoIsRequested();
-        }
+            EmployeeList = new ObservableCollection<Employee> (DataBaseClient.GetAllEmployeeData());
 
-        private void AssertValues(EmployeeListEventArgs e)
-        {
-            EmployeeList = new ObservableCollection<Employee>(e.EmployeeList);
+            AddEmployeeCommand = new RelayCommand(RequestAdditionWindow);
+            EditEmployeeCommand = new RelayCommand(EditEmployee,() => IsEmployeeSelected);
+            ChangePasswordCommand = new RelayCommand(ChangeEmployeePassword, () => IsEmployeeSelected);
         }
     }
 }

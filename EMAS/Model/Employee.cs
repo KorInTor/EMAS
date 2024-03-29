@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,30 +10,30 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about employee.
     /// </summary>
-    public class Employee
+    public class Employee : ObservableObject
     {
         /// <summary>
         /// Stores unique id of Employee.
         /// </summary>
-        private int _id;
+        private int _id = 0;
 
         /// <summary>
         /// Stores fullname of employee.
         /// </summary>
-        private string _fullname;
+        private string _fullname = string.Empty;
 
         /// <summary>
         /// Stroes departmnet name.
         /// </summary>
-        private string _department;
+        private string _department = string.Empty;
 
         /// <summary>
         /// Email of Employee.
         /// </summary>
-        private string _email;
+        private string _email = string.Empty;
 
 
-        private string _username;
+        private string _username = string.Empty;
 
         public Employee(int id, string fullname, string username, string email)
         {
@@ -48,19 +49,18 @@ namespace EMAS.Model
             Email = email;
             Username = username;
         }
+
+        public Employee()
+        {
+        }
+
         /// <summary>
         /// Returns id of employee.
         /// </summary>
         public int Id
         {
-            get
-            {
-                return _id;
-            }
-            set
-            {
-                _id = value;
-            }
+            get => _id;
+            set => SetProperty(ref _id, value);
         }
 
         /// <summary>
@@ -68,14 +68,8 @@ namespace EMAS.Model
         /// </summary>
         public string Fullname
         {
-            get
-            {
-                return _fullname;
-            }
-            set
-            {
-                _fullname = value;
-            }
+            get => _fullname;
+            set => SetProperty(ref _fullname, value);
         }
 
         /// <summary>
@@ -83,22 +77,20 @@ namespace EMAS.Model
         /// </summary>
         public string Department
         {
-            get
-            {
-                return _department;
-            }
-            set
-            {
-                _department = value;
-            }
+            get => _department;
+            set => SetProperty(ref _department, value);
         }
 
         public string Email
         {
-            get;
-            set;
+            get => _email;
+            set => SetProperty(ref _email, value);
         }
 
-        public string Username { get => _username; set => _username = value; }
+        public string Username 
+        {
+            get => _username;
+            set => SetProperty(ref _username, value);
+        }
     }
 }

@@ -1,91 +1,53 @@
-﻿using EMAS.EventArgs;
-using EMAS.Events;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
-using EMAS.Service.Command;
 using EMAS.Service.Connection;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
-using System.Xaml.Schema;
 
 namespace EMAS.ViewModel
 {
-    public class LocationControlVM : INotifyPropertyChanged //TODO: Добавить показ всплывающего окна если пользователь ввёл не правильные значения.
+    public partial class LocationControlVM : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<string> AdditionConfirmed;
+        public event Action<string> AdditionFailed;
 
+        [ObservableProperty]
         private ObservableCollection<Location> _locations = new(DataBaseClient.GetLocationData());
+
+        [ObservableProperty]
         private string _newLocationName;
-        private RelayCommand _addLocationCommand;
 
-        public RelayCommand AddLocationCommand
-        {
-            get
-            {
-                return _addLocationCommand ??= new RelayCommand(param => AddNewLocation());
-            }
-        }
+        public RelayCommand AddLocationCommand { get; set; }
 
-        public ObservableCollection<Location> Locations
-        {
-            get
-            {
-                return _locations;
-            }
-            private set
-            {
-                if (value != _locations)
-                {
-                    _locations = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Locations)));
-                }
-            }
-        }
-
-        public string NewLocationName
-        {
-            get
-            {
-                return _newLocationName;
-            }
-            set
-            {
-                if (value == string.Empty)
-                {
-                    return;
-                }
-                _newLocationName = value;
-            }
-        }
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddLocationCommand))]
+        private bool _isNewNameEmpty;
 
         public LocationControlVM()
         {
-            MiscellaneousEvents.LocationPackageIsReady += AssertValues;
-            MiscellaneousEvents.InvokeLocationPackageIsRequested();
+            AddLocationCommand = new RelayCommand(AddNewLocation, () => IsNewNameEmpty);
         }
 
         private void AddNewLocation()
         {
-            if (NewLocationName == null)
+            try 
             {
-                MessageBox.Show("Не заполнены значения для имени новго объекта.", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
+                DataBaseClient.AddNewLocation(new Location(0, NewLocationName));
             }
-            DataBaseClient.AddNewLocation(new Location(0, NewLocationName));
-            MessageBox.Show("Добавление нового объекта успешно", "Успех!", MessageBoxButton.OK, MessageBoxImage.Information);
-            MiscellaneousEvents.InvokeLocationPackageIsRequested();
+            catch (Exception ex)
+            {
+                AdditionFailed?.Invoke("Имя не заполнено");
+            }
+            AdditionConfirmed?.Invoke("Добавление нового объекта успешно");
+            
         }
 
         private void UpdateLocationsList()
         {
             Locations = new(DataBaseClient.GetLocationData());
         }
-
-        private void AssertValues(LocationListEventArgs e)
-        {
-            Locations = new ObservableCollection<Location>(e.Locations);
-        }
     }
-
 }
 

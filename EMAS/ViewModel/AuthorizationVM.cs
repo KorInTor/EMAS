@@ -1,5 +1,6 @@
-﻿using EMAS.Exceptions;
-using EMAS.Service.Command;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using EMAS.Exceptions;
 using EMAS.Service.Connection;
 using System;
 using System.Collections.Generic;
@@ -11,68 +12,42 @@ using System.Windows;
 
 namespace EMAS.ViewModel
 {
-    public class AuthorizationVM : INotifyPropertyChanged
+    public partial class AuthorizationVM : ObservableObject
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action<string> LoginFailed;
+        public event Action LoginSucceeded;
+
         private RelayCommand _loginCommand;
 
-        private string _username;
-        private string _password;
+        [ObservableProperty]
+        private string _username = "Пряхин Д.С.";
 
-        public RelayCommand LoginCommand => _loginCommand ??= new RelayCommand(param => Login());
+        [ObservableProperty]
+        private string _password = "ps123123";
+
+        public RelayCommand LoginCommand => _loginCommand ??= new RelayCommand(Login);
 
         private void Login()
         {
+            DataBaseClient.Username = Username;
+            DataBaseClient.Password = Password;
             try
             {
                 DataBaseClient.Login();
+                LoginSucceeded?.Invoke();
             }
-            catch(ConnectionFailedException)
+            catch (ConnectionFailedException)
             {
-                MessageBox.Show("Проблемы с соединением, обратитесь к администратору.", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
+                LoginFailed?.Invoke("Проблемы с соединением, обратитесь к администратору.");
             }
             catch (InvalidUsernameException)
             {
-                MessageBox.Show("Такого пользователя не существует.", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
+                LoginFailed?.Invoke("Такого пользователя не существует.");
             }
             catch (InvalidPasswordException)
             {
-                MessageBox.Show("Неправильный пароль.", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            MessageBox.Show("Вход успешен");//TODO: Удалить после добавления главного окна. Сейчас нужен только для проверки окна авторизации.
-        }
-
-        public string Username
-        {
-            get
-            {
-                return _username;
-            }
-            set
-            {
-                _username = value;
-                DataBaseClient.Username = value;
-                PropertyChanged?.Invoke(this,new PropertyChangedEventArgs(nameof(Username)));
+                LoginFailed?.Invoke("Неправильный пароль.");
             }
         }
-
-        public string Password
-        {
-            get
-            {
-                return _password;
-            }
-            set
-            {
-                _password = value;
-                DataBaseClient.Password = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Password)));
-            }
-        }
-
-        public AuthorizationVM()
-        {
-        }
-
     }
 }

@@ -8,11 +8,11 @@ namespace EMAS.Service.Connection
 {
     public static class ConnectionOptions
     {
-        private static string _host = "26.156.157.222";
+        private static string _host = "26.34.196.234";
 
         private static string _port = "5432";
 
-        private static string _dataBase = "postgres";
+        private static string _dataBase = "praktik";
 
         private static string _DBMSlogin = "praktikant";
 

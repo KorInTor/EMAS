@@ -47,7 +47,7 @@ namespace EMAS.TestCases
 
             //Assert.AreEqual(expected, actual);
 
-            ExcelParser.ExportToExcel([exampleEquipment],outputFullPath);
+            ExcelParser.ExportToExcel(new List <Equipment>{ exampleEquipment },outputFullPath,"Локация-1");
 
             Trace.WriteLine($"Результат экспорта в Excel файл: {exampleEquipment.Equals(ExcelParser.ImportFromExcel(outputFullPath)[0])}");
         }

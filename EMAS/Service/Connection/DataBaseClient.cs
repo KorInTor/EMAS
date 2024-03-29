@@ -12,84 +12,23 @@ namespace EMAS.Service.Connection
 {
     public static class DataBaseClient
     {
-        public static List<int> GetLocationsId()
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            connection.Open();
-
-            string sql = "SELECT id FROM public.location";
-            using var command = new NpgsqlCommand(sql, connection);
-
-            var list = new List<int>();
-
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    list.Add(reader.GetInt32(0));
-                }
-
-                foreach (var data in list)
-                {
-                    Debug.WriteLine($"Получено id локации:{data}");
-                }
-
-            }
-            connection.Close();
-            return list;
-        }
-
-        private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
-
         private static int _currentEmployeeId;
+
+        private static bool? _isCurrentEmployeeAdmin;
+
+        private static string _password = string.Empty;
 
         private static Dictionary<int, List<string>>? _permissions;
 
-        private static bool? _isCurrentEmployeeAdmin;
+        private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
+
+        private static string _username = string.Empty;
 
         public static string ConnectionString
         {
             get
             {
                 return ConnectionOptions.ConnectionString;
-            }
-        }
-
-        private static string _username = "Пряхин Д.С.";
-
-        private static string _password = "ps123123";
-
-        public static string Username
-        {
-            get
-            {
-                return _username;
-            }
-            set
-            {
-                if (value == null || value == string.Empty)
-                {
-                    //throw new InvalidUsernameException("Некоректное имя пользователя.");
-                    return;
-                }
-                _username = value;
-            }
-        }
-
-        public static string Password
-        {
-            get
-            {
-                return _password;
-            }
-            set
-            {
-                if (value == null || value == string.Empty)
-                {
-                    //throw new InvalidPasswordException("Некоректный пароль.");
-                    return;
-                }
-                _password = value;
             }
         }
 
@@ -109,14 +48,6 @@ namespace EMAS.Service.Connection
             }
         }
 
-        public static Dictionary<int, List<string>> Permissions
-        {
-            get
-            {
-                return _permissions ??= GetCurrentSessionPermissions();
-            }
-        }
-
         public static bool IsCurrentEmployeeAdmin
         {
             get
@@ -125,35 +56,119 @@ namespace EMAS.Service.Connection
             }
         }
 
-        public static void Login()
+        public static string Password
         {
-            TryConnectToserver();
-            if (!IsUsernameCorrect())
+            get
             {
-                throw new InvalidUsernameException();
+                return _password;
             }
-            if (!IsPasswordCorrect())
+            set
             {
-                throw new InvalidPasswordException();
+                if (value == null || value == string.Empty)
+                {
+                    throw new InvalidPasswordException("Некоректный пароль.");
+                    return;
+                }
+                _password = value;
             }
-            SetCurrentSessionEmployeeId();
-            CreateNewSession();
         }
 
-        private static void CreateNewSession()
+        public static Dictionary<int, List<string>> Permissions
+        {
+            get
+            {
+                return _permissions ??= GetCurrentSessionPermissions();
+            }
+        }
+
+        public static string Username
+        {
+            get
+            {
+                return _username;
+            }
+            set
+            {
+                if (value == null || value == string.Empty)
+                {
+                    throw new InvalidUsernameException("Некоректное имя пользователя.");
+                    return;
+                }
+                _username = value;
+            }
+        }
+
+        public static void AddNewDelivery(Delivery delivery)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void AddNewEmployee(Employee employee, string password)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string query = "INSERT INTO \"session\".active_session (employee_id) VALUES (@employeeId) ";
+            string query = "INSERT INTO public.employee (fullname, email, username, password_hash) VALUES(@name, @email, @username, @password) RETURNING id;";
 
             using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+            command.Parameters.AddWithValue("@name", employee.Fullname);
+            command.Parameters.AddWithValue("@email", employee.Email);
+            command.Parameters.AddWithValue("@username", employee.Username);
+            command.Parameters.AddWithValue("@password", HashPassword(password));
+
+            employee.Id = (int)command.ExecuteScalar();
+
+            Debug.WriteLine($"Успешно вставлено: Id: {employee.Id}, Name: {employee.Fullname}");
+
+            connection.Close();
+        }
+
+        public static void AddNewEquipment(Equipment equipment, int locationId)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "INSERT INTO public.equipment (\"name\", manufacturer, \"type\", measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, tags, location_id, status, description) VALUES (@name, @manufacturer, @type, @measurment_units, @accuracy_class, @measurment_limit, @serial_number, @inventory_number, @tags, @location_id, @status, @description);";
+
+            using var command = new NpgsqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@name", equipment.Name);
+            command.Parameters.AddWithValue("@manufacturer", equipment.Manufacturer);
+            command.Parameters.AddWithValue("@type", equipment.Type);
+            command.Parameters.AddWithValue("@measurment_units", equipment.Units);
+            command.Parameters.AddWithValue("@accuracy_class", equipment.AccuracyClass);
+            command.Parameters.AddWithValue("@measurment_limit", equipment.Limit);
+            command.Parameters.AddWithValue("@serial_number", equipment.FactoryNumber);
+            command.Parameters.AddWithValue("@inventory_number", equipment.RegistrationNumber);
+            command.Parameters.AddWithValue("@tags", equipment.Tags);
+            command.Parameters.AddWithValue("@location_id", locationId);
+            command.Parameters.AddWithValue("@status", equipment.Status);
+            command.Parameters.AddWithValue("@description", equipment.Description);
+
             command.ExecuteNonQuery();
 
             connection.Close();
+        }
 
-            Debug.WriteLine($"Успешно установлена сессия в базе данных для сотрудника с Id = {CurrentEmployeeId}");
+        public static void AddNewLocation(Location location)
+        {
+            if (location.Name == string.Empty)
+            {
+                throw new ArgumentNullException(nameof(location));
+            }
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string query = "INSERT INTO public.location (name) VALUES (@name)";
+
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@name", location.Name);
+            command.ExecuteNonQuery();
+
+            Debug.WriteLine($"Успешно вставлено: Id: {location.Id}, Name: {location.Name}");
+
+            connection.Close();
         }
 
         public static void CloseSession()
@@ -171,109 +186,27 @@ namespace EMAS.Service.Connection
             Debug.WriteLine($"Успешно закрыта активная сессия в базе данных для сотрудника с Id = {CurrentEmployeeId}");
         }
 
-        private static void SetCurrentSessionEmployeeId()
-        {
-            if (!IsUsernameCorrect())
-            {
-                throw new InvalidUsernameException();
-            }
-            using var connection = new NpgsqlConnection(ConnectionString);
-            connection.Open();
-
-            string query = "SELECT id FROM public.employee WHERE employee.username = @username";
-            using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@username", Username);
-
-            int? EmployeeId = (int?)command.ExecuteScalar();
-
-            if (EmployeeId == null)
-            {
-                throw new ArgumentNullException(nameof(EmployeeId));
-            }
-            else
-            {
-                CurrentEmployeeId = (int)EmployeeId;
-            }
-
-            connection.Close();
-        }
-
-        public static void TryConnectToserver()
-        {
-            using var conection = new NpgsqlConnection(ConnectionString);
-            try
-            {
-                conection.Open();
-                conection.Close();
-            }
-            catch (Exception ex)
-            {
-                throw new ConnectionFailedException(ex.Message);
-            }
-        }
-
-        public static bool IsUsernameCorrect()
+        public static List<Employee> GetAllEmployeeData()
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.username = @username) AS subquery;";
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@username", Username);
+            string sql = "SELECT id, fullname, username, email FROM public.employee;";
 
-            int? count = (int?)(long?)command.ExecuteScalar();
-
-            connection.Close();
-            return count == 1;
-        }
-
-        public static bool IsPasswordCorrect()
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            connection.Open();
-
-            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.password_hash = @passwordHash AND employee.username = @username) AS subquery;";
             using var command = new NpgsqlCommand(sql, connection);
 
-            command.Parameters.AddWithValue("@username", Username);
-            command.Parameters.AddWithValue("@passwordHash", HashPassword(Password));
-
-            Debug.WriteLine($"Хэш для {Password} = {HashPassword(Password)}");
-
-            int? count = (int?)(long?)command.ExecuteScalar();
-
-            connection.Close();
-
-            return count == 1;
-        }
-
-        public static string HashPassword(string password)
-        {
-            var pbkdf2 = new Rfc2898DeriveBytes(password, Encoding.UTF8.GetBytes(_storedSalt), 10000);
-            byte[] hash = pbkdf2.GetBytes(20);
-            return Convert.ToBase64String(hash);
-        }
-
-        public static List<Location> GetLocationData()
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            connection.Open();
-
-            string sql = "SELECT * FROM public.location";
-            using var command = new NpgsqlCommand(sql, connection);
-
-            var list = new List<Location>();
+            var list = new List<Employee>();
 
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    list.Add(new Location(reader.GetInt32(0), reader.GetString(1)));
+                    list.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
                 }
 
                 foreach (var data in list)
                 {
-                    Debug.WriteLine($"Получена локация:{data.Id}-{data.Name}");
+                    Debug.WriteLine($"Получен сотрудник:{data.Id}-{data.Fullname}");
                 }
 
             }
@@ -281,11 +214,6 @@ namespace EMAS.Service.Connection
             return list;
         }
 
-        public static List<Equipment> GetEquipmentOnLocation(int locationId)
-        {
-            throw new NotImplementedException();
-        }
-        
         public static List<Equipment> GetAllEquipmentData()
         {
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -315,30 +243,60 @@ namespace EMAS.Service.Connection
             return list;
         }
 
-        public static List<Employee> GetAllEmployeeData()
+        public static List<Delivery> GetDeliveryTo(int locationId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static List<string> GetDistincEquipmentAccuracyClasses()
+        {
+            return GetDistinctValues("accuracy_class");
+        }
+
+        public static List<string> GetDistincEquipmentManufacturers()
+        {
+            return GetDistinctValues("manufacturer");
+        }
+
+        public static List<string> GetDistincEquipmentMeasurmentLimits()
+        {
+            return GetDistinctValues("measurment_limit");
+        }
+
+        public static List<string> GetDistincEquipmentMeasurmentUnits()
+        {
+            return GetDistinctValues("measurment_units");
+        }
+
+        public static List<string> GetDistincEquipmentNames()
+        {
+            return GetDistinctValues("\"name\"");
+        }
+
+        public static List<string> GetDistincEquipmentTypes()
+        {
+            return GetDistinctValues("\"type\"");
+        }
+
+        public static List<string> GetDistinctValues(string columnName)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "SELECT id, fullname, username, email FROM public.employee;";
+            string sql = $"SELECT DISTINCT {columnName} FROM public.equipment;";
 
             using var command = new NpgsqlCommand(sql, connection);
 
-            var list = new List<Employee>();
+            var list = new List<string>();
 
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    list.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+                    list.Add(reader.GetString(0));
                 }
-
-                foreach (var data in list)
-                {
-                    Debug.WriteLine($"Получен сотрудник:{data.Id}-{data.Fullname}");
-                }
-
             }
+
             connection.Close();
             return list;
         }
@@ -393,186 +351,180 @@ namespace EMAS.Service.Connection
             return list;
         }
 
-        private static Dictionary<int, List<string>> GetCurrentSessionPermissions()
+        public static List<Equipment> GetEquipmentOnLocation(int locationId)
         {
-            Dictionary<int, List<string>> permissions = [];
-
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "SELECT location_id FROM \"permission\".employee_permissions " +
-                         "JOIN \"permission\".permission_type.name ON permission_type.id = permission_type " +
-                         "WHERE employee_id = @employeeId ";
-            
+            string sql = "SELECT id, \"name\", manufacturer, \"type\", measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, tags, location_id, status, description FROM public.equipment WHERE location_id = @locationId;";
 
             using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+            command.Parameters.AddWithValue("@locationId", locationId);
+
+            var list = new List<Equipment>();
 
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    int locationId = reader.GetInt32(0);
-                    string permissionType = reader.GetString(1);
+                    List<string> tags = [.. ((string[])reader[9])]; // Считывание tags
+                    list.Add(new Equipment(reader.GetString(11), reader.GetString(8), reader.GetString(12), reader.GetString(5), reader.GetString(4), reader.GetString(6), reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(7), tags));
+                }
 
-                    if (!permissions.TryGetValue(locationId, out List<string>? value))
-                    {
-                        value = [];
-                        permissions[locationId] = value;
-                    }
-                    value.Add(permissionType);
+                foreach (var data in list)
+                {
+                    Debug.WriteLine($"Получено оборудование: {data.Id} - {data.Name}");
                 }
             }
             connection.Close();
-            return permissions;
+            return list;
         }
 
-        private static bool IsCurrentSessionAdmin()
+        public static List<Location> GetLocationData()
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "SELECT employee_id FROM \"permission\".\"admin\" WHERE employee_id = @employeeId";
-
+            string sql = "SELECT * FROM public.location";
             using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+
+            var list = new List<Location>();
 
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    if (reader.GetString(0) is not null)
-                    {
-                        connection.Close();
-                        return true;
-                    }
+                    list.Add(new Location(reader.GetInt32(0), reader.GetString(1)));
                 }
+
+                foreach (var data in list)
+                {
+                    Debug.WriteLine($"Получена локация:{data.Id}-{data.Name}");
+                }
+
             }
             connection.Close();
-
-            return false;
-        } 
-
-        public static Dictionary<int, List<string>> GetPermissions()
-        {
-            throw new NotImplementedException();
+            return list;
         }
 
-        private static Employee GetEmployeeInfoById(int employeeId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static List<Delivery> GetDeliveryTo(int locationId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static void AddNewEquipment(Equipment equipment, int locationId)
+        public static List<int> GetLocationsId()
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "INSERT INTO public.equipment (\"name\", manufacturer, \"type\", measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, tags, location_id, status, description) VALUES (@name, @manufacturer, @type, @measurment_units, @accuracy_class, @measurment_limit, @serial_number, @inventory_number, @tags, @location_id, @status, @description);";
-
+            string sql = "SELECT id FROM public.location";
             using var command = new NpgsqlCommand(sql, connection);
 
-            command.Parameters.AddWithValue("@name", equipment.Name);
-            command.Parameters.AddWithValue("@manufacturer", equipment.Manufacturer);
-            command.Parameters.AddWithValue("@type", equipment.Type);
-            command.Parameters.AddWithValue("@measurment_units", equipment.Units);
-            command.Parameters.AddWithValue("@accuracy_class", equipment.AccuracyClass);
-            command.Parameters.AddWithValue("@measurment_limit", equipment.Limit);
-            command.Parameters.AddWithValue("@serial_number", equipment.FactoryNumber);
-            command.Parameters.AddWithValue("@inventory_number", equipment.RegistrationNumber);
-            command.Parameters.AddWithValue("@tags", equipment.Tags);
-            command.Parameters.AddWithValue("@location_id", locationId);
-            command.Parameters.AddWithValue("@status", equipment.Status);
-            command.Parameters.AddWithValue("@description", equipment.Description);
+            var list = new List<int>();
 
-            command.ExecuteNonQuery();
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(reader.GetInt32(0));
+                }
 
+                foreach (var data in list)
+                {
+                    Debug.WriteLine($"Получено id локации:{data}");
+                }
+
+            }
             connection.Close();
+            return list;
         }
 
+        public static string HashPassword(string password)
+        {
+            var pbkdf2 = new Rfc2898DeriveBytes(password, Encoding.UTF8.GetBytes(_storedSalt), 10000);
+            byte[] hash = pbkdf2.GetBytes(20);
+            return Convert.ToBase64String(hash);
+        }
 
-        public static void AddNewDelivery(Delivery delivery)
+        public static bool IsPasswordCorrect()
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.password_hash = @passwordHash AND employee.username = @username) AS subquery;";
+            using var command = new NpgsqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@username", Username);
+            command.Parameters.AddWithValue("@passwordHash", HashPassword(Password));
+
+            Debug.WriteLine($"Хэш для {Password} = {HashPassword(Password)}");
+
+            int? count = (int?)(long?)command.ExecuteScalar();
+
+            connection.Close();
+
+            return count == 1;
+        }
+
+        public static bool IsUsernameCorrect()
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.username = @username) AS subquery;";
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@username", Username);
+
+            int? count = (int?)(long?)command.ExecuteScalar();
+
+            connection.Close();
+            return count == 1;
+        }
+
+        public static void Login()
+        {
+            TryConnectToserver();
+            if (!IsUsernameCorrect())
+            {
+                throw new InvalidUsernameException();
+            }
+            if (!IsPasswordCorrect())
+            {
+                throw new InvalidPasswordException();
+            }
+            SetCurrentSessionEmployeeId();
+            CloseSession(); //УДАЛИТЬ ПОСЛЕ ВЫПУСКА!!!.
+            CreateNewSession();
+        }
+
+        public static void RemoveEmployee(Employee employee)
         {
             throw new NotImplementedException();
         }
 
-        public static void AddNewEmployee(Employee employee, string password)
+        public static void RemoveEquipment(Equipment equipment)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string query = "INSERT INTO public.employee (fullname, email, username, password_hash) VALUES(@name, @email, @username, @password) RETURNING id;";
-
-            using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@name", employee.Fullname);
-            command.Parameters.AddWithValue("@email", employee.Email);
-            command.Parameters.AddWithValue("@username", employee.Username);
-            command.Parameters.AddWithValue("@password", HashPassword(password));
-
-            employee.Id = (int)command.ExecuteScalar();
-
-            Debug.WriteLine($"Успешно вставлено: Id: {employee.Id}, Name: {employee.Fullname}");
-
-            connection.Close();
-        }
-
-        public static void AddNewLocation(Location location)
-        {
-            if (location.Name == string.Empty)
-            {
-                throw new ArgumentNullException(nameof(location));
-            }
-
-            using var connection = new NpgsqlConnection(ConnectionString);
-            connection.Open();
-
-            string query = "INSERT INTO public.location (name) VALUES (@name)";
-
-            using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@name", location.Name);
-            command.ExecuteNonQuery();
-
-            Debug.WriteLine($"Успешно вставлено: Id: {location.Id}, Name: {location.Name}");
-
-            connection.Close();
-        }
-
-        public static void UpdateEquipmentData(Equipment equipment, int locationId)
-        {
-            using var connection = new NpgsqlConnection(ConnectionString);
-            connection.Open();
-
-            string sql = "UPDATE public.equipment SET \"name\" = @name, manufacturer = @manufacturer, \"type\" = @type, measurment_units = @measurment_units, accuracy_class = @accuracy_class, measurment_limit = @measurment_limit, serial_number = @serial_number, inventory_number = @inventory_number, tags = @tags, location_id = @location_id, status = @status, description = @description WHERE id = @id;";
+            string sql = "DELETE FROM public.equipment WHERE id = @id;";
 
             using var command = new NpgsqlCommand(sql, connection);
 
             command.Parameters.AddWithValue("@id", equipment.Id);
-            command.Parameters.AddWithValue("@name", equipment.Name);
-            command.Parameters.AddWithValue("@manufacturer", equipment.Manufacturer);
-            command.Parameters.AddWithValue("@type", equipment.Type);
-            command.Parameters.AddWithValue("@measurment_units", equipment.Units);
-            command.Parameters.AddWithValue("@accuracy_class", equipment.AccuracyClass);
-            command.Parameters.AddWithValue("@measurment_limit", equipment.Limit);
-            command.Parameters.AddWithValue("@serial_number", equipment.FactoryNumber);
-            command.Parameters.AddWithValue("@inventory_number", equipment.RegistrationNumber);
-            command.Parameters.AddWithValue("@tags", equipment.Tags);
-            command.Parameters.AddWithValue("@location_id", locationId);
-            command.Parameters.AddWithValue("@status", equipment.Status);
-            command.Parameters.AddWithValue("@description", equipment.Description);
 
             command.ExecuteNonQuery();
 
             connection.Close();
         }
 
-        public static void UpdateEquipmentData(ref List<Equipment> equipment)
+        public static void TryConnectToserver()
         {
-            throw new NotImplementedException();
+            using var conection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                conection.Open();
+                conection.Close();
+            }
+            catch (Exception ex)
+            {
+                throw new ConnectionFailedException(ex.Message);
+            }
         }
 
         public static void UpdateEmployeeData(Employee employee, string? newPassword = null)
@@ -611,78 +563,134 @@ namespace EMAS.Service.Connection
             connection.Close();
         }
 
-        public static void RemoveEquipment(Equipment equipment)
+        public static void UpdateEquipmentData(Equipment equipment, int locationId)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = "DELETE FROM public.equipment WHERE id = @id;";
+            string sql = "UPDATE public.equipment SET \"name\" = @name, manufacturer = @manufacturer, \"type\" = @type, measurment_units = @measurment_units, accuracy_class = @accuracy_class, measurment_limit = @measurment_limit, serial_number = @serial_number, inventory_number = @inventory_number, tags = @tags, location_id = @location_id, status = @status, description = @description WHERE id = @id;";
 
             using var command = new NpgsqlCommand(sql, connection);
 
             command.Parameters.AddWithValue("@id", equipment.Id);
+            command.Parameters.AddWithValue("@name", equipment.Name);
+            command.Parameters.AddWithValue("@manufacturer", equipment.Manufacturer);
+            command.Parameters.AddWithValue("@type", equipment.Type);
+            command.Parameters.AddWithValue("@measurment_units", equipment.Units);
+            command.Parameters.AddWithValue("@accuracy_class", equipment.AccuracyClass);
+            command.Parameters.AddWithValue("@measurment_limit", equipment.Limit);
+            command.Parameters.AddWithValue("@serial_number", equipment.FactoryNumber);
+            command.Parameters.AddWithValue("@inventory_number", equipment.RegistrationNumber);
+            command.Parameters.AddWithValue("@tags", equipment.Tags);
+            command.Parameters.AddWithValue("@location_id", locationId);
+            command.Parameters.AddWithValue("@status", equipment.Status);
+            command.Parameters.AddWithValue("@description", equipment.Description);
 
             command.ExecuteNonQuery();
 
             connection.Close();
         }
 
-        public static void RemoveEmployee(Employee employee)
+        public static void UpdateEquipmentData(ref List<Equipment> equipment)
         {
             throw new NotImplementedException();
         }
 
-        public static List<string> GetDistinctValues(string columnName)
+        private static void CreateNewSession()
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
 
-            string sql = $"SELECT DISTINCT {columnName} FROM public.equipment;";
+            string query = "INSERT INTO \"session\".active_session (employee_id) VALUES (@employeeId) ";
+
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+            command.ExecuteNonQuery();
+
+            connection.Close();
+
+            Debug.WriteLine($"Успешно установлена сессия в базе данных для сотрудника с Id = {CurrentEmployeeId}");
+        }
+        private static Dictionary<int, List<string>> GetCurrentSessionPermissions()
+        {
+            Dictionary<int, List<string>> permissions = [];
+
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT location_id FROM \"permission\".employee_permissions " +
+                         "JOIN \"permission\".permission_type.name ON permission_type.id = permission_type " +
+                         "WHERE employee_id = @employeeId ";
+
 
             using var command = new NpgsqlCommand(sql, connection);
-
-            var list = new List<string>();
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
 
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    list.Add(reader.GetString(0));
+                    int locationId = reader.GetInt32(0);
+                    string permissionType = reader.GetString(1);
+
+                    if (!permissions.TryGetValue(locationId, out List<string>? value))
+                    {
+                        value = [];
+                        permissions[locationId] = value;
+                    }
+                    value.Add(permissionType);
                 }
+            }
+            connection.Close();
+            return permissions;
+        }
+
+        private static Employee GetEmployeeInfoById(int employeeId)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static bool IsCurrentSessionAdmin()
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT COUNT(employee_id) FROM \"permission\".\"admin\" WHERE employee_id = @employeeId";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+
+            long count = (long)command.ExecuteScalar();
+
+            connection.Close();
+            return count > 0;
+        }
+
+        private static void SetCurrentSessionEmployeeId()
+        {
+            if (!IsUsernameCorrect())
+            {
+                throw new InvalidUsernameException();
+            }
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string query = "SELECT id FROM public.employee WHERE employee.username = @username";
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@username", Username);
+
+            int? EmployeeId = (int?)command.ExecuteScalar();
+
+            if (EmployeeId == null)
+            {
+                throw new ArgumentNullException(nameof(EmployeeId));
+            }
+            else
+            {
+                CurrentEmployeeId = (int)EmployeeId;
             }
 
             connection.Close();
-            return list;
-        }
-
-        public static List<string> GetDistincEquipmentNames()
-        {
-            return GetDistinctValues("\"name\"");
-        }
-
-        public static List<string> GetDistincEquipmentTypes()
-        {
-            return GetDistinctValues("\"type\"");
-        }
-
-        public static List<string> GetDistincEquipmentMeasurmentUnits()
-        {
-            return GetDistinctValues("measurment_units");
-        }
-
-        public static List<string> GetDistincEquipmentAccuracyClasses()
-        {
-            return GetDistinctValues("accuracy_class");
-        }
-
-        public static List<string> GetDistincEquipmentMeasurmentLimits()
-        {
-            return GetDistinctValues("measurment_limit");
-        }
-
-        public static List<string> GetDistincEquipmentManufacturers()
-        {
-            return GetDistinctValues("manufacturer");
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using EMAS.Service.Connection;
-using EMAS.View;
+﻿using EMAS.ViewModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,16 +19,29 @@ namespace EMAS
     {
         public MainWindow()
         {
-            AdminWindow adminWindow = new AdminWindow();
-            adminWindow.Show();
             InitializeComponent();
+            AuthorizationVM dataContext = (AuthorizationVM)this.DataContext;
+            dataContext.LoginFailed += ShowErrorMessage;
+            dataContext.LoginSucceeded += OpenMainMenu;
+        }
+
+        private void OpenMainMenu()
+        {
+            MainMenu mainMenu = new();
+            mainMenu.Show();
+            this.Close();
+        }
+
+        private void ShowErrorMessage(string obj)
+        {
+            MessageBox.Show(obj, "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
             if (this.DataContext != null)
-            { 
-                ((dynamic)this.DataContext).Password = ((PasswordBox)sender).Password; 
+            {
+                ((dynamic)this.DataContext).Password = ((PasswordBox)sender).Password;
             }
         }
     }

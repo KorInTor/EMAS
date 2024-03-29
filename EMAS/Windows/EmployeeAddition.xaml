@@ -12,11 +12,12 @@
     </Window.DataContext>
     <StackPanel VerticalAlignment="Bottom">
         <Label Content="Полное имя"/>
-        <TextBox Text="{Binding Fullname}"/>
+        <TextBox Text="{Binding NewEmployee.Fullname, UpdateSourceTrigger=PropertyChanged}"/>
         <Label Content="E-Mail"/>
-        <TextBox Text="{Binding Email}"/>
+        <TextBox Text="{Binding NewEmployee.Email, UpdateSourceTrigger=PropertyChanged}"/>
         <Label Content="Имя пользователся для входа"/>
-        <TextBox Text="{Binding Username}"/>
+        <TextBox Text="{Binding NewEmployee.Username, UpdateSourceTrigger=PropertyChanged}"/>
+        
         <Button Content="Добавить" Margin="3,3,3,3" Command="{Binding ConfirmAddition, Mode=OneWay}"/>
     </StackPanel>
 </Window>

@@ -1,80 +1,58 @@
-﻿using EMAS.Model;
-using EMAS.Service.Command;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using EMAS.Model;
 using EMAS.Service.Connection;
 using EMAS.Service.Security;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows;
-using System.Windows.Input;
 
 namespace EMAS.ViewModel
 {
-    public class EmployeeAdditionVM
+    public partial class EmployeeAdditionVM : ObservableObject
     {
-        private string _fullname;
-        private string _email;
-        private string _username;
-        private RelayCommand _confirmAddition;
+        public event Action<string> AdditionFailed;
+        public event Action<string,string> AdditionSucceeded;
 
-        public RelayCommand ConfirmAddition
-        {
-            get
-            {
-                return _confirmAddition ??= new RelayCommand(param=>AddNewEmployee());
-            }
-        }
+        [ObservableProperty]
+        private Employee _newEmployee = new();
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(ConfirmAddition))]
+        private bool _canAddEmployee;
+
+        public RelayCommand ConfirmAddition { get; set; }
 
         public void AddNewEmployee()
         {
-            if (Fullname == string.Empty || Email == string.Empty || Username == string.Empty)
+            if (NewEmployee.Fullname == string.Empty || NewEmployee.Email == string.Empty || NewEmployee.Username == string.Empty)
             {
-                MessageBox.Show("Не все поля заполнены.", "Внимание!", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                AdditionFailed?.Invoke("Не все поля заполнены.");
                 return;
             }
+
             string password = PasswordGenerator.RandomString(10);
-            DataBaseClient.AddNewEmployee(new Employee(Fullname,Email,Username), password);
-            Clipboard.SetText(password);
-            MessageBox.Show($"Добавление успешно!\r\nПароль сотрудника в вашем буфере обмена.", "Успешно.", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        public string Fullname
-        {
-            get
+
+            try
             {
-                return _fullname;
+                DataBaseClient.AddNewEmployee(NewEmployee, password);
             }
-            set
+            catch (Exception ex)
             {
-                _fullname = value;
+                AdditionFailed?.Invoke(ex.Message);
             }
+            AdditionSucceeded?.Invoke("Добавление успешно!\r\nПароль сотрудника в вашем буфере обмена.",password);
         }
 
-        public string Email
+        public EmployeeAdditionVM()
         {
-            get
-            {
-                return _email;
-            }
-            set
-            {
-                _email = value;
-            }
+            ConfirmAddition = new RelayCommand(AddNewEmployee, () => CanAddEmployee);
+            NewEmployee.PropertyChanged += OnNewEmployeePropertyChanged;
         }
 
-        public string Username
+        private void OnNewEmployeePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            get
-            {
-                return _username;
-            }
-            set
-            {
-                _username = value;
-            }
+            CanAddEmployee = !(NewEmployee.Fullname == string.Empty || NewEmployee.Username == string.Empty || NewEmployee.Email == string.Empty);
         }
-
-        public EmployeeAdditionVM() { }
     }
 }

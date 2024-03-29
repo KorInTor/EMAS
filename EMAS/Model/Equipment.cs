@@ -1,5 +1,7 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +11,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about equipment.
     /// </summary>
-    public class Equipment : IEquatable<Equipment>
+    public class Equipment : ObservableObject, IEquatable<Equipment>
     {
         /// <summary>
         /// Unique id of Equipment.
@@ -72,6 +74,8 @@ namespace EMAS.Model
         /// </summary>
         private List<string> _tags;
 
+        public Equipment(){ }
+
         public Equipment(string status, string registrationNumber, string description)
         {
             Status = status;
@@ -101,14 +105,8 @@ namespace EMAS.Model
         /// </summary>
         public List<string> Tags
         {
-            get
-            {
-                return _tags;
-            }
-            set
-            {
-                _tags = value;
-            }
+            get => _tags;
+            set => SetProperty(ref _tags, value);
         }
 
         /// <summary>
@@ -116,14 +114,8 @@ namespace EMAS.Model
         /// </summary>
         public string Status
         {
-            get
-            {
-                return _status;
-            }
-            set
-            {
-                _status = value;
-            }
+            get => _status;
+            set => SetProperty(ref _status, value);
         }
 
         /// <summary>
@@ -131,14 +123,8 @@ namespace EMAS.Model
         /// </summary>
         public string RegistrationNumber
         {
-            get
-            {
-                return _registrationNumber;
-            }
-            set
-            {
-                _registrationNumber = value;
-            }
+            get => _registrationNumber;
+            set => SetProperty(ref _registrationNumber, value);
         }
 
         /// <summary>
@@ -146,14 +132,8 @@ namespace EMAS.Model
         /// </summary>
         public string Description
         {
-            get
-            {
-                return _description;
-            }
-            set
-            {
-                _description = value;
-            }
+            get => _description;
+            set => SetProperty(ref _description, value);
         }
 
         /// <summary>
@@ -161,14 +141,8 @@ namespace EMAS.Model
         /// </summary>
         public string? AccuracyClass
         {
-            get
-            {
-                return _accuracyClass;
-            }
-            set
-            {
-                _accuracyClass = value;
-            }
+            get => _accuracyClass;
+            set => SetProperty(ref _accuracyClass, value);
         }
 
         /// <summary>
@@ -176,14 +150,8 @@ namespace EMAS.Model
         /// </summary>
         public string Units
         {
-            get
-            {
-                return _units ?? string.Empty;
-            }
-            private set
-            {
-                _units = value;
-            }
+            get => _units;
+            set => SetProperty(ref _units, value);
         }
 
         /// <summary>
@@ -191,14 +159,8 @@ namespace EMAS.Model
         /// </summary>
         public string Limit
         {
-            get
-            {
-                return _limit ?? string.Empty;
-            }
-            set
-            {
-                _limit = value;
-            }
+            get => _limit;
+            set => SetProperty(ref _limit, value);
         }
 
         /// <summary>
@@ -206,14 +168,8 @@ namespace EMAS.Model
         /// </summary>
         public int Id
         {
-            get
-            {
-                return _id;
-            }
-            private set
-            {
-                _id = value;
-            }
+            get => _id;
+            set => SetProperty(ref _id, value);
         }
 
         /// <summary>
@@ -221,14 +177,8 @@ namespace EMAS.Model
         /// </summary>
         public string Name
         {
-            get
-            {
-                return _name;
-            }
-            private set
-            {
-                _name = value;
-            }
+            get => _name;
+            set => SetProperty(ref _name, value);
         }
 
         /// <summary>
@@ -236,14 +186,8 @@ namespace EMAS.Model
         /// </summary>
         public string Manufacturer
         {
-            get
-            {
-                return _manufacturer;
-            }
-            private set
-            {
-                _manufacturer = value;
-            }
+            get => _manufacturer;
+            set => SetProperty(ref _manufacturer, value);
         }
 
         /// <summary>
@@ -251,14 +195,8 @@ namespace EMAS.Model
         /// </summary>
         public string Type
         {
-            get
-            {
-                return _type;
-            }
-            private set
-            {
-                _type = value;
-            }
+            get => _type;
+            set => SetProperty(ref _type, value);
         }
 
         /// <summary>
@@ -266,14 +204,8 @@ namespace EMAS.Model
         /// </summary>
         public string FactoryNumber
         {
-            get
-            {
-                return _factoryNumber;
-            }
-            private set
-            {
-                _factoryNumber = value;
-            }
+            get => _factoryNumber;
+            set => SetProperty(ref _factoryNumber, value);
         }
 
         public bool Equals(Equipment? other)

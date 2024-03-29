@@ -26,7 +26,7 @@ namespace EMAS.Service.Connection
         /// <summary>
         /// Invokes when equipment data in location has updated.
         /// </summary>
-        public static event HandleDataChange? DataChanged;
+        public event HandleDataChange? DataChanged;
 
         /// <summary>
         /// CancelationToken for stoping listeners.
@@ -91,7 +91,7 @@ namespace EMAS.Service.Connection
         {
             using var connection = new NpgsqlConnection(ConnectionOptions.ConnectionString);
             connection.Open();
-            string sql = "SELECT hash FROM public.location_data_change WHERE location_id=@id;";
+            string sql = "SELECT last_change_time FROM public.location_data_change WHERE location_id=@id;";
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("@id", locationId);
             do
@@ -101,12 +101,21 @@ namespace EMAS.Service.Connection
                     break;
                 }
                 
-                DateTimeOffset dateTimeOffset = (DateTimeOffset)command.ExecuteScalar();
+                if(command.ExecuteScalar() == null)
+                {
+                    Debug.WriteLine($"Нет последнего времени обновления для локации {locationId}");
+                    return;
+                }
 
-                DateTime localChangeTime = dateTimeOffset.DateTime.ToLocalTime();
+                DateTime dateTimeOffset = (DateTime)command.ExecuteScalar();
+
+                DateTime localChangeTime = dateTimeOffset.ToLocalTime();
+
+                Debug.WriteLine($"Получили последнее время при обновлении: {localChangeTime}");
 
                 if (localChangeTime != lastModificationTimes[locationId])
                 {
+                    Debug.WriteLine("Время поменялось!");
                     lastModificationTimes[locationId] = localChangeTime;
                     DataChanged?.Invoke(locationId);
                 }

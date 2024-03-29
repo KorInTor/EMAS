@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EMAS.ViewModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,19 @@ namespace EMAS.View.Control
         public LocationControl()
         {
             InitializeComponent();
+            LocationControlVM locationControlVM = (LocationControlVM)DataContext;
+            locationControlVM.AdditionConfirmed += OpenSuccesfullAdditionMessage;
+            locationControlVM.AdditionFailed += OpenFailesAdditionMessage;
+        }
+
+        private void OpenFailesAdditionMessage(string message)
+        {
+            MessageBox.Show(message, "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void OpenSuccesfullAdditionMessage(string message)
+        {
+            MessageBox.Show(message, "Успех!", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

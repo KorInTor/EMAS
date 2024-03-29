@@ -1,300 +1,93 @@
-﻿using EMAS.Model;
-using EMAS.Service.Command;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using EMAS.Model;
 using EMAS.Service.Connection;
-using EMAS.Events;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Windows.Input;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace EMAS.ViewModel
 {
-    public class EquipmentVM : INotifyPropertyChanged
+    public partial class EquipmentVM : ObservableObject
     {
-        private List<Equipment> _sourceEquipmentList;
+        public event Action<int> HistoryWindowRequested;
+        public event Action<int> AdditionWindowRequested;
 
-        private ObservableCollection<Equipment> _filteredEquipmnetList;
+        public int CurrentLocationId { get; private set; }
 
-        private string _nameFilter;
-
-        private string _descriptionFilter;
-
-        private string _typeFilter;
-
-        private string _idFilter;
-
-        private string _unitsFilter;
-
-        private string _limitFilter;
-
+        [ObservableProperty]
         private string _accuracyClassFilter;
 
-        private string _manufacturerFilter;
-
-        private string _inventoryNumberFilter;
-
-        private string _serialNumberFilter;
-
-        private string _statusFilter;
-
+        [ObservableProperty]
         private RelayCommand _clearFiltersCommand;
+
+        [ObservableProperty]
         private RelayCommand _openHistoryWindowCommand;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        [ObservableProperty]
+        private RelayCommand _openAdditionWindow;
 
-        public RelayCommand ClearFiltersCommand => _clearFiltersCommand ??= new RelayCommand(param => ClearFilters());
+        [ObservableProperty]
+        private string _descriptionFilter;
 
-        public RelayCommand OpenHistoryWindowCommand => _openHistoryWindowCommand ??= new RelayCommand(OpenHistoryWindow);
+        [ObservableProperty]
+        private ObservableCollection<Equipment> _filteredEquipmnetList;
 
-        public List<string> GetAllTypes
-        {
-            get
-            {
-                return SourceEquipmentList.Select(eq => eq.Type).Distinct().ToList();
-            }
-        }
+        [ObservableProperty]
+        private string _idFilter;
 
-        public List<string> GetAllUnits
-        {
-            get
-            {
-                return SourceEquipmentList.Select(eq => eq.Units).Distinct().ToList();
-            }
-        }
+        [ObservableProperty]
+        private string _inventoryNumberFilter;
 
-        public List<string> GetAllLimits
-        {
-            get
-            {
-                return SourceEquipmentList.Select(eq => eq.Limit).Distinct().ToList();
-            }
-        }
+        [ObservableProperty]
+        private string _limitFilter;
 
-        public List<string> GetAllAccuracyClasses
-        {
-            get
-            {
-                return SourceEquipmentList.Select(eq => eq.AccuracyClass).Distinct().ToList();
-            }
-        }
+        [ObservableProperty]
+        private string _manufacturerFilter;
 
-        public List<string> GetAllStatuses
-        {
-            get
-            {
-                return SourceEquipmentList.Select(eq => eq.Status).Distinct().ToList();
-            }
-        }
+        [ObservableProperty]
+        private string _nameFilter;
 
-        public string NameFilter
-        {
-            get
-            {
-                return _nameFilter;
-            }
-            set
-            {
-                if (_nameFilter == value) 
-                    return;
-                _nameFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NameFilter)));
-                FilterEquipment();
-            }
-        }
+        [ObservableProperty]
+        private string _serialNumberFilter;
 
-        public string DescriptionFilter
-        {
-            get
-            {
-                return _descriptionFilter;
-            }
-            set
-            {
-                if (_descriptionFilter == value) 
-                    return;
-                _descriptionFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DescriptionFilter)));
-                FilterEquipment();
-            }
-        }
+        [ObservableProperty]
+        private List<Equipment> _sourceEquipmentList;
 
-        public string TypeFilter
-        {
-            get
-            {
-                return _typeFilter;
-            }
-            set
-            {
-                if (_typeFilter == value) 
-                    return;
-                _typeFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TypeFilter)));
-                FilterEquipment();
-            }
-        }
+        [ObservableProperty]
+        private string _statusFilter;
 
-        public string IdFilter
-        {
-            get
-            {
-                return _idFilter;
-            }
-            set
-            {
-                if (_idFilter == value) 
-                    return;
-                _idFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IdFilter)));
-                FilterEquipment();
-            }
-        }
+        [ObservableProperty]
+        private string _typeFilter;
 
-        public string UnitsFilter
-        {
-            get
-            {
-                return _unitsFilter;
-            }
-            set
-            {
-                if (_unitsFilter == value) 
-                    return;
-                _unitsFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UnitsFilter)));
-                FilterEquipment();
-            }
-        }
+        [ObservableProperty]
+        private string _unitsFilter;
 
-        public string LimitFilter
-        {
-            get
-            {
-                return _limitFilter;
-            }
-            set
-            {
-                if (_limitFilter == value) 
-                    return;
-                _limitFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LimitFilter)));
-                FilterEquipment();
-            }
-        }
-
-        public string AccuracyClassFilter
-        {
-            get
-            {
-                return _accuracyClassFilter;
-            }
-            set
-            {
-                if (_accuracyClassFilter == value) 
-                    return;
-                _accuracyClassFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AccuracyClassFilter)));
-                FilterEquipment();
-            }
-        }
-
-        public string ManufacturerFilter
-        {
-            get
-            {
-                return _manufacturerFilter;
-            }
-            set
-            {
-                if (_manufacturerFilter == value) 
-                    return;
-                _manufacturerFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ManufacturerFilter)));
-                FilterEquipment();
-            }
-        }
-
-        public string InventoryNumberFilter
-        {
-            get
-            {
-                return _inventoryNumberFilter;
-            }
-            set
-            {
-                if (_inventoryNumberFilter == value) 
-                    return;
-                _inventoryNumberFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InventoryNumberFilter)));
-                FilterEquipment();
-            }
-        }
-
-        public string SerialNumberFilter
-        {
-            get
-            {
-                return _serialNumberFilter;
-            }
-            set
-            {
-                if (_serialNumberFilter == value) 
-                    return;
-                _serialNumberFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SerialNumberFilter)));
-                FilterEquipment();
-            }
-        }
-
-        public string StatusFilter
-        {
-            get
-            {
-                return _statusFilter;
-            }
-            set
-            {
-                if (_statusFilter == value)
-                    return;
-                _statusFilter = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StatusFilter)));
-                FilterEquipment();
-            }
-        }
-
-        public List<Equipment> SourceEquipmentList
-        {
-            get
-            {
-                return _sourceEquipmentList;
-            }
-            set
-            {
-                _sourceEquipmentList = value;
-                FilteredEquipmnetList = new ObservableCollection<Equipment>(value);
-            }
-        }
-
-        public ObservableCollection<Equipment> FilteredEquipmnetList
-        {
-            get
-            {
-                return _filteredEquipmnetList;
-            }
-            set
-            {
-                _filteredEquipmnetList = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FilteredEquipmnetList)));
-            }
-        }
-
-        public ObservableCollection<Tool> AllowedTools
-        {
-            get;
-        }
+        [ObservableProperty]
+        private Equipment _selectedEquipment;
 
         public EquipmentVM()
         {
-            SourceEquipmentList = [];
+            ClearFiltersCommand = new RelayCommand(ClearFilters);
+            OpenHistoryWindowCommand = new RelayCommand(RequestHistoryWindow);
+            OpenAdditionWindow = new RelayCommand(RequestAdditionWindow);
+        }
+
+        public EquipmentVM(int locationId)
+        {
+            CurrentLocationId = locationId;
+            SourceEquipmentList = DataBaseClient.GetEquipmentOnLocation(locationId);
+            ClearFiltersCommand = new RelayCommand(ClearFilters);
+            OpenHistoryWindowCommand = new RelayCommand(RequestHistoryWindow);
+            OpenAdditionWindow = new RelayCommand(RequestAdditionWindow);
+        }
+
+        private void RequestAdditionWindow()
+        {
+            AdditionWindowRequested?.Invoke(CurrentLocationId);
         }
 
         public void FilterEquipment()
@@ -318,7 +111,6 @@ namespace EMAS.ViewModel
             FilteredEquipmnetList = new ObservableCollection<Equipment>(filteredList);
         }
 
-
         private void ClearFilters()
         {
             NameFilter = string.Empty;
@@ -333,9 +125,14 @@ namespace EMAS.ViewModel
             SerialNumberFilter = string.Empty;
         }
 
-        private void OpenHistoryWindow(object data)
+        partial void OnSourceEquipmentListChanged(List<Equipment> value)
         {
-            throw new NotImplementedException();
+            FilteredEquipmnetList = new ObservableCollection<Equipment>(value);
+        }
+
+        private void RequestHistoryWindow()
+        {
+            HistoryWindowRequested?.Invoke(SelectedEquipment.Id);
         }
     }
 }
