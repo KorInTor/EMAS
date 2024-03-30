@@ -31,7 +31,12 @@ namespace EMAS.Model
         /// <summary>
         /// Stores destination <see cref="Location"/> id.
         /// </summary>
-        private int? _destinationId;
+        private int _destinationId;
+
+        /// <summary>
+        /// Stores departure <see cref="Location"/> id.
+        /// </summary>
+        private int _departureId;
 
         /// <summary>
         /// 
@@ -64,10 +69,19 @@ namespace EMAS.Model
         /// <summary>
         /// Returns destination <see cref="Location"/> id. Or null if delivery is InGoing.
         /// </summary>
-        public int? DestinationId
+        public int DestinationId
         {
             get => _destinationId;
             set => SetProperty(ref _destinationId, value);
+        }
+
+        /// <summary>
+        /// Returns destination <see cref="Location"/> id. Or null if delivery is InGoing.
+        /// </summary>
+        public int DepartureId
+        {
+            get => _departureId;
+            set => SetProperty(ref _departureId, value);
         }
 
         /// <summary>
@@ -82,14 +96,16 @@ namespace EMAS.Model
 
         }
 
-        public Delivery(DateTime date, int destinationId, Equipment equipment)
+        public Delivery(long dispatchEventId,int departureId ,int destinationId, DateTime date, Equipment equipment)
         {
+            EventDispatchId = dispatchEventId;
+
             DispatchDate = date;
 
-            this.Equipment = equipment;
+            Equipment = equipment;
 
-            this.DestinationId = destinationId;
-
+            DestinationId = destinationId;
+            DepartureId = departureId;
         }
 
         public Delivery()
