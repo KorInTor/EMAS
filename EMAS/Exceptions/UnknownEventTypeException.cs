@@ -3,7 +3,7 @@
 namespace EMAS.Exceptions
 {
     [Serializable]
-    internal class UnknownEventTypeException : Exception
+    public class UnknownEventTypeException : Exception
     {
         public UnknownEventTypeException()
         {

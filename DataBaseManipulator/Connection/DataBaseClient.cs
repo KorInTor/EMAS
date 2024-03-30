@@ -1,6 +1,7 @@
 ﻿using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.HistoryEntry;
+using EMAS.Service.Connection;
 using Npgsql;
 using System.Collections.Generic;
 using System.Diagnostics;

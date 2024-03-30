@@ -13,7 +13,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
-        <DataGrid ItemsSource="{Binding FilteredEquipmnetList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedEquipment}">
+        <DataGrid ItemsSource="{Binding FilteredEquipmentList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedEquipment}">
             <DataGrid.ContextMenu>
                 <ContextMenu ItemsSource="{Binding}">
                     <ContextMenu.ItemContainerStyle>
@@ -47,7 +47,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Name="ViewHistoryButton" Content="Просмотр" 
-                                Command="{Binding DataContext.OpenHistoryWindowCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EquipmentControl}}}" />
+                        Command="{Binding DataContext.OpenHistoryWindowCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EquipmentControl}}}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -75,25 +75,26 @@
                 <Label Content="Фильтрация значений" Grid.Row="0" Grid.ColumnSpan="10"/>
 
                 <Label Content="Поиск по Id:" Grid.Row="1" Grid.Column="0"/>
-                <TextBox Text="{Binding IdFilter}" Grid.Row="1" Grid.Column="1"/>
+                <TextBox Text="{Binding DesiredEquipment.Id, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1"/>
                 <Label Content="Марка:" Grid.Row="2" Grid.Column="0"/>
-                <TextBox Text="{Binding NameFilter}" Grid.Row="2" Grid.Column="1"/>
+                <TextBox Text="{Binding DesiredEquipment.Name, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1"/>
                 <Label Content="Тип:" Grid.Row="3" Grid.Column="0"/>
-                <ComboBox ItemsSource="{Binding GetAllTypes}" SelectedItem="{Binding TypeFilter}" Grid.Row="3" Grid.Column="1"/>
+                <ComboBox ItemsSource="{Binding GetAllTypes}" Text="{Binding DesiredEquipment.Type, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1" IsEditable="True"/>
                 <Label Content="Заводской номер:" Grid.Row="4" Grid.Column="0"/>
-                <TextBox Text="{Binding SerialNumberFilter}" Grid.Row="4" Grid.Column="1"/>
+                <TextBox Text="{Binding DesiredEquipment.FactoryNumber, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1"/>
                 <Label Content="Инвентарный номер:" Grid.Row="5" Grid.Column="0"/>
-                <TextBox Text="{Binding InventoryNumberFilter}" Grid.Row="5" Grid.Column="1"/>
+                <TextBox Text="{Binding DesiredEquipment.RegistrationNumber, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1"/>
                 <Label Content="Статус:" Grid.Row="6" Grid.Column="0"/>
-                <ComboBox ItemsSource="{Binding GetAllStatuses}" SelectedItem="{Binding StatusFilter}" Grid.Row="6" Grid.Column="1"/>
+                <ComboBox ItemsSource="{Binding GetAllStatuses}" Text="{Binding DesiredEquipment.Status, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEditable="True"/>
 
                 <Label Content="Единицы измерений:" Grid.Row="1" Grid.Column="2"/>
-                <ComboBox ItemsSource="{Binding GetAllUnits}" SelectedItem="{Binding UnitsFilter}" Grid.Row="1" Grid.Column="3"/>
+                <ComboBox ItemsSource="{Binding GetAllUnits}" Text="{Binding DesiredEquipment.Units, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="3" IsEditable="True"/>
                 <Label Content="Пределы измерения:" Grid.Row="2" Grid.Column="2"/>
-                <ComboBox ItemsSource="{Binding GetAllLimits}" SelectedItem="{Binding LimitFilter}" Grid.Row="2" Grid.Column="3"/>
+                <ComboBox ItemsSource="{Binding GetAllLimits}" Text="{Binding DesiredEquipment.Limit, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="3" IsEditable="True"/>
                 <Label Content="Класс точности:" Grid.Row="3" Grid.Column="2"/>
-                <ComboBox ItemsSource="{Binding GetAllAccuracyClasses}" SelectedItem="{Binding AccuracyClassFilter}" Grid.Row="3" Grid.Column="3"/>
+                <ComboBox ItemsSource="{Binding GetAllAccuracyClasses}" Text="{Binding DesiredEquipment.AccuracyClass, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="3" IsEditable="True"/>
 
+                <!--Доавбить фильтр по тэгам-->
                 <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="10" Command="{Binding ClearFiltersCommand}"/>
                 <Button Content="Добавить" Grid.Column="0" Grid.Row="10" Command="{Binding OpenAdditionWindow}"/>
             </Grid>

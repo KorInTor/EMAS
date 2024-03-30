@@ -14,7 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace EMAS
+namespace EMAS.Windows
 {
     /// <summary>
     /// Логика взаимодействия для MainMenu.xaml

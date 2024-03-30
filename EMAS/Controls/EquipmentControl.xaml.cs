@@ -1,4 +1,5 @@
 ﻿using EMAS.ViewModel;
+using EMAS.Windows;
 using System.Diagnostics;
 using System.Windows.Controls;
 

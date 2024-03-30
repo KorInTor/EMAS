@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using EMAS.Controls;
 using EMAS.ViewModel;
 
-namespace EMAS
+namespace EMAS.Windows
 {
     /// <summary>
     /// Логика взаимодействия для EquipmentWindow.xaml

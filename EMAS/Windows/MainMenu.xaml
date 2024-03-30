@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:EMAS"
-        xmlns:ViewModel="clr-namespace:EMAS.ViewModel" x:Class="EMAS.MainMenu"
+        xmlns:local="clr-namespace:EMAS.Windows"
+        xmlns:ViewModel="clr-namespace:EMAS.ViewModel" x:Class="EMAS.Windows.MainMenu"
         mc:Ignorable="d"
         Title="MainMenu" Height="450" Width="800">
     <Window.Resources>
