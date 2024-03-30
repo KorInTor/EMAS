@@ -91,5 +91,12 @@ namespace EMAS.Model
             this.DestinationId = destinationId;
 
         }
+
+        public Delivery()
+        {
+            DispatchDate = DateTime.MinValue;
+
+            Equipment = new();
+        }
     }
 }
