@@ -118,7 +118,8 @@ namespace EMAS.Model
             this.Id = Id;
             this.Name = Name;
             Equipments = [];
-            Deliveries = [];
+            IncomingDeliveries = [];
+            OutgoingDeliveries = [];
         }
     }
 }
