@@ -21,17 +21,17 @@ namespace EMAS.Model
         /// <summary>
         /// Equipments that are currently in this site.
         /// </summary>
-        private List<Equipment>? _equipments;
+        private List<Equipment> _equipments;
 
         /// <summary>
-        /// Employees woring on this site.
+        /// List of Outgoing deliviries.
         /// </summary>
-        private List<Employee>? _employees;
+        private List<Delivery> _outgoingDeliviries;
 
         /// <summary>
-        /// List of Outgoing and Incoming deliviries.
+        /// List of Incoming deliviries.
         /// </summary>
-        private List<Delivery>? _deliviries;
+        private List<Delivery> _incomingDeliviries;
 
         /// <summary>
         /// Return unique id of this site.
@@ -79,32 +79,32 @@ namespace EMAS.Model
         }
 
         /// <summary>
-        /// Return and set list of Delivery on this site.
+        /// Return and set list of Delivery going from this site.
         /// </summary>
-        public List<Delivery> Deliveries
+        public List<Delivery> OutgoingDeliveries
         {
             get
             {
-                return _deliviries;
+                return _outgoingDeliviries;
             }
             set
             {
-                _deliviries = value;
+                _outgoingDeliviries = value;
             }
         }
 
         /// <summary>
-        /// Return and set list of Employees on this site.
+        /// Return and set list of Incoming Delivery to this site.
         /// </summary>
-        public List<Employee> Employees
+        public List<Delivery> IncomingDeliveries
         {
             get
             {
-                return _employees;
+                return _incomingDeliviries;
             }
             set
             {
-                _employees = value;
+                _incomingDeliviries = value;
             }
         }
 
@@ -117,8 +117,8 @@ namespace EMAS.Model
         {
             this.Id = Id;
             this.Name = Name;
-            Equipments = new List<Equipment>();
-            Deliveries = new List<Delivery>();
+            Equipments = [];
+            Deliveries = [];
         }
     }
 }
