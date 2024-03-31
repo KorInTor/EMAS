@@ -14,6 +14,8 @@ namespace EMAS.ViewModel
 {
     public partial class DeliveryControlVM : ObservableObject
     {
+        public event Action<long> DeliveryConfirmationRequested;
+
         [ObservableProperty]
         private ObservableCollection<Delivery> _filteredDeliveries;
 
@@ -35,11 +37,14 @@ namespace EMAS.ViewModel
         [ObservableProperty]
         private Delivery _desiredDelivery = new(); //Treat DateTime.MinValue as not setted for Filtration.
 
-        public RelayCommand CompleteDeliveryCommand { get; set; }
+        private bool _canUserChangeDelivery = false;
 
-        private static void ConfirmDelivery()
+        public RelayCommand ConfirmDeliveryCommand { get; set; }
+        public RelayCommand ClearFilterCommand { get; set; }
+
+        private void ConfirmDelivery()
         {
-            throw new NotImplementedException();
+            DeliveryConfirmationRequested?.Invoke(SelectedDelivery.EventDispatchId);
         }
 
         public DeliveryControlVM()
@@ -47,26 +52,32 @@ namespace EMAS.ViewModel
             DesiredDelivery.PropertyChanged += FilterDeliveries;
             DesiredDelivery.Equipment.PropertyChanged += FilterDeliveries;
 
-            CompleteDeliveryCommand = new RelayCommand(ConfirmDelivery, CanConfirmDelivery);
+            PropertyChanged += FilterDeliveries; //Need to find Better solution for catching IsIncomingSelected change and filter. Maybe use pointer to filtration source.
+
+            ConfirmDeliveryCommand = new RelayCommand(ConfirmDelivery, CanConfirmDelivery);
+            ClearFilterCommand = new RelayCommand(ClearFilters);
+        }
+
+        private void ClearFilters()
+        {
+            //No memory leaks on my duty @Danil.
+            DesiredDelivery.PropertyChanged -= FilterDeliveries;
+            DesiredDelivery.Equipment.PropertyChanged -= FilterDeliveries;
+
+            DesiredDelivery = new();
+
+            DesiredDelivery.PropertyChanged += FilterDeliveries;
+            DesiredDelivery.Equipment.PropertyChanged += FilterDeliveries;
         }
 
         private bool CanConfirmDelivery()
         {
-            return IsIncomingSelected && SelectedDelivery != null;
+            return IsIncomingSelected && SelectedDelivery is not null && _canUserChangeDelivery;
         }
 
-        private void FilterDeliveries(object? sender, PropertyChangedEventArgs e)
+        private void FilterDeliveries(object? sender, PropertyChangedEventArgs e) //Too bloated. Read SOLID and Refactor.
         {
-            List<Delivery> source;
-
-            if (IsIncomingSelected)
-            {
-                source = IncomingDeliveries;
-            }
-            else
-            {
-                source = OutgoingDeliveries;
-            }
+            List<Delivery> source = IsIncomingSelected ? IncomingDeliveries : OutgoingDeliveries;
 
             Debug.WriteLine($"Поменялось свойство фильтрации:{e.PropertyName}");
 
@@ -77,30 +88,60 @@ namespace EMAS.ViewModel
 
             if (sender is Equipment)
             {
-                filteredList = source.Where(delivery =>
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.Name) || delivery.Equipment.Name.Contains(DesiredDelivery.Equipment.Name)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.Description) || delivery.Equipment.Description.Contains(DesiredDelivery.Equipment.Description)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.Type) || delivery.Equipment.Type.Contains(DesiredDelivery.Equipment.Type)) &&
-                (DesiredDelivery.Equipment.Id == 0 || delivery.Equipment.Id == DesiredDelivery.Equipment.Id) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.Units) || delivery.Equipment.Units.Contains(DesiredDelivery.Equipment.Units)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.Limit) || delivery.Equipment.Limit.Contains(DesiredDelivery.Equipment.Limit)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.AccuracyClass) || delivery.Equipment.AccuracyClass.Contains(DesiredDelivery.Equipment.AccuracyClass)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.Manufacturer) || delivery.Equipment.Manufacturer.Contains(DesiredDelivery.Equipment.Manufacturer)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.RegistrationNumber) || delivery.Equipment.RegistrationNumber.Contains(DesiredDelivery.Equipment.RegistrationNumber)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.FactoryNumber) || delivery.Equipment.FactoryNumber.Contains(DesiredDelivery.Equipment.FactoryNumber)) &&
-                (string.IsNullOrEmpty(DesiredDelivery.Equipment.Status) || delivery.Equipment.Status.Contains(DesiredDelivery.Equipment.Status))
-                ).ToList();
+                var properties = new List<Func<Delivery, bool>>
+                {
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Name) || delivery.Equipment.Name.Contains(DesiredDelivery.Equipment.Name),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Description) || delivery.Equipment.Description.Contains(DesiredDelivery.Equipment.Description),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Type) || delivery.Equipment.Type.Contains(DesiredDelivery.Equipment.Type),
+                    delivery => DesiredDelivery.Equipment.Id == 0 || delivery.Equipment.Id == DesiredDelivery.Equipment.Id,
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Units) || delivery.Equipment.Units.Contains(DesiredDelivery.Equipment.Units),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Limit) || delivery.Equipment.Limit.Contains(DesiredDelivery.Equipment.Limit),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.AccuracyClass) || delivery.Equipment.AccuracyClass.Contains(DesiredDelivery.Equipment.AccuracyClass),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Manufacturer) || delivery.Equipment.Manufacturer.Contains(DesiredDelivery.Equipment.Manufacturer),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.RegistrationNumber) || delivery.Equipment.RegistrationNumber.Contains(DesiredDelivery.Equipment.RegistrationNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.FactoryNumber) || delivery.Equipment.FactoryNumber.Contains(DesiredDelivery.Equipment.FactoryNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Status) || delivery.Equipment.Status.Contains(DesiredDelivery.Equipment.Status)
+                };
+
+                filteredList = source.Where(delivery => properties.All(property => property(delivery))).ToList();
             }
             else if (sender is Delivery)
             {
-                filteredList = source.Where(delivery =>
-                (DesiredDelivery.EventDispatchId != 0 || delivery.EventDispatchId == DesiredDelivery.EventDispatchId) &&
-                (DesiredDelivery.DispatchDate != DateTime.MinValue || delivery.DispatchDate == DesiredDelivery.DispatchDate))
-                .ToList();
-            }
+                var properties = new List<Func<Delivery, bool>>
+                {
+                    delivery => DesiredDelivery.EventDispatchId == 0 || delivery.EventDispatchId == DesiredDelivery.EventDispatchId,
+                    delivery => DesiredDelivery.DispatchDate == DateTime.MinValue || delivery.DispatchDate == DesiredDelivery.DispatchDate,
+                    delivery => DesiredDelivery.DepartureId == 0 || delivery.DepartureId == DesiredDelivery.DepartureId,
+                    delivery => DesiredDelivery.DestinationId == 0 || delivery.DestinationId == DesiredDelivery.DestinationId
+                };
 
-            FilteredDeliveries = new ObservableCollection<Delivery>(filteredList);
+                filteredList = source.Where(delivery => properties.All(property => property(delivery))).ToList();
+            }
+            else if (sender is bool && e.PropertyName == nameof(IsIncomingSelected))
+            {
+                var properties = new List<Func<Delivery, bool>>
+                {
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Name) || delivery.Equipment.Name.Contains(DesiredDelivery.Equipment.Name),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Description) || delivery.Equipment.Description.Contains(DesiredDelivery.Equipment.Description),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Type) || delivery.Equipment.Type.Contains(DesiredDelivery.Equipment.Type),
+                    delivery => DesiredDelivery.Equipment.Id == 0 || delivery.Equipment.Id == DesiredDelivery.Equipment.Id,
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Units) || delivery.Equipment.Units.Contains(DesiredDelivery.Equipment.Units),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Limit) || delivery.Equipment.Limit.Contains(DesiredDelivery.Equipment.Limit),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.AccuracyClass) || delivery.Equipment.AccuracyClass.Contains(DesiredDelivery.Equipment.AccuracyClass),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Manufacturer) || delivery.Equipment.Manufacturer.Contains(DesiredDelivery.Equipment.Manufacturer),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.RegistrationNumber) || delivery.Equipment.RegistrationNumber.Contains(DesiredDelivery.Equipment.RegistrationNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.FactoryNumber) || delivery.Equipment.FactoryNumber.Contains(DesiredDelivery.Equipment.FactoryNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Status) || delivery.Equipment.Status.Contains(DesiredDelivery.Equipment.Status),
+
+                    delivery => DesiredDelivery.EventDispatchId == 0 || delivery.EventDispatchId == DesiredDelivery.EventDispatchId,
+                    delivery => DesiredDelivery.DispatchDate == DateTime.MinValue || delivery.DispatchDate == DesiredDelivery.DispatchDate,
+                    delivery => DesiredDelivery.DepartureId == 0 || delivery.DepartureId == DesiredDelivery.DepartureId,
+                    delivery => DesiredDelivery.DestinationId == 0 || delivery.DestinationId == DesiredDelivery.DestinationId
+                };
+                filteredList = source.Where(delivery => properties.All(property => property(delivery))).ToList();
+            }
         }
+
 
         partial void OnSelectedDispatchDateChanged(DateTime? value)
         {
@@ -116,12 +157,22 @@ namespace EMAS.ViewModel
 
         partial void OnSelectedDeliveryChanged(Delivery value)
         {
-            CompleteDeliveryCommand.NotifyCanExecuteChanged();
+            ConfirmDeliveryCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnIsIncomingSelectedChanged(bool value)
         {
-            CompleteDeliveryCommand.NotifyCanExecuteChanged();
+            ConfirmDeliveryCommand.NotifyCanExecuteChanged();
+        }
+
+        public void ChagneSourceList(List<Delivery> incomingDeliviries, List<Delivery> outgoingDeliviries, bool canChangeDelivery = false)
+        {
+            IncomingDeliveries = incomingDeliviries;
+            OutgoingDeliveries = outgoingDeliviries;
+
+            _canUserChangeDelivery = canChangeDelivery;
+
+            IsIncomingSelected = true;
         }
     }
 }
