@@ -1,6 +1,7 @@
 ﻿using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.HistoryEntry;
+using EMAS.ViewModel;
 using Npgsql;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,6 +20,8 @@ namespace EMAS.Service.Connection
         private static string _password = string.Empty;
 
         private static Dictionary<int, List<string>>? _permissions;
+
+        private static Dictionary<string, short> _eventTypes;
 
         private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
 
@@ -245,7 +248,133 @@ namespace EMAS.Service.Connection
 
         public static List<Delivery> GetDeliveryTo(int locationId)
         {
-            throw new NotImplementedException();
+            var deliveries = new List<Delivery>();
+
+            string query = "SELECT E.date, EqEvent.equipment_id, D.departure_id, D.dispatch_event_id " +
+                                "FROM \"event\".delivery AS D " +
+                                "JOIN FROM public.\"event\" AS E ON E.id = D.dispatch_id " +
+                                "JOIN FROM public.equipment_event AS EqEvent ON EqEvent.event_id = D.dispatch_id " +
+                                "WHERE D.arrival_event_id IS NULL AND D.destination_id = @locationId ";
+
+            using (var connection = new NpgsqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                using var cmd = new NpgsqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@locationId", locationId);
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    deliveries.Add(new Delivery(reader.GetInt64(3), locationId, reader.GetInt32(2), reader.GetDateTime(0), GetEquipmentDataById(reader.GetInt32(1))));
+                    Debug.WriteLine($"Получили delivery идущее В Объект с id - {locationId}");
+                }
+            }
+
+            return deliveries;
+        }
+
+        public static Equipment GetEquipmentDataById(int equipmentId)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = $"SELECT id, \"name\", manufacturer, \"type\", measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, tags, location_id, status, description FROM public.equipment WHERE id = {equipmentId};";
+
+            using var command = new NpgsqlCommand(sql, connection);
+
+            Equipment equipment = null;
+
+            using (var reader = command.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    List<string> tags = [.. ((string[])reader[9])]; // Считывание tags
+                    equipment = new Equipment(reader.GetString(11), reader.GetString(8), reader.GetString(12), reader.GetString(5), reader.GetString(4), reader.GetString(6), reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(7), tags);
+                    Debug.WriteLine($"Получено оборудование: {equipment.Id} - {equipment.Name}");
+                }
+            }
+
+            connection.Close();
+            return equipment;
+        }
+
+
+        public static List<Delivery> GetDeliveryOutOf(int locationId)
+        {
+            var deliveries = new List<Delivery>();
+
+            string query = "SELECT E.date, EqEvent.equipment_id, D.destination_id, D.dispatch_event_id " +
+                                "FROM \"event\".delivery AS D " +
+                                "JOIN FROM public.\"event\" AS E ON E.id = D.dispatch_id " +
+                                "JOIN FROM public.equipment_event AS EqEvent ON EqEvent.event_id = D.dispatch_id " +
+                                "WHERE D.arrival_event_id IS NULL AND D.departure_id = @locationId ";
+
+            using (var connection = new NpgsqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                using var cmd = new NpgsqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@locationId", locationId);
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    deliveries.Add(new Delivery(reader.GetInt64(3),locationId,reader.GetInt32(2),reader.GetDateTime(0),GetEquipmentDataById(reader.GetInt32(1))));
+                    Debug.WriteLine($"Получили delivery идущее ИЗ Объекта с id - {locationId}");
+                }
+            }
+
+            return deliveries;
+        }
+
+        public static void CompleteDelivery(Delivery delivery)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            long newEventId = InsertEvent(connection, CurrentEmployeeId, _eventTypes["Arrival"]);
+            CompleteDelivery(connection, newEventId, delivery.EventDispatchId);
+            InsertEquipmentEvent(connection, newEventId, delivery.Equipment.Id);
+            MoveEquipmentToLocation(connection, delivery.Equipment.Id,delivery.DestinationId);
+
+            connection.Close();
+        }
+
+        private static void MoveEquipmentToLocation(NpgsqlConnection connection,int equipmentId, int newLocationId)
+        {
+            using var command = new NpgsqlCommand("UPDATE \"public\".equipment SET location_id=@newLocationId, WHERE id=@equipmentId ", connection);
+            command.Parameters.AddWithValue("@newLocationId", newLocationId);
+            command.Parameters.AddWithValue("@equipmentId", equipmentId);
+
+            command.ExecuteNonQuery();
+        }
+
+        private static long InsertEvent(NpgsqlConnection connection, int employeeId, int eventTypeId)
+        {
+            using var command = new NpgsqlCommand("INSERT INTO public.event (employee_id, event_type) VALUES (@emp_id,@eventTypeId) RETURNING id ", connection);
+            command.Parameters.AddWithValue("@emp_id", employeeId);
+            command.Parameters.AddWithValue("@eventTypeId", eventTypeId);
+
+            return (long)command.ExecuteScalar();
+        }
+
+        private static void CompleteDelivery(NpgsqlConnection connection, long newEventId, long sendedEventId)
+        {
+            using var command = new NpgsqlCommand("UPDATE \"event\".delivery SET arrival_event_id=@arrival_event_id, WHERE dispatch_event_id=@sendedEventId ", connection);
+            command.Parameters.AddWithValue("@arrival_event_id", newEventId);
+            command.Parameters.AddWithValue("@sendedEventId", sendedEventId);
+
+            command.ExecuteNonQuery();
+        }
+
+        private static void InsertEquipmentEvent(NpgsqlConnection connection, long newEventId, int equipmentId)
+        {
+            using var command = new NpgsqlCommand("INSERT INTO public.\"equipment_event\" (equipment_id, event_id) VALUES (@eq_id ,@new_id) ", connection);
+            command.Parameters.AddWithValue("@new_id", newEventId);
+            command.Parameters.AddWithValue("@eq_id", equipmentId);
+
+            command.ExecuteNonQuery();
         }
 
         public static List<string> GetDistincEquipmentAccuracyClasses()
@@ -490,6 +619,31 @@ namespace EMAS.Service.Connection
             SetCurrentSessionEmployeeId();
             CloseSession(); //УДАЛИТЬ ПОСЛЕ ВЫПУСКА!!!.
             CreateNewSession();
+            InitEventTypeList();
+        }
+
+        private static void InitEventTypeList()
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT id, \"name\" FROM public.event_type;";
+            using var command = new NpgsqlCommand(sql, connection);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    _eventTypes.Add(reader.GetString(1), reader.GetInt16(0));
+                }
+
+                foreach (var item in _eventTypes)
+                {
+                    Debug.WriteLine($"Получено тип события:{item.Key} - {item.Value}");
+                }
+
+            }
+            connection.Close();
         }
 
         public static void RemoveEmployee(Employee employee)

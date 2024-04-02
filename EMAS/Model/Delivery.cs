@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,13 +11,12 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about active delivery,
     /// </summary>
-    public class Delivery
+    public class Delivery : ObservableObject
     {
         /// <summary>
         /// Stores event from Dispatch event from dataBase.
         /// </summary>
         private long _eventDispatchId;
-
 
         /// <summary>
         /// Date when delivery is dispatched.
@@ -31,21 +31,20 @@ namespace EMAS.Model
         /// <summary>
         /// Stores destination <see cref="Location"/> id.
         /// </summary>
-        private int? _destinationId;
+        private int _destinationId;
+
+        /// <summary>
+        /// Stores departure <see cref="Location"/> id.
+        /// </summary>
+        private int _departureId;
 
         /// <summary>
         /// 
         /// </summary>
         public long EventDispatchId
         {
-            get
-            {
-                return _eventDispatchId;
-            }
-            set
-            {
-                _eventDispatchId = value;
-            }
+            get => _eventDispatchId;
+            set => SetProperty(ref _eventDispatchId, value);
         }
 
 
@@ -54,14 +53,8 @@ namespace EMAS.Model
         /// </summary>
         public DateTime DispatchDate
         {
-            get
-            {
-                return _dispatchDate;
-            }
-            private set
-            {
-                _dispatchDate = value;
-            }
+            get => _dispatchDate;
+            set => SetProperty(ref _dispatchDate, value);
         }
 
         /// <summary>
@@ -69,29 +62,26 @@ namespace EMAS.Model
         /// </summary>
         public Equipment Equipment
         {
-            get
-            {
-                return _equipment;
-            }
-            private set
-            {
-                _equipment = value;
-            }
+            get => _equipment;
+            set => SetProperty(ref _equipment, value);
         }
 
         /// <summary>
         /// Returns destination <see cref="Location"/> id. Or null if delivery is InGoing.
         /// </summary>
-        public int? DestinationId
+        public int DestinationId
         {
-            get
-            {
-                return _destinationId;
-            }
-            private set
-            {
-                _destinationId = value;
-            }
+            get => _destinationId;
+            set => SetProperty(ref _destinationId, value);
+        }
+
+        /// <summary>
+        /// Returns destination <see cref="Location"/> id. Or null if delivery is InGoing.
+        /// </summary>
+        public int DepartureId
+        {
+            get => _departureId;
+            set => SetProperty(ref _departureId, value);
         }
 
         /// <summary>
@@ -106,27 +96,23 @@ namespace EMAS.Model
 
         }
 
-        /// <summary>
-        /// Creates ingoing Delivery.
-        /// </summary>
-        /// <param name="EquipmentList">Equipment that will be sended.</param>
-        public Delivery(Delivery d)
+        public Delivery(long dispatchEventId,int departureId ,int destinationId, DateTime date, Equipment equipment)
         {
-            DispatchDate = d.DispatchDate;
+            EventDispatchId = dispatchEventId;
 
-            this.Equipment = d.Equipment;
-            this.DestinationId = null;
-
-        }
-
-        public Delivery(DateTime date, int destinationId, Equipment equipment)
-        {
             DispatchDate = date;
 
-            this.Equipment = equipment;
+            Equipment = equipment;
 
-            this.DestinationId = destinationId;
+            DestinationId = destinationId;
+            DepartureId = departureId;
+        }
 
+        public Delivery()
+        {
+            DispatchDate = DateTime.MinValue;
+
+            Equipment = new();
         }
     }
 }
