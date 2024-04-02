@@ -15,10 +15,9 @@ namespace EMAS.ViewModel
         public event Action<int> AdditionWindowRequested;
 
         [ObservableProperty]
-        private Location _currentLocation;
+        private List<Equipment> _equipmentSourceList = new();
 
-        [ObservableProperty]
-        private List<Location> _locations = [];
+        public int CurrentLocationId;
 
         [ObservableProperty]
         private RelayCommand _clearFiltersCommand;
@@ -32,8 +31,6 @@ namespace EMAS.ViewModel
         [ObservableProperty]
         private Equipment _selectedEquipment;
 
-        private DataChangeChecker _monitor;
-
         [ObservableProperty]
         private ObservableCollection<Equipment> _filteredEquipmentList;
 
@@ -42,13 +39,6 @@ namespace EMAS.ViewModel
 
         public EquipmentVM()
         {
-            Locations = DataBaseClient.GetLocationData();
-
-            InitLocationsData();
-
-            _monitor = new DataChangeChecker(Locations.Select(location => location.Id).ToList());
-            _monitor.DataChanged += async (id) => UpdateEquipmentData(id);
-
             ClearFiltersCommand = new RelayCommand(ClearFilters);
             OpenHistoryWindowCommand = new RelayCommand(RequestHistoryWindow);
             OpenAdditionWindow = new RelayCommand(RequestAdditionWindow);
@@ -56,13 +46,21 @@ namespace EMAS.ViewModel
             DesiredEquipment.PropertyChanged += FilterEquipment;
         }
 
+        partial void OnEquipmentSourceListChanged(List<Equipment> value)
+        {
+            FilterEquipment(this, new PropertyChangedEventArgs(nameof(EquipmentSourceList)));
+        }
+
         private void FilterEquipment(object? sender, PropertyChangedEventArgs e)
         {
             Debug.WriteLine($"Поменялось свойство фильтрации:{e.PropertyName}");
-            if (CurrentLocation.Equipments.Count == 0)
+            if (EquipmentSourceList.Count == 0)
+            {
+                FilteredEquipmentList = [];
                 return;
+            }
 
-            var filteredList = CurrentLocation.Equipments.Where(equipment =>
+            var filteredList = EquipmentSourceList.Where(equipment =>
                 (string.IsNullOrEmpty(DesiredEquipment.Name) || equipment.Name.Contains(DesiredEquipment.Name)) &&
                 (string.IsNullOrEmpty(DesiredEquipment.Description) || equipment.Description.Contains(DesiredEquipment.Description)) &&
                 (string.IsNullOrEmpty(DesiredEquipment.Type) || equipment.Type.Contains(DesiredEquipment.Type)) &&
@@ -79,36 +77,9 @@ namespace EMAS.ViewModel
             FilteredEquipmentList = new ObservableCollection<Equipment>(filteredList);
         }
 
-        private async Task UpdateEquipmentData(int ID)
-        {
-            foreach (var location in Locations)
-            {
-                if (location.Id == ID)
-                {
-                    location.Equipments = DataBaseClient.GetEquipmentOnLocation(location.Id);
-                }
-            }
-            FilteredEquipmentList = new ObservableCollection<Equipment>(CurrentLocation.Equipments);
-        }
-
-        private void InitLocationsData()
-        {
-            foreach (var location in Locations)
-            {
-                location.Equipments = DataBaseClient.GetEquipmentOnLocation(location.Id);
-            }
-        }
-
-        partial void OnCurrentLocationChanged(Location value)
-        {
-            FilteredEquipmentList = new ObservableCollection<Equipment>(CurrentLocation.Equipments);
-            _monitor.StopActiveListeners();
-            _monitor.InitListener(value.Id);
-        }
-
         private void RequestAdditionWindow()
         {
-            AdditionWindowRequested?.Invoke(CurrentLocation.Id);
+            AdditionWindowRequested?.Invoke(CurrentLocationId);
         }
 
         private void RequestHistoryWindow()

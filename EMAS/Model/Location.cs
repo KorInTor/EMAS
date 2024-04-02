@@ -120,5 +120,9 @@ namespace EMAS.Model
             Equipments = new List<Equipment>();
             Deliveries = new List<Delivery>();
         }
+
+        public Location()
+        {
+        }
     }
 }
