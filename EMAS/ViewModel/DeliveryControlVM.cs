@@ -52,8 +52,6 @@ namespace EMAS.ViewModel
             DesiredDelivery.PropertyChanged += FilterDeliveries;
             DesiredDelivery.Equipment.PropertyChanged += FilterDeliveries;
 
-            PropertyChanged += FilterDeliveries; //Need to find Better solution for catching IsIncomingSelected change and filter. Maybe use pointer to filtration source.
-
             ConfirmDeliveryCommand = new RelayCommand(ConfirmDelivery, CanConfirmDelivery);
             ClearFilterCommand = new RelayCommand(ClearFilters);
         }
@@ -81,11 +79,14 @@ namespace EMAS.ViewModel
 
             Debug.WriteLine($"Поменялось свойство фильтрации:{e.PropertyName}");
 
-            if (source.Count == 0)
-                return;
-
             List<Delivery> filteredList = [];
 
+            if (source.Count == 0)
+            {
+                FilteredDeliveries = new ObservableCollection<Delivery> (filteredList);
+                return;
+            }
+            
             if (sender is Equipment)
             {
                 var properties = new List<Func<Delivery, bool>>
@@ -117,7 +118,7 @@ namespace EMAS.ViewModel
 
                 filteredList = source.Where(delivery => properties.All(property => property(delivery))).ToList();
             }
-            else if (sender is bool && e.PropertyName == nameof(IsIncomingSelected))
+            else if (sender is DeliveryControlVM && e.PropertyName == nameof(IsIncomingSelected))
             {
                 var properties = new List<Func<Delivery, bool>>
                 {
@@ -140,6 +141,7 @@ namespace EMAS.ViewModel
                 };
                 filteredList = source.Where(delivery => properties.All(property => property(delivery))).ToList();
             }
+            FilteredDeliveries = new ObservableCollection<Delivery>(filteredList);
         }
 
 
@@ -162,6 +164,7 @@ namespace EMAS.ViewModel
 
         partial void OnIsIncomingSelectedChanged(bool value)
         {
+            FilterDeliveries(this, new PropertyChangedEventArgs(nameof(IsIncomingSelected)));
             ConfirmDeliveryCommand.NotifyCanExecuteChanged();
         }
 
