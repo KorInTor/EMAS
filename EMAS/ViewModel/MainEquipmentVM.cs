@@ -18,13 +18,15 @@ namespace EMAS.ViewModel
 
         //New VM goes here.
         public EquipmentVM EquipmentVM { get; set; } = new();
+        public DeliveryControlVM DeliveryControlVM { get; set;} = new();
         
 
         partial void OnLocationInfoChanged(Location value)
         {
             //Updating VMs Data here;
             EquipmentVM.EquipmentSourceList = LocationInfo.Equipments;
-            
+
+            DeliveryControlVM.ChagneSourceList(LocationInfo.IncomingDeliveries,LocationInfo.OutgoingDeliveries);
         }
     }
 }
