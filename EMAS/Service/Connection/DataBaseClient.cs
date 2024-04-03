@@ -21,7 +21,7 @@ namespace EMAS.Service.Connection
 
         private static Dictionary<int, List<string>>? _permissions;
 
-        private static Dictionary<string, short> _eventTypes;
+        private static Dictionary<string, short> _eventTypes = [];
 
         private static string _storedSalt = "0Xin54hFmmX93ljqMUqOzeqhCf8Cpeur";
 
@@ -101,9 +101,26 @@ namespace EMAS.Service.Connection
             }
         }
 
-        public static void AddNewDelivery(Delivery delivery)
+        public static void AddNewDelivery(ref Delivery delivery)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            delivery.EventDispatchId = InsertEvent(connection, CurrentEmployeeId, _eventTypes["Sent"]);
+            InsertEquipmentEvent(connection, delivery.EventDispatchId, delivery.Equipment.Id);
+
+            string query = "INSERT INTO \"event\".delivery (dispatch_event_id, destination_id, departure_id) VALUES(@dispatch_event_id, @destination_id, @departure_id);";
+            using var command = new NpgsqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@dispatch_event_id",delivery.EventDispatchId);
+            command.Parameters.AddWithValue("@destination_id", delivery.DestinationId);
+            command.Parameters.AddWithValue("@departure_id", delivery.DepartureId);
+
+            command.ExecuteNonQuery();
+
+            Debug.WriteLine("Успешно добавлена доставка");
+
+            connection.Close();
         }
 
         public static void AddNewEmployee(Employee employee, string password)
@@ -306,8 +323,8 @@ namespace EMAS.Service.Connection
 
             string query = "SELECT E.date, EqEvent.equipment_id, D.destination_id, D.dispatch_event_id " +
                                 "FROM \"event\".delivery AS D " +
-                                "JOIN FROM public.\"event\" AS E ON E.id = D.dispatch_id " +
-                                "JOIN FROM public.equipment_event AS EqEvent ON EqEvent.event_id = D.dispatch_id " +
+                                "JOIN public.\"event\" AS E ON E.id = D.dispatch_event_id " +
+                                "JOIN public.equipment_event AS EqEvent ON EqEvent.event_id = D.dispatch_event_id " +
                                 "WHERE D.arrival_event_id IS NULL AND D.departure_id = @locationId ";
 
             using (var connection = new NpgsqlConnection(ConnectionString))
@@ -334,7 +351,7 @@ namespace EMAS.Service.Connection
             connection.Open();
 
             long newEventId = InsertEvent(connection, CurrentEmployeeId, _eventTypes["Arrival"]);
-            CompleteDelivery(connection, newEventId, delivery.EventDispatchId);
+            SetDeliveryComplete(connection, newEventId, delivery.EventDispatchId);
             InsertEquipmentEvent(connection, newEventId, delivery.Equipment.Id);
             MoveEquipmentToLocation(connection, delivery.Equipment.Id,delivery.DestinationId);
 
@@ -359,7 +376,7 @@ namespace EMAS.Service.Connection
             return (long)command.ExecuteScalar();
         }
 
-        private static void CompleteDelivery(NpgsqlConnection connection, long newEventId, long sendedEventId)
+        private static void SetDeliveryComplete(NpgsqlConnection connection, long newEventId, long sendedEventId)
         {
             using var command = new NpgsqlCommand("UPDATE \"event\".delivery SET arrival_event_id=@arrival_event_id, WHERE dispatch_event_id=@sendedEventId ", connection);
             command.Parameters.AddWithValue("@arrival_event_id", newEventId);
