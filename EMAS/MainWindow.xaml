@@ -35,5 +35,6 @@
         <Label Content="Пароль:" Grid.Row="3" Grid.Column="1"/>
         <PasswordBox Grid.Row="4" Grid.Column="1" Margin="3,3,3,3" PasswordChanged="PasswordBox_PasswordChanged"/>
         <Button Content="Войти" Grid.Column="1" Grid.Row="6" Command="{Binding LoginCommand, Mode=OneWay}"/>
+        <Button Content="Fast Login" Grid.Column="1" Grid.Row="7" Command="{Binding LetMeInCommand, Mode=OneWay}"/>
     </Grid>
 </Window>
