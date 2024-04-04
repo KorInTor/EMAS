@@ -20,12 +20,41 @@ namespace EMAS.ViewModel
         private RelayCommand _loginCommand;
 
         [ObservableProperty]
-        private string _username = "Пряхин Д.С.";
+        private string _username = "Пряхин";
 
         [ObservableProperty]
         private string _password = "ps123123";
 
+        public AuthorizationVM()
+        {
+            LetMeInCommand = new RelayCommand(FastLogin);
+        }
+
         public RelayCommand LoginCommand => _loginCommand ??= new RelayCommand(Login);
+        public RelayCommand LetMeInCommand { get; }
+
+        private void FastLogin()
+        {
+            DataBaseClient.Username = "Пряхин";
+            DataBaseClient.Password = "ps123123";
+            try
+            {
+                DataBaseClient.Login();
+                LoginSucceeded?.Invoke();
+            }
+            catch (ConnectionFailedException)
+            {
+                LoginFailed?.Invoke("Проблемы с соединением, обратитесь к администратору.");
+            }
+            catch (InvalidUsernameException)
+            {
+                LoginFailed?.Invoke("Такого пользователя не существует.");
+            }
+            catch (InvalidPasswordException)
+            {
+                LoginFailed?.Invoke("Неправильный пароль.");
+            }
+        }
 
         private void Login()
         {
