@@ -27,7 +27,7 @@ namespace EMAS.ViewModel
 
         public MainEquipmentVM MainEquipmentVM { get; set; } = new();
 
-        public EquipmentController() 
+        public EquipmentController()
         {
             Locations = DataBaseClient.GetLocationData();
             InitLocationsData();
@@ -49,6 +49,10 @@ namespace EMAS.ViewModel
 
         partial void OnCurrentLocationChanged(Location value)
         {
+            if (value == null)
+            {
+                return;
+            }
             _monitor.StopActiveListeners();
             _monitor.InitListener(value.Id);
 
@@ -60,6 +64,36 @@ namespace EMAS.ViewModel
             foreach (var location in Locations)
             {
                 location.Equipments = DataBaseClient.GetEquipmentOnLocation(location.Id);
+
+                location.OutgoingDeliveries = DataBaseClient.GetDeliveryOutOf(location.Id);
+            }
+
+            InitIncomingDeliveriesFromOutgoing();
+        }
+
+        /// <summary>
+        /// Initializes Locations incoming deliveries when Location outgoing deliveries is initialized, reduces the load on the DBMS.
+        /// </summary>
+        private void InitIncomingDeliveriesFromOutgoing()
+        {
+            Dictionary<int, List<Delivery>> incomingDeliveries = [];
+
+            foreach (var location in Locations)
+            {
+                incomingDeliveries.Add(location.Id, []);
+            }
+
+            foreach (var location in Locations)
+            {
+                foreach (var delivery in location.OutgoingDeliveries)
+                {
+                    incomingDeliveries[delivery.DestinationId].Add(delivery);
+                }
+            }
+
+            foreach (var location in Locations)
+            {
+                location.IncomingDeliveries = incomingDeliveries[location.Id];
             }
         }
     }

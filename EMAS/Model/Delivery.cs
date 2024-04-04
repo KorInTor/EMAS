@@ -114,5 +114,17 @@ namespace EMAS.Model
 
             Equipment = new();
         }
+
+        public Delivery(int departureId, int destinationId, DateTime date, Equipment equipment)
+        {
+            EventDispatchId = 0;
+
+            DispatchDate = date;
+
+            Equipment = equipment;
+
+            DestinationId = destinationId;
+            DepartureId = departureId;
+        }
     }
 }

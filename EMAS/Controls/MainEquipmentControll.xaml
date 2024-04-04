@@ -15,10 +15,10 @@
             <TabItem Header="Оборудование">
                 <local:EquipmentControl DataContext="{Binding DataContext.EquipmentVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             </TabItem>
+            <TabItem Header="Доставки">
+                <local:DeliveryControl DataContext="{Binding DataContext.DeliveryControlVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            </TabItem>
             <!--Новые контролы Сюда-->
-            <!--<TabItem Header="Доставки">
-                <local:CustomControl2 DataContext="{Binding DataContext.CustomViewModel2, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-            </TabItem>-->
         </TabControl>
     </Grid>
 </UserControl>
