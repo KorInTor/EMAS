@@ -123,6 +123,28 @@ namespace EMAS.Service.Connection
             connection.Close();
         }
 
+        public static void AddNewReservation(ref Reservation reservation, int locartionId)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            reservation.Id = InsertEvent(connection, CurrentEmployeeId, _eventTypes["Reserved"]);
+            InsertEquipmentEvent(connection, reservation.Id, reservation.Equipment.Id);
+
+            string query = "INSERT INTO \"event\".reservation (start_event_id, location_id, additional_info) VALUES(@start_event_id, @location_id, @additional_info);";
+            using var command = new NpgsqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@start_event_id", reservation.Id);
+            command.Parameters.AddWithValue("@location_id", locartionId);
+            command.Parameters.AddWithValue("@additional_info", reservation.AdditionalInfo);
+
+            command.ExecuteNonQuery();
+
+            Debug.WriteLine("Успешно добавлена резервация");
+
+            connection.Close();
+        }
+
         public static void AddNewEmployee(Employee employee, string password)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -390,6 +412,28 @@ namespace EMAS.Service.Connection
             using var command = new NpgsqlCommand("INSERT INTO public.\"equipment_event\" (equipment_id, event_id) VALUES (@eq_id ,@new_id) ", connection);
             command.Parameters.AddWithValue("@new_id", newEventId);
             command.Parameters.AddWithValue("@eq_id", equipmentId);
+
+            command.ExecuteNonQuery();
+        }
+
+        public static void EndReservation(Reservation reservation)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            long newEventId = InsertEvent(connection, CurrentEmployeeId, _eventTypes["ReserveEnded"]);
+            SetReservationComplete(connection, newEventId, reservation.Id);
+            InsertEquipmentEvent(connection, newEventId, reservation.Equipment.Id);
+
+            connection.Close();
+        }
+
+        private static void SetReservationComplete(NpgsqlConnection connection, long reservationEndedEventId, long reservation_id)
+        {
+            using var command = new NpgsqlCommand("UPDATE \"event\".reservation SET end_event_id=@start_event_id, WHERE start_event_id=@end_event_id ", connection);
+
+            command.Parameters.AddWithValue("@start_event_id", reservation_id);
+            command.Parameters.AddWithValue("@end_event_id", reservationEndedEventId);
 
             command.ExecuteNonQuery();
         }
