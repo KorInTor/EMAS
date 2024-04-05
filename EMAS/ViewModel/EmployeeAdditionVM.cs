@@ -31,7 +31,7 @@ namespace EMAS.ViewModel
                 return;
             }
 
-            string password = PasswordGenerator.RandomString(10);
+            string password = PasswordManager.Generate(10);
 
             try
             {
