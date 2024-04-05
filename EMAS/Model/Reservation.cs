@@ -19,6 +19,8 @@ namespace EMAS.Model
 
         private string _additionalInfo;
 
+        private int _locationId;
+
         public long Id
         {
             get => _id;
@@ -47,6 +49,12 @@ namespace EMAS.Model
         {
             get => _additionalInfo;
             set => SetProperty(ref _additionalInfo, value);
+        }
+
+        public int LocationId
+        {
+            get => _locationId;
+            set => SetProperty(ref _locationId, value);
         }
 
         public Reservation(long id, DateTime startDate, Employee reservedBy, string additionalInfo, Equipment equipment)

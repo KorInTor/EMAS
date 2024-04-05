@@ -32,6 +32,7 @@ namespace EMAS.Model
         /// </summary>
         private string _email = string.Empty;
 
+        private string _passwordHash = string.Empty;
 
         private string _username = string.Empty;
 
@@ -91,6 +92,12 @@ namespace EMAS.Model
         {
             get => _username;
             set => SetProperty(ref _username, value);
+        }
+
+        public string PasswordHash
+        {
+            get => _passwordHash;
+            set => SetProperty(ref _passwordHash, value);
         }
     }
 }
