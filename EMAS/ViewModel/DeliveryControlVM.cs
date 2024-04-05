@@ -40,7 +40,7 @@ namespace EMAS.ViewModel
         private bool _canUserChangeDelivery = false;
 
         public RelayCommand ConfirmDeliveryCommand { get; set; }
-        public RelayCommand ClearFilterCommand { get; set; }
+        public RelayCommand ClearFiltersCommand { get; set; }
 
         private void ConfirmDelivery()
         {
@@ -53,7 +53,7 @@ namespace EMAS.ViewModel
             DesiredDelivery.Equipment.PropertyChanged += FilterDeliveries;
 
             ConfirmDeliveryCommand = new RelayCommand(ConfirmDelivery, CanConfirmDelivery);
-            ClearFilterCommand = new RelayCommand(ClearFilters);
+            ClearFiltersCommand = new RelayCommand(ClearFilters);
         }
 
         private void ClearFilters()

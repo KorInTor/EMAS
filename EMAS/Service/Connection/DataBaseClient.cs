@@ -1,11 +1,8 @@
 ﻿using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.HistoryEntry;
-using EMAS.ViewModel;
 using Npgsql;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Formats.Asn1;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -112,13 +109,35 @@ namespace EMAS.Service.Connection
             string query = "INSERT INTO \"event\".delivery (dispatch_event_id, destination_id, departure_id) VALUES(@dispatch_event_id, @destination_id, @departure_id);";
             using var command = new NpgsqlCommand(query, connection);
 
-            command.Parameters.AddWithValue("@dispatch_event_id",delivery.EventDispatchId);
+            command.Parameters.AddWithValue("@dispatch_event_id", delivery.EventDispatchId);
             command.Parameters.AddWithValue("@destination_id", delivery.DestinationId);
             command.Parameters.AddWithValue("@departure_id", delivery.DepartureId);
 
             command.ExecuteNonQuery();
 
             Debug.WriteLine("Успешно добавлена доставка");
+
+            connection.Close();
+        }
+
+        public static void AddNewReservation(ref Reservation reservation, int locartionId)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            reservation.Id = InsertEvent(connection, CurrentEmployeeId, _eventTypes["Reserved"]);
+            InsertEquipmentEvent(connection, reservation.Id, reservation.Equipment.Id);
+
+            string query = "INSERT INTO \"event\".reservation (start_event_id, location_id, additional_info) VALUES(@start_event_id, @location_id, @additional_info);";
+            using var command = new NpgsqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@start_event_id", reservation.Id);
+            command.Parameters.AddWithValue("@location_id", locartionId);
+            command.Parameters.AddWithValue("@additional_info", reservation.AdditionalInfo);
+
+            command.ExecuteNonQuery();
+
+            Debug.WriteLine("Успешно добавлена резервация");
 
             connection.Close();
         }
@@ -316,6 +335,33 @@ namespace EMAS.Service.Connection
             return equipment;
         }
 
+        public static List<Reservation> GetReservationsOn(int locationId)
+        {
+            var reservations = new List<Reservation>();
+
+            string query = "SELECT E.date, EqEvent.equipment_id, R.start_event_id, R.additional_info, E.employee_id" +
+                                "FROM \"event\".reservation AS R " +
+                                "JOIN public.\"event\" AS E ON E.id = R.start_event_id " +
+                                "JOIN public.equipment_event AS EqEvent ON EqEvent.event_id = R.start_event_id " +
+                                "WHERE D.end_event_id IS NULL AND D.location_id = @locationId ";
+
+            using (var connection = new NpgsqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                using var cmd = new NpgsqlCommand(query, connection);
+                cmd.Parameters.AddWithValue("@locationId", locationId);
+
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    reservations.Add(new Reservation(reader.GetInt64(2), reader.GetDateTime(0), GetEmployeeInfoById(reader.GetInt32(4)), reader.GetString(3), GetEquipmentDataById(reader.GetInt32(1))));
+                    Debug.WriteLine($"Получили delivery идущее ИЗ Объекта с id - {locationId}");
+                }
+            }
+
+            return reservations;
+        }
 
         public static List<Delivery> GetDeliveryOutOf(int locationId)
         {
@@ -337,7 +383,7 @@ namespace EMAS.Service.Connection
                 using var reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    deliveries.Add(new Delivery(reader.GetInt64(3),locationId,reader.GetInt32(2),reader.GetDateTime(0),GetEquipmentDataById(reader.GetInt32(1))));
+                    deliveries.Add(new Delivery(reader.GetInt64(3), locationId, reader.GetInt32(2), reader.GetDateTime(0), GetEquipmentDataById(reader.GetInt32(1))));
                     Debug.WriteLine($"Получили delivery идущее ИЗ Объекта с id - {locationId}");
                 }
             }
@@ -353,12 +399,12 @@ namespace EMAS.Service.Connection
             long newEventId = InsertEvent(connection, CurrentEmployeeId, _eventTypes["Arrival"]);
             SetDeliveryComplete(connection, newEventId, delivery.EventDispatchId);
             InsertEquipmentEvent(connection, newEventId, delivery.Equipment.Id);
-            MoveEquipmentToLocation(connection, delivery.Equipment.Id,delivery.DestinationId);
+            MoveEquipmentToLocation(connection, delivery.Equipment.Id, delivery.DestinationId);
 
             connection.Close();
         }
 
-        private static void MoveEquipmentToLocation(NpgsqlConnection connection,int equipmentId, int newLocationId)
+        private static void MoveEquipmentToLocation(NpgsqlConnection connection, int equipmentId, int newLocationId)
         {
             using var command = new NpgsqlCommand("UPDATE \"public\".equipment SET location_id=@newLocationId, WHERE id=@equipmentId ", connection);
             command.Parameters.AddWithValue("@newLocationId", newLocationId);
@@ -390,6 +436,28 @@ namespace EMAS.Service.Connection
             using var command = new NpgsqlCommand("INSERT INTO public.\"equipment_event\" (equipment_id, event_id) VALUES (@eq_id ,@new_id) ", connection);
             command.Parameters.AddWithValue("@new_id", newEventId);
             command.Parameters.AddWithValue("@eq_id", equipmentId);
+
+            command.ExecuteNonQuery();
+        }
+
+        public static void EndReservation(Reservation reservation)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            long newEventId = InsertEvent(connection, CurrentEmployeeId, _eventTypes["ReserveEnded"]);
+            SetReservationComplete(connection, newEventId, reservation.Id);
+            InsertEquipmentEvent(connection, newEventId, reservation.Equipment.Id);
+
+            connection.Close();
+        }
+
+        private static void SetReservationComplete(NpgsqlConnection connection, long reservationEndedEventId, long reservation_id)
+        {
+            using var command = new NpgsqlCommand("UPDATE \"event\".reservation SET end_event_id=@start_event_id, WHERE start_event_id=@end_event_id ", connection);
+
+            command.Parameters.AddWithValue("@start_event_id", reservation_id);
+            command.Parameters.AddWithValue("@end_event_id", reservationEndedEventId);
 
             command.ExecuteNonQuery();
         }
@@ -818,7 +886,26 @@ namespace EMAS.Service.Connection
 
         private static Employee GetEmployeeInfoById(int employeeId)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+
+            string sql = "SELECT fullname, email, username FROM public.employee;";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@employeeId", CurrentEmployeeId);
+
+            Employee employee = null;
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    employee = new Employee(employeeId, reader.GetString(0), reader.GetString(1), reader.GetString(2));
+                }
+            }
+
+            connection.Close();
+            return employee;
         }
 
         private static bool IsCurrentSessionAdmin()

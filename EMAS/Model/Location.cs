@@ -33,6 +33,8 @@ namespace EMAS.Model
         /// </summary>
         private List<Delivery> _incomingDeliviries;
 
+        private List<Reservation> _reservations;
+
         /// <summary>
         /// Return unique id of this site.
         /// </summary>
@@ -108,6 +110,18 @@ namespace EMAS.Model
             }
         }
 
+        public List<Reservation> Reservations
+        {
+            get
+            {
+                return _reservations;
+            }
+            set
+            {
+                _reservations = value;
+            }
+        }
+
         /// <summary>
         /// Creates instance of site with Lists for equipment, Delivery, Reservation.
         /// </summary>
@@ -120,6 +134,7 @@ namespace EMAS.Model
             Equipments = [];
             IncomingDeliveries = [];
             OutgoingDeliveries = [];
+            Reservations = [];
         }
 
         public Location()
