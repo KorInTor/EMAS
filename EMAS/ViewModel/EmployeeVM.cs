@@ -55,7 +55,7 @@ namespace EMAS.ViewModel
 
         private void ChangeEmployeePassword()
         {
-            string password = PasswordGenerator.RandomString(10);
+            string password = PasswordManager.Generate(10);
 
             DataBaseClient.UpdateEmployeeData(SelectedEmployee, password);
 

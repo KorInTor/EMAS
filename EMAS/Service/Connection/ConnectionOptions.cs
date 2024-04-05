@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace EMAS.Service.Connection
     {
         private static string _host = "26.34.196.234";
 
-        private static string _port = "5432";
+        private static int _port = 5432;
 
         private static string _dataBase = "praktik";
 
