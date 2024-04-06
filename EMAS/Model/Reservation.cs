@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EMAS.Model
 {
-    public class Reservation : ObservableObject
+    public class Reservation : ObservableObject , IEquipmentState, ILocationBounded
     {
         private long _id;
 

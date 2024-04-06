@@ -14,7 +14,7 @@ namespace EMAS.ViewModel
         public event Action<string> AdditionFailed;
 
         [ObservableProperty]
-        private ObservableCollection<Location> _locations = new(DataBaseClient.GetLocationData());
+        private ObservableCollection<Location> _locations = new(DataBaseClient.GetInstance().SelectLocations());
 
         [ObservableProperty]
         private string _newLocationName;
@@ -34,7 +34,7 @@ namespace EMAS.ViewModel
         {
             try 
             {
-                DataBaseClient.AddNewLocation(new Location(0, NewLocationName));
+                DataBaseClient.GetInstance().Add(new Location(0,NewLocationName));
             }
             catch (Exception ex)
             {
@@ -46,7 +46,7 @@ namespace EMAS.ViewModel
 
         private void UpdateLocationsList()
         {
-            Locations = new(DataBaseClient.GetLocationData());
+            Locations = new(DataBaseClient.GetInstance().SelectLocations());
         }
     }
 }

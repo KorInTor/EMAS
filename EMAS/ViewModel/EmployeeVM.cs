@@ -56,8 +56,8 @@ namespace EMAS.ViewModel
         private void ChangeEmployeePassword()
         {
             string password = PasswordManager.Generate(10);
-
-            DataBaseClient.UpdateEmployeeData(SelectedEmployee, password);
+            SelectedEmployee.PasswordHash = PasswordManager.Hash(password);
+            DataBaseClient.GetInstance().Update(SelectedEmployee);
 
             PasswordChangedSuccsesfull?.Invoke($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.", password);
         }
@@ -66,7 +66,7 @@ namespace EMAS.ViewModel
         {
             try
             {
-                DataBaseClient.UpdateEmployeeData(SelectedEmployee);
+                DataBaseClient.GetInstance().Update(SelectedEmployee);
             }
             catch (Exception ex)
             {
@@ -79,12 +79,12 @@ namespace EMAS.ViewModel
         private void RequestAdditionWindow()
         {
             AdditionWindowRequested?.Invoke();
-            EmployeeList = new ObservableCollection<Employee>(DataBaseClient.GetAllEmployeeData());
+            EmployeeList = new ObservableCollection<Employee>(DataBaseClient.GetInstance().SelectEmployee());
         }
 
         public EmployeeVM()
         {
-            EmployeeList = new ObservableCollection<Employee> (DataBaseClient.GetAllEmployeeData());
+            EmployeeList = new ObservableCollection<Employee> (DataBaseClient.GetInstance().SelectEmployee());
 
             AddEmployeeCommand = new RelayCommand(RequestAdditionWindow);
             EditEmployeeCommand = new RelayCommand(EditEmployee,() => IsEmployeeSelected);

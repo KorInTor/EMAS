@@ -11,7 +11,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about equipment.
     /// </summary>
-    public class Equipment : ObservableObject, IEquatable<Equipment>
+    public class Equipment : ObservableObject, IEquatable<Equipment> , ILocationBounded
     {
         /// <summary>
         /// Unique id of Equipment.

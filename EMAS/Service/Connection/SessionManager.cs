@@ -1,5 +1,6 @@
 ﻿using EMAS.Exceptions;
 using EMAS.Service.Connection.DataAccess;
+using EMAS.Service.Security;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,9 @@ namespace EMAS.Service.Connection
 
         public static int UserId { get; private set; }
 
-        public static void Login(string username,string passwordHash)
+        public static void Login(string username,string password)
         {
+            string passwordHash = PasswordManager.Hash(password);
             ConnectionPool.TryConnect();
             if (!IsUsernameCorrect(username))
             {
