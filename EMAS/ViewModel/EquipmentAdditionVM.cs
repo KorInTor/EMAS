@@ -22,16 +22,15 @@ namespace EMAS.ViewModel
         [ObservableProperty]
         private string _tags;
 
-        public EquipmentAdditionVM(int locationId)
-        {
-            ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
-            _currentLocationId = locationId;
-        }
-
         public EquipmentAdditionVM()
         {
             ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
             _currentLocationId = 0;
+        }
+        public EquipmentAdditionVM(int locationId)
+        {
+            ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
+            _currentLocationId = locationId;
         }
 
         private void ConfirmAddition()
@@ -39,7 +38,7 @@ namespace EMAS.ViewModel
             try
             {
                 NewEquipment.Tags = [.. Tags.Split('\n')];
-                DataBaseClient.AddNewEquipment(NewEquipment, _currentLocationId);
+                DataBaseClient.GetInstance().AddOnLocation(NewEquipment, _currentLocationId);
                 AdditionConfirmed?.Invoke();
             }
             catch(Exception exception)
@@ -47,6 +46,11 @@ namespace EMAS.ViewModel
                 AdditionFailed?.Invoke(exception.Message);
                 Debug.WriteLine(exception.Message);
             }
+        }
+
+        public void ChangeCurrentLocationId(int id)
+        {
+            _currentLocationId = id;
         }
     }
 }

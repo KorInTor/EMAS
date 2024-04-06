@@ -35,7 +35,8 @@ namespace EMAS.ViewModel
 
             try
             {
-                DataBaseClient.AddNewEmployee(NewEmployee, password);
+                NewEmployee.PasswordHash = PasswordManager.Hash(password);
+                DataBaseClient.GetInstance().Add(NewEmployee);
             }
             catch (Exception ex)
             {

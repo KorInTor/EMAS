@@ -44,7 +44,7 @@ namespace EMAS.ViewModel
 
         private void ConfirmDelivery()
         {
-            DeliveryConfirmationRequested?.Invoke(SelectedDelivery.EventDispatchId);
+            DeliveryConfirmationRequested?.Invoke(SelectedDelivery.Id);
         }
 
         public DeliveryControlVM()
@@ -110,7 +110,7 @@ namespace EMAS.ViewModel
             {
                 var properties = new List<Func<Delivery, bool>>
                 {
-                    delivery => DesiredDelivery.EventDispatchId == 0 || delivery.EventDispatchId == DesiredDelivery.EventDispatchId,
+                    delivery => DesiredDelivery.Id == 0 || delivery.Id == DesiredDelivery.Id,
                     delivery => DesiredDelivery.DispatchDate == DateTime.MinValue || delivery.DispatchDate == DesiredDelivery.DispatchDate,
                     delivery => DesiredDelivery.DepartureId == 0 || delivery.DepartureId == DesiredDelivery.DepartureId,
                     delivery => DesiredDelivery.DestinationId == 0 || delivery.DestinationId == DesiredDelivery.DestinationId
@@ -134,7 +134,7 @@ namespace EMAS.ViewModel
                     delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.FactoryNumber) || delivery.Equipment.FactoryNumber.Contains(DesiredDelivery.Equipment.FactoryNumber),
                     delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Status) || delivery.Equipment.Status.Contains(DesiredDelivery.Equipment.Status),
 
-                    delivery => DesiredDelivery.EventDispatchId == 0 || delivery.EventDispatchId == DesiredDelivery.EventDispatchId,
+                    delivery => DesiredDelivery.Id == 0 || delivery.Id == DesiredDelivery.Id,
                     delivery => DesiredDelivery.DispatchDate == DateTime.MinValue || delivery.DispatchDate == DesiredDelivery.DispatchDate,
                     delivery => DesiredDelivery.DepartureId == 0 || delivery.DepartureId == DesiredDelivery.DepartureId,
                     delivery => DesiredDelivery.DestinationId == 0 || delivery.DestinationId == DesiredDelivery.DestinationId
@@ -175,7 +175,7 @@ namespace EMAS.ViewModel
 
             _canUserChangeDelivery = canChangeDelivery;
 
-            IsIncomingSelected = true;
+            FilterDeliveries(this, new PropertyChangedEventArgs(nameof(IsIncomingSelected)));
         }
     }
 }

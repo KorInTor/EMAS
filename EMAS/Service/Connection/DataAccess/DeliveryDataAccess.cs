@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess
 {
-    public class DeliveryDataAccess : IDataAccess<Delivery>
+    public class DeliveryDataAccess : IEquipmentStateLocationBoundedDataAccess<Delivery>
     {
         private readonly EventDataAccess eventAccess = new();
 
@@ -18,14 +18,14 @@ namespace EMAS.Service.Connection.DataAccess
         {
             eventAccess.Add((SessionManager.UserId, EventDataAccess.EventTypes["Sent"], newDelivery.Equipment.Id));
 
-            newDelivery.EventDispatchId = eventAccess.LastEventId;
+            newDelivery.Id = eventAccess.LastEventId;
 
             var connection = ConnectionPool.GetConnection();
 
             string query = "INSERT INTO \"event\".delivery (dispatch_event_id, destination_id, departure_id) VALUES(@dispatch_event_id, @destination_id, @departure_id);";
             using var command = new NpgsqlCommand(query, connection);
 
-            command.Parameters.AddWithValue("@dispatch_event_id", newDelivery.EventDispatchId);
+            command.Parameters.AddWithValue("@dispatch_event_id", newDelivery.Id);
             command.Parameters.AddWithValue("@destination_id", newDelivery.DestinationId);
             command.Parameters.AddWithValue("@departure_id", newDelivery.DepartureId);
 
@@ -56,7 +56,7 @@ namespace EMAS.Service.Connection.DataAccess
             throw new NotImplementedException();
         }
 
-        public List<Delivery> SelectDeliveryOutOf(int locationId)
+        public List<Delivery> SelectOnLocation(int locationId)
         {
             var equipmentAccess = new EquipmentDataAccess();
             var deliveries = new List<Delivery>();
@@ -96,11 +96,21 @@ namespace EMAS.Service.Connection.DataAccess
 
             using var command = new NpgsqlCommand("UPDATE \"event\".delivery SET arrival_event_id=@arrival_event_id, WHERE dispatch_event_id=@sendedEventId ", connection);
             command.Parameters.AddWithValue("@arrival_event_id", eventAccess.LastEventId);
-            command.Parameters.AddWithValue("@sendedEventId", completedDelivery.EventDispatchId);
+            command.Parameters.AddWithValue("@sendedEventId", completedDelivery.Id);
 
             command.ExecuteNonQuery();
 
             ConnectionPool.ReleaseConnection(connection);
+        }
+
+        public void SelectById(long Id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddOnLocation(Delivery item, int locationId)
+        {
+            Add(item);
         }
     }
 }

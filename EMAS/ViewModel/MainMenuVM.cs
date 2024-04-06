@@ -24,7 +24,7 @@ namespace EMAS.ViewModel
 
         public MainMenuVM()
         {
-            IsAdministrator = DataBaseClient.IsCurrentEmployeeAdmin;
+            IsAdministrator = SessionManager.PermissionInfo.IsCurrentEmployeeAdmin;
 
             OpenEquipmentWindow = new RelayCommand(RequestEquipmentWindow);
             OpenAboutWindow = new RelayCommand(RequestAboutWindow);

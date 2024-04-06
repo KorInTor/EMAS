@@ -1,4 +1,5 @@
-﻿using EMAS.Model;
+﻿using DocumentFormat.OpenXml.Office2010.Excel;
+using EMAS.Model;
 using EMAS.ViewModel;
 using Npgsql;
 using System;
@@ -24,14 +25,31 @@ namespace EMAS.Service.Connection.DataAccess
 
         public List<Employee> Select()
         {
-            throw new NotImplementedException();
+            var connection = ConnectionPool.GetConnection();
+
+            string sql = "SELECT id, fullname, email, username FROM public.employee;";
+
+            using var command = new NpgsqlCommand(sql, connection);
+
+            List<Employee> employeeList = [];
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    employeeList.Add(new Employee(reader.GetInt32(0),reader.GetString(1),reader.GetString(3),reader.GetString(2)));
+                }
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+            return employeeList;
         }
 
         public Employee SelectById(int id)
         {
             using var connection = ConnectionPool.GetConnection();
             
-            string sql = "SELECT fullname, email, username FROM public.employee;";
+            string sql = "SELECT fullname, username, email FROM public.employee WHERE id=@employeeId;";
 
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("@employeeId", id);
@@ -52,7 +70,7 @@ namespace EMAS.Service.Connection.DataAccess
 
         public Employee SelectByUsername(string username)
         {
-            using var connection = ConnectionPool.GetConnection();
+            var connection = ConnectionPool.GetConnection();
 
             string sql = "SELECT id, fullname, email, username FROM public.employee WHERE username=@username;";
             using var command = new NpgsqlCommand(sql, connection);
@@ -98,11 +116,9 @@ namespace EMAS.Service.Connection.DataAccess
 
             Dictionary<int, List<string>> permissions = [];
 
-            connection.Open();
-
-            string sql = "SELECT location_id FROM \"permission\".employee_permissions " +
-                         "JOIN \"permission\".permission_type.name ON permission_type.id = permission_type " +
-                         "WHERE employee_id = @employeeId ";
+            string sql = "SELECT \"permission\".permission_type.\"name\", location_id " +
+                "FROM \"permission\".employee_permissions JOIN \"permission\".permission_type ON permission_type.id = employee_permissions.permission_type " +
+                "WHERE employee_id = @employeeId";
 
 
             using var command = new NpgsqlCommand(sql, connection);

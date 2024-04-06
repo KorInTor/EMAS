@@ -11,12 +11,12 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about active delivery,
     /// </summary>
-    public class Delivery : ObservableObject
+    public class Delivery : ObservableObject , IEquipmentState, ILocationBounded 
     {
         /// <summary>
         /// Stores event from Dispatch event from dataBase.
         /// </summary>
-        private long _eventDispatchId;
+        private long _id;
 
         /// <summary>
         /// Date when delivery is dispatched.
@@ -41,10 +41,10 @@ namespace EMAS.Model
         /// <summary>
         /// 
         /// </summary>
-        public long EventDispatchId
+        public long Id
         {
-            get => _eventDispatchId;
-            set => SetProperty(ref _eventDispatchId, value);
+            get => _id;
+            set => SetProperty(ref _id, value);
         }
 
 
@@ -98,7 +98,7 @@ namespace EMAS.Model
 
         public Delivery(long dispatchEventId,int departureId ,int destinationId, DateTime date, Equipment equipment)
         {
-            EventDispatchId = dispatchEventId;
+            Id = dispatchEventId;
 
             DispatchDate = date;
 
@@ -117,7 +117,7 @@ namespace EMAS.Model
 
         public Delivery(int departureId, int destinationId, DateTime date, Equipment equipment)
         {
-            EventDispatchId = 0;
+            Id = 0;
 
             DispatchDate = date;
 

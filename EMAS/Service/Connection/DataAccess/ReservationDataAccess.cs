@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess
 {
-    public class ReservationDataAccess : IDataAccess<Reservation>
+    public class ReservationDataAccess : IEquipmentStateLocationBoundedDataAccess<Reservation>
     {
         private readonly EventDataAccess eventAccess = new();
 
@@ -52,8 +52,32 @@ namespace EMAS.Service.Connection.DataAccess
         {
             throw new NotImplementedException();
         }
+        public void Complete(Reservation completedReservation)
+        {
+            using var connection = ConnectionPool.GetConnection();
+            eventAccess.Add((SessionManager.UserId, EventDataAccess.EventTypes["ReserveEnded"], completedReservation.Equipment.Id));
 
-        public List<Reservation> SelectByLocationId(int locationId)
+            using var command = new NpgsqlCommand("UPDATE \"event\".reservation SET end_event_id=@start_event_id, WHERE start_event_id=@end_event_id ", connection);
+
+            command.Parameters.AddWithValue("@start_event_id", completedReservation.Id);
+            command.Parameters.AddWithValue("@end_event_id", eventAccess.LastEventId);
+
+            command.ExecuteNonQuery();
+
+            ConnectionPool.ReleaseConnection(connection);
+        }
+
+        public void SelectById(long Id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddOnLocation(Reservation item, int locationId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<Reservation> SelectOnLocation(int locationId)
         {
             var equipmentAccess = new EquipmentDataAccess();
             var employeeAccess = new EmployeeDataAccess();
@@ -77,21 +101,6 @@ namespace EMAS.Service.Connection.DataAccess
             }
             ConnectionPool.ReleaseConnection(connection);
             return reservations;
-        }
-
-        public void SetCompleted(Reservation completedReservation)
-        {
-            using var connection = ConnectionPool.GetConnection();
-            eventAccess.Add((SessionManager.UserId, EventDataAccess.EventTypes["ReserveEnded"], completedReservation.Equipment.Id));
-
-            using var command = new NpgsqlCommand("UPDATE \"event\".reservation SET end_event_id=@start_event_id, WHERE start_event_id=@end_event_id ", connection);
-
-            command.Parameters.AddWithValue("@start_event_id", completedReservation.Id);
-            command.Parameters.AddWithValue("@end_event_id", eventAccess.LastEventId);
-
-            command.ExecuteNonQuery();
-
-            ConnectionPool.ReleaseConnection(connection);
         }
     }
 }

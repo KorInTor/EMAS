@@ -29,7 +29,7 @@ namespace EMAS.ViewModel
 
         public EquipmentController()
         {
-            Locations = DataBaseClient.GetLocationData();
+            Locations = DataBaseClient.GetInstance().SelectLocations();
             InitLocationsData();
 
             _monitor = new DataChangeChecker(Locations.Select(location => location.Id).ToList());
@@ -42,7 +42,7 @@ namespace EMAS.ViewModel
             {
                 if (location.Id == ID)
                 {
-                    location.Equipments = DataBaseClient.GetEquipmentOnLocation(location.Id);
+                    location.Equipments = DataBaseClient.GetInstance().SelectEquipmentOn(location.Id);
                 }
             }
         }
@@ -63,9 +63,9 @@ namespace EMAS.ViewModel
         {
             foreach (var location in Locations)
             {
-                location.Equipments = DataBaseClient.GetEquipmentOnLocation(location.Id);
+                location.Equipments = DataBaseClient.GetInstance().SelectEquipmentOn(location.Id);
 
-                location.OutgoingDeliveries = DataBaseClient.GetDeliveryOutOf(location.Id);
+                location.OutgoingDeliveries = DataBaseClient.GetInstance().GetDeliverysOutOf(location.Id);
             }
 
             InitIncomingDeliveriesFromOutgoing();
