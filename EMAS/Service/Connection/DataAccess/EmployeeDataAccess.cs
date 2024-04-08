@@ -116,10 +116,19 @@ namespace EMAS.Service.Connection.DataAccess
 
             Dictionary<int, List<string>> permissions = [];
 
-            string sql = "SELECT \"permission\".permission_type.\"name\", location_id " +
-                "FROM \"permission\".employee_permissions JOIN \"permission\".permission_type ON permission_type.id = employee_permissions.permission_type " +
-                "WHERE employee_id = @employeeId";
+            string locationIdSql = "SELECT id FROM public.\"location\";";
+            using var command1 = new NpgsqlCommand(locationIdSql, connection);
+            using (var reader = command1.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    permissions.Add(reader.GetInt32(0), []);
+                }
+            }
 
+            string sql = "SELECT \"permission\".permission_type.\"name\", location_id " +
+            "FROM \"permission\".employee_permissions JOIN \"permission\".permission_type ON permission_type.id = employee_permissions.permission_type " +
+            "WHERE employee_id = @employeeId";
 
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("@employeeId", employeeId);
@@ -128,15 +137,7 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    int locationId = reader.GetInt32(0);
-                    string permissionType = reader.GetString(1);
-
-                    if (!permissions.TryGetValue(locationId, out List<string>? value))
-                    {
-                        value = [];
-                        permissions[locationId] = value;
-                    }
-                    value.Add(permissionType);
+                    permissions[reader.GetInt32(1)].Add(reader.GetString(0));
                 }
             }
             ConnectionPool.ReleaseConnection(connection);
