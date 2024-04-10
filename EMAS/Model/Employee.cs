@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using EMAS.Service.Connection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,13 +36,15 @@ namespace EMAS.Model
         private string _passwordHash = string.Empty;
 
         private string _username = string.Empty;
+        private PermissionInfo _permissionInfo;
 
-        public Employee(int id, string fullname, string username, string email)
+        public Employee(int id, string fullname, string username, string email, PermissionInfo permissionInfo)
         {
             Id = id;
             Fullname = fullname;
             Username = username;
             Email = email;
+            PermissionInfo = permissionInfo;
         }
 
         public Employee(string fullname, string email, string username)
@@ -98,6 +101,12 @@ namespace EMAS.Model
         {
             get => _passwordHash;
             set => SetProperty(ref _passwordHash, value);
+        }
+
+        public PermissionInfo PermissionInfo
+        {
+            get => _permissionInfo;
+            set => SetProperty(ref _permissionInfo, value);
         }
     }
 }

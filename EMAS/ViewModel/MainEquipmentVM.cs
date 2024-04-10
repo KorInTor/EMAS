@@ -15,7 +15,7 @@ namespace EMAS.ViewModel
     {
         [ObservableProperty]
         private Location _locationInfo = new();
-
+        public List<string> Permissions { get; set; }
         //New VM goes here.
         public EquipmentVM EquipmentVM { get; set; } = new();
         public DeliveryControlVM DeliveryControlVM { get; set;} = new();
@@ -25,7 +25,7 @@ namespace EMAS.ViewModel
         {
             //Updating VMs Data here;
             EquipmentVM.EquipmentSourceList = LocationInfo.Equipments;
-
+            EquipmentVM.ChangeCommandAccess(Permissions);
             DeliveryControlVM.ChagneSourceList(LocationInfo.IncomingDeliveries,LocationInfo.OutgoingDeliveries);
         }
     }

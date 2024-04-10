@@ -7,7 +7,9 @@
              xmlns:ViewModel="clr-namespace:EMAS.ViewModel"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    
+    <d:UserControl.DataContext>
+        <ViewModel:EquipmentVM/>
+    </d:UserControl.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -15,11 +17,11 @@
         </Grid.RowDefinitions>
         <DataGrid ItemsSource="{Binding FilteredEquipmentList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedEquipment}">
             <DataGrid.ContextMenu>
-                <ContextMenu ItemsSource="{Binding}">
+                <ContextMenu ItemsSource="{Binding NamedCommands}">
                     <ContextMenu.ItemContainerStyle>
                         <Style TargetType="MenuItem">
-                            <Setter Property="Header" Value="{Binding YourPropertyForHeader}"/>
-                            <Setter Property="Command" Value="{Binding YourCommand}"/>
+                            <Setter Property="Header" Value="{Binding Key}"/>
+                            <Setter Property="Command" Value="{Binding Value}"/>
                         </Style>
                     </ContextMenu.ItemContainerStyle>
                 </ContextMenu>

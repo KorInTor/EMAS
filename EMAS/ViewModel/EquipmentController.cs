@@ -24,7 +24,7 @@ namespace EMAS.ViewModel
 
         [ObservableProperty]
         private List<Location> _locations = [];
-
+        private PermissionInfo _permissions = SessionManager.PermissionInfo;
         public MainEquipmentVM MainEquipmentVM { get; set; } = new();
 
         public EquipmentController()
@@ -55,7 +55,7 @@ namespace EMAS.ViewModel
             }
             _monitor.StopActiveListeners();
             _monitor.InitListener(value.Id);
-
+            MainEquipmentVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
             MainEquipmentVM.LocationInfo = CurrentLocation;
         }
 

@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Office2010.Excel;
 using EMAS.Model;
+using EMAS.Model.Enum;
 using EMAS.ViewModel;
 using Npgsql;
 using System;
@@ -37,7 +38,8 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    employeeList.Add(new Employee(reader.GetInt32(0),reader.GetString(1),reader.GetString(3),reader.GetString(2)));
+                    PermissionInfo permissionInfo = GetPermissionInfo(reader.GetInt32(0));
+                    employeeList.Add(new Employee(reader.GetInt32(0),reader.GetString(1),reader.GetString(3),reader.GetString(2), permissionInfo));
                 }
             }
 
@@ -60,7 +62,8 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    employee = new Employee(id, reader.GetString(0), reader.GetString(1), reader.GetString(2));
+                    PermissionInfo permissionInfo = GetPermissionInfo(reader.GetInt32(id));
+                    employee = new Employee(id, reader.GetString(0), reader.GetString(1), reader.GetString(2), permissionInfo);
                 }
             }
 
@@ -82,7 +85,8 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    employee = new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3));
+                    PermissionInfo permissionInfo = GetPermissionInfo(reader.GetInt32(0));
+                    employee = new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), permissionInfo);
                 }
             }
 
@@ -94,18 +98,52 @@ namespace EMAS.Service.Connection.DataAccess
         {
             var connection = ConnectionPool.GetConnection();
 
-            string query = "UPDATE public.employee SET fullname=@fullname, email=@email, password_hash=@password_hash, username=@username WHERE id=@id;";
+            string query = "UPDATE public.employee SET fullname=@fullname, email=@email,";
+            if (objectToUpdate.PasswordHash != string.Empty)
+            {
+                query += (" password_hash=@password_hash,");
+            }
+            query += ("  username=@username WHERE id=@id;");
 
             using var command = new NpgsqlCommand(query, connection);
             command.Parameters.AddWithValue("@fullname", objectToUpdate.Fullname);
             command.Parameters.AddWithValue("@email", objectToUpdate.Email);
-            command.Parameters.AddWithValue("@password_hash", objectToUpdate.PasswordHash);
+            if (objectToUpdate.PasswordHash != string.Empty)
+                command.Parameters.AddWithValue("@password_hash", objectToUpdate.PasswordHash);
             command.Parameters.AddWithValue("@username",objectToUpdate.Username);
             command.Parameters.AddWithValue("@id", objectToUpdate.Id);
 
             command.ExecuteNonQuery();
 
+            ConnectionPool.ReleaseConnection(connection);
+
+            UpdatePermissions(objectToUpdate);
+
             Debug.WriteLine($"Успешно обновлён сотрудник: Id: {objectToUpdate.Id}, Name: {objectToUpdate.Fullname}");
+
+        }
+
+        public void UpdatePermissions(Employee objectToUpdate)
+        {
+            var connection = ConnectionPool.GetConnection();
+
+            string deleteQuery = "DELETE FROM \"permission\".employee_permissions WHERE employee_id=@employeeId;";
+            using var deleteCommand = new NpgsqlCommand(deleteQuery, connection);
+            deleteCommand.Parameters.AddWithValue("@employeeId", objectToUpdate.Id);
+            deleteCommand.ExecuteNonQuery();
+
+            string insertQuery = "INSERT INTO \"permission\".employee_permissions (employee_id, permission_type, location_id) VALUES (@employeeId, @permissionType, @location_id);";
+            foreach (var permissionsOnLocation in objectToUpdate.PermissionInfo.Permissions)
+            {
+                foreach (var permission in permissionsOnLocation.Value)
+                {
+                    using var insertCommand = new NpgsqlCommand(insertQuery, connection);
+                    insertCommand.Parameters.AddWithValue("@employeeId", objectToUpdate.Id);
+                    insertCommand.Parameters.AddWithValue("@location_id", permissionsOnLocation.Key);
+                    insertCommand.Parameters.AddWithValue("@permissionType", (int)Enum.Parse(typeof(PermissionType), permission));
+                    insertCommand.ExecuteNonQuery();
+                }
+            }
 
             ConnectionPool.ReleaseConnection(connection);
         }
@@ -116,10 +154,19 @@ namespace EMAS.Service.Connection.DataAccess
 
             Dictionary<int, List<string>> permissions = [];
 
-            string sql = "SELECT \"permission\".permission_type.\"name\", location_id " +
-                "FROM \"permission\".employee_permissions JOIN \"permission\".permission_type ON permission_type.id = employee_permissions.permission_type " +
-                "WHERE employee_id = @employeeId";
+            string locationIdSql = "SELECT id FROM public.\"location\";";
+            using var command1 = new NpgsqlCommand(locationIdSql, connection);
+            using (var reader = command1.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    permissions.Add(reader.GetInt32(0), []);
+                }
+            }
 
+            string sql = "SELECT \"permission\".permission_type.\"name\", location_id " +
+            "FROM \"permission\".employee_permissions JOIN \"permission\".permission_type ON permission_type.id = employee_permissions.permission_type " +
+            "WHERE employee_id = @employeeId";
 
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("@employeeId", employeeId);
@@ -128,15 +175,7 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    int locationId = reader.GetInt32(0);
-                    string permissionType = reader.GetString(1);
-
-                    if (!permissions.TryGetValue(locationId, out List<string>? value))
-                    {
-                        value = [];
-                        permissions[locationId] = value;
-                    }
-                    value.Add(permissionType);
+                    permissions[reader.GetInt32(1)].Add(reader.GetString(0));
                 }
             }
             ConnectionPool.ReleaseConnection(connection);

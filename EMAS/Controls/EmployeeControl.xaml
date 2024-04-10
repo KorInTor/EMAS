@@ -24,6 +24,7 @@
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
@@ -35,7 +36,8 @@
         <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SelectedEmployee.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         <Label Content="Имя пользователя" Grid.Row="4" Grid.Column="1"/>
         <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SelectedEmployee.Username , Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-        <Button Grid.Column="1" Grid.Row="6" Content="Подтвердить изменения" Margin="0,3,0,0" Command="{Binding EditEmployeeCommand, Mode=OneWay}"/>
-        <Button Grid.Column="1" Grid.Row="7" Content="Поменять пароль для пользователя" Margin="0,3,0,0" Command="{Binding ChangePasswordCommand, Mode=OneWay}"/>
+        <Button Grid.Column="1" Grid.Row="6" Content="Подтвердить изменения" Margin="3" Command="{Binding EditEmployeeCommand, Mode=OneWay}"/>
+        <Button Grid.Column="1" Grid.Row="7" Content="Поменять пароль для пользователя" Margin="3" Command="{Binding ChangePasswordCommand, Mode=OneWay}"/>
+        <Button Grid.Column="1" Grid.Row="8" Content="Настройка прав доступа" Margin="3" Command="{Binding ChangePermissionCommand, Mode=OneWay}"/>
     </Grid>
 </UserControl>
