@@ -1,5 +1,7 @@
-﻿using EMAS.View.AdditionWindow;
+﻿using EMAS.Model;
+using EMAS.View.AdditionWindow;
 using EMAS.ViewModel;
+using EMAS.Windows;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -17,6 +19,16 @@ namespace EMAS.View.Control
             vm.AdditionWindowRequested += OpenAdditionWindow;
             vm.PasswordChangedSuccsesfull += ShowPwdChangeSuccesfullMessage;
             vm.DataChnageSuccesfull += ShowSuccesfullMessage;
+            vm.PermissionChangeWindowRequested += ShowPermissionWindow;
+        }
+
+        private void ShowPermissionWindow(Employee employee)
+        {
+            PermissionChangerWindow permissionChangerWindow = new();
+            PermissionChangerVM permissionChangerVM = new();
+            permissionChangerVM.InitValues(employee);
+            permissionChangerWindow.DataContext = permissionChangerVM;
+            permissionChangerWindow.ShowDialog();
         }
 
         private void ShowSuccesfullMessage(string message)

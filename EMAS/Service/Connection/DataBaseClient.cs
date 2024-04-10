@@ -1,4 +1,5 @@
-﻿using EMAS.Exceptions;
+﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
+using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.HistoryEntry;
 using EMAS.Service.Connection.DataAccess;
@@ -113,6 +114,16 @@ namespace EMAS.Service.Connection
         public List<Location> SelectLocations()
         {
             return locationDataAccess.Select();
+        }
+
+        public Dictionary<int,string> SelectNamedLocations()
+        {
+            Dictionary<int, string> namedLocations = [];
+            foreach (Location location in SelectLocations())
+            {
+                namedLocations.Add(location.Id, location.Name);
+            }
+            return namedLocations;
         }
     }
 }

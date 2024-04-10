@@ -15,6 +15,7 @@ namespace EMAS.ViewModel
         public event Action<string,string> PasswordChangedSuccsesfull;
         public event Action<string> DataChnageSuccesfull;
         public event Action<string> DataChangeFailed;
+        public event Action<Employee> PermissionChangeWindowRequested;
 
         [ObservableProperty]
         private ObservableCollection<Employee> _employeeList;
@@ -30,6 +31,9 @@ namespace EMAS.ViewModel
 
         [ObservableProperty]
         private RelayCommand _editEmployeeCommand;
+
+        [ObservableProperty]
+        private RelayCommand _changePermissionCommand;
 
         [ObservableProperty]
         private bool _isEmployeeSelected;
@@ -51,6 +55,7 @@ namespace EMAS.ViewModel
             ChangePasswordCommand.NotifyCanExecuteChanged();
             AddEmployeeCommand.NotifyCanExecuteChanged();
             EditEmployeeCommand.NotifyCanExecuteChanged();
+            ChangePermissionCommand.NotifyCanExecuteChanged();
         }
 
         private void ChangeEmployeePassword()
@@ -60,6 +65,11 @@ namespace EMAS.ViewModel
             DataBaseClient.GetInstance().Update(SelectedEmployee);
 
             PasswordChangedSuccsesfull?.Invoke($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.", password);
+        }
+
+        private void RequestPermissionsWindow()
+        {
+            PermissionChangeWindowRequested?.Invoke(SelectedEmployee);
         }
 
         private void EditEmployee()
@@ -89,6 +99,7 @@ namespace EMAS.ViewModel
             AddEmployeeCommand = new RelayCommand(RequestAdditionWindow);
             EditEmployeeCommand = new RelayCommand(EditEmployee,() => IsEmployeeSelected);
             ChangePasswordCommand = new RelayCommand(ChangeEmployeePassword, () => IsEmployeeSelected);
+            ChangePermissionCommand = new RelayCommand(RequestPermissionsWindow, () => IsEmployeeSelected);
         }
     }
 }

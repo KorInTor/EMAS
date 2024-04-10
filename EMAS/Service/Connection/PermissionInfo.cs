@@ -14,6 +14,11 @@ namespace EMAS.Service.Connection
             IsCurrentEmployeeAdmin = isCurrentEmployeeAdmin;
             Permissions = permissions;
         }
+        public PermissionInfo()
+        {
+            IsCurrentEmployeeAdmin = false;
+            Permissions = [];
+        }
 
         public bool IsCurrentEmployeeAdmin { get; private set; }
 

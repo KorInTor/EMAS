@@ -8,8 +8,8 @@ namespace EMAS.Model.Enum
 {
     public enum PermissionType
     {
-        DeliveryAccess,
-        EquipmentAdd,
-        EquipmentEdit
+        DeliveryAccess = 1,
+        EquipmentAdd = 2,
+        EquipmentEdit = 3
     }
 }
