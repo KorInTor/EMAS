@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,10 +33,11 @@ namespace EMAS.ViewModel
         private bool _canConfirm = true;
 
         public RelayCommand ConfirmSelectionCommand { get; }
-
+        public static IWindowsDialogueService DialogueService { get; private set; }
         public LocationPickerVM()
         {
             ConfirmSelectionCommand = new RelayCommand(ConfirmSelection, () => CanConfirm);
+            DialogueService = new WindowsDialogueService();
         }
 
         private void ConfirmSelection()

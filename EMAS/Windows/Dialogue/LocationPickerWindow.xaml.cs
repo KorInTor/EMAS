@@ -25,18 +25,6 @@ namespace EMAS.Windows.Dialogue
         public LocationPickerWindow()
         {
             InitializeComponent();
-            if (DataContext == null)
-            {
-                Debug.WriteLine($"DataContext не назанчен для{nameof(LocationPickerControl)}");
-                return;
-            }
-            LocationPickerVM dataContext = DataContext as LocationPickerVM;
-            dataContext.ActionSuccessful += CloseWindow;
-        }
-
-        private void CloseWindow(string obj)
-        {
-            this.Close();
         }
     }
 }

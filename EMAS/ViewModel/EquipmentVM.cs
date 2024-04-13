@@ -2,7 +2,9 @@
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
 using EMAS.Model.Enum;
+using EMAS.Service;
 using EMAS.Service.Connection;
+using EMAS.Windows;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -51,7 +53,7 @@ namespace EMAS.ViewModel
 
         [ObservableProperty]
         private Equipment _desiredEquipment = new();
-
+        public static IWindowsDialogueService DialogueService { get; private set; }
         public EquipmentVM()
         {
             ClearFiltersCommand = new RelayCommand(ClearFilters);
@@ -62,6 +64,8 @@ namespace EMAS.ViewModel
 
             InitCommandDictionary();
             DesiredEquipment.PropertyChanged += FilterEquipment;
+
+            DialogueService = new WindowsDialogueService();
         }
 
         private void InitCommandDictionary()
@@ -153,6 +157,8 @@ namespace EMAS.ViewModel
         private void RequestAdditionWindow()
         {
             AdditionWindowRequested?.Invoke(CurrentLocationId);
+            var dataContext = new EquipmentAdditionVM(CurrentLocationId);
+            DialogueService.ShowWidnow<EquipmentAdditionWindow>(dataContext);
         }
 
         private void RequestHistoryWindow()

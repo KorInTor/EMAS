@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Service;
 using EMAS.Service.Connection;
 using System.Diagnostics;
 
@@ -21,7 +22,7 @@ namespace EMAS.ViewModel
 
         [ObservableProperty]
         private string _tags;
-
+        public static IWindowsDialogueService DialogueService { get; private set; }
         public EquipmentAdditionVM()
         {
             ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
@@ -39,10 +40,12 @@ namespace EMAS.ViewModel
             {
                 NewEquipment.Tags = [.. Tags.Split('\n')];
                 DataBaseClient.GetInstance().AddOnLocation(NewEquipment, _currentLocationId);
+                DialogueService.ShowSuccesfullMessage("Добавленно успешно!");
                 AdditionConfirmed?.Invoke();
             }
             catch(Exception exception)
             {
+                DialogueService.ShowFailMessage(exception.Message);
                 AdditionFailed?.Invoke(exception.Message);
                 Debug.WriteLine(exception.Message);
             }
