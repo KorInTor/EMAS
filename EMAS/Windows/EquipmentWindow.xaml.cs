@@ -1,9 +1,4 @@
-﻿using EMAS.Service.Connection;
-using System.Windows;
-using EMAS.Model;
-using System.Windows.Controls;
-using EMAS.Controls;
-using EMAS.ViewModel;
+﻿using System.Windows;
 
 namespace EMAS.Windows
 {

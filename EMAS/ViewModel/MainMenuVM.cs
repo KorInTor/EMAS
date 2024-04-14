@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EMAS.Service;
 using EMAS.Service.Connection;
+using EMAS.Windows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +23,7 @@ namespace EMAS.ViewModel
         private bool _isAdministrator;
 
         public event Action<int> OpenWindow;
-
+        public static IWindowsDialogueService DialogueService { get; private set; }
         public MainMenuVM()
         {
             IsAdministrator = SessionManager.PermissionInfo.IsCurrentEmployeeAdmin;
@@ -29,11 +31,14 @@ namespace EMAS.ViewModel
             OpenEquipmentWindow = new RelayCommand(RequestEquipmentWindow);
             OpenAboutWindow = new RelayCommand(RequestAboutWindow);
             OpenAdminWindow = new RelayCommand(RequestAdminWindow, () => IsAdministrator);
+
+            DialogueService = new WindowsDialogueService();
         }
 
         private void RequestEquipmentWindow()
         {
             OpenWindow?.Invoke(0);
+            DialogueService.ShowWindow<EquipmentWindow>();
         }
 
         private void RequestAboutWindow()
@@ -44,6 +49,7 @@ namespace EMAS.ViewModel
         private void RequestAdminWindow()
         {
             OpenWindow?.Invoke(2);
+            DialogueService.ShowWindow<AdminWindow>();
         }
     }
 }

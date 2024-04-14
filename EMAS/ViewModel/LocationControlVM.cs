@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Service;
 using EMAS.Service.Connection;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -28,20 +29,23 @@ namespace EMAS.ViewModel
         public LocationControlVM()
         {
             AddLocationCommand = new RelayCommand(AddNewLocation, () => IsNewNameEmpty);
+            DialogueService = new WindowsDialogueService();
         }
-
+        public static IWindowsDialogueService DialogueService { get; private set; }
         private void AddNewLocation()
         {
             try 
             {
                 DataBaseClient.GetInstance().Add(new Location(0,NewLocationName));
+                AdditionConfirmed?.Invoke("Добавление нового объекта успешно");
+                DialogueService.ShowSuccesfullMessage("Добавление нового объекта успешно");
+                UpdateLocationsList();
             }
             catch (Exception ex)
             {
                 AdditionFailed?.Invoke("Имя не заполнено");
+                DialogueService.ShowFailMessage("Имя не заполнено");
             }
-            AdditionConfirmed?.Invoke("Добавление нового объекта успешно");
-            
         }
 
         private void UpdateLocationsList()

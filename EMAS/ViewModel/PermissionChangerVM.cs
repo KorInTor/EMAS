@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
 using EMAS.Model.Enum;
+using EMAS.Service;
 using EMAS.Service.Connection;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,7 @@ namespace EMAS.ViewModel
         private LocationPermission _selectedLocation;
 
         private PermissionInfo currentUserPermissions = SessionManager.PermissionInfo;
+        public static IWindowsDialogueService DialogueService { get; private set; }
 
         public PermissionChangerVM()
         {
@@ -54,10 +56,12 @@ namespace EMAS.ViewModel
             {
                 DataBaseClient.GetInstance().Update(ManagedEmployee);
                 PermissionChangeSucessfull?.Invoke("Успешно изменены права доступа");
+                DialogueService.ShowSuccesfullMessage("Успешно изменены права доступа");
             }
             catch(Exception exception)
             {
                 PermissionChangeFailed?.Invoke(exception.Message);
+                DialogueService.ShowFailMessage(exception.Message);
             }
         }
 

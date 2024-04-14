@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.Service.Security;
 using System.ComponentModel;
@@ -19,7 +20,7 @@ namespace EMAS.ViewModel
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(ConfirmAddition))]
         private bool _canAddEmployee;
-
+        public static IWindowsDialogueService DialogueService { get; private set; }
         public RelayCommand ConfirmAddition { get; set; }
 
         public void AddNewEmployee()
@@ -28,6 +29,7 @@ namespace EMAS.ViewModel
             {
 
                 AdditionFailed?.Invoke("Не все поля заполнены.");
+                DialogueService.ShowFailMessage("Не все поля заполнены.");
                 return;
             }
 
@@ -36,19 +38,24 @@ namespace EMAS.ViewModel
             try
             {
                 NewEmployee.PasswordHash = PasswordManager.Hash(password);
-                DataBaseClient.GetInstance().Add(NewEmployee);
+                DataBaseClient.GetInstance().Add(NewEmployee); 
+                AdditionSucceeded?.Invoke("Добавление успешно!\r\nПароль сотрудника в вашем буфере обмена.", password);
+                DialogueService.ClipboardSetText(password);
+                DialogueService.ShowSuccesfullMessage("Добавление успешно!\r\nПароль сотрудника в вашем буфере обмена.");
             }
             catch (Exception ex)
             {
                 AdditionFailed?.Invoke(ex.Message);
+                DialogueService.ShowFailMessage(ex.Message);
+                DialogueService.Close();
             }
-            AdditionSucceeded?.Invoke("Добавление успешно!\r\nПароль сотрудника в вашем буфере обмена.",password);
         }
 
-        public EmployeeAdditionVM()
+        public EmployeeAdditionVM(IWindowsDialogueService dialogueService)
         {
             ConfirmAddition = new RelayCommand(AddNewEmployee, () => CanAddEmployee);
             NewEmployee.PropertyChanged += OnNewEmployeePropertyChanged;
+            DialogueService = dialogueService;
         }
 
         private void OnNewEmployeePropertyChanged(object? sender, PropertyChangedEventArgs e)

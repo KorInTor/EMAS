@@ -22,20 +22,7 @@ namespace EMAS
         {
             InitializeComponent();
             AuthorizationVM dataContext = (AuthorizationVM)this.DataContext;
-            dataContext.LoginFailed += ShowErrorMessage;
-            dataContext.LoginSucceeded += OpenMainMenu;
-        }
-
-        private void OpenMainMenu()
-        {
-            MainMenu mainMenu = new();
-            mainMenu.Show();
-            this.Close();
-        }
-
-        private void ShowErrorMessage(string obj)
-        {
-            MessageBox.Show(obj, "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
+            dataContext.LoginSucceeded += Close;
         }
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)

@@ -1,8 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.Service.Security;
+using EMAS.View.AdditionWindow;
+using EMAS.Windows;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
@@ -16,7 +19,7 @@ namespace EMAS.ViewModel
         public event Action<string> DataChnageSuccesfull;
         public event Action<string> DataChangeFailed;
         public event Action<Employee> PermissionChangeWindowRequested;
-
+        public static IWindowsDialogueService DialogueService { get; private set; }
         [ObservableProperty]
         private ObservableCollection<Employee> _employeeList;
 
@@ -62,14 +65,28 @@ namespace EMAS.ViewModel
         {
             string password = PasswordManager.Generate(10);
             SelectedEmployee.PasswordHash = PasswordManager.Hash(password);
-            DataBaseClient.GetInstance().Update(SelectedEmployee);
+            try
+            {
+                DataBaseClient.GetInstance().Update(SelectedEmployee);
+            }
+            catch (Exception ex)
+            {
+                DataChangeFailed?.Invoke($"Ошибка изменения данных: \n\r{ex.Message}");
+                DialogueService.ShowFailMessage(ex.Message);
+                return;
+            }
 
             PasswordChangedSuccsesfull?.Invoke($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.", password);
+            DialogueService.ClipboardSetText(password);
+            DialogueService.ShowSuccesfullMessage($"Новый пароль для \"{SelectedEmployee.Fullname}\" находится в вашем буфере обмена.");
         }
 
         private void RequestPermissionsWindow()
         {
             PermissionChangeWindowRequested?.Invoke(SelectedEmployee);
+            PermissionChangerVM permissionChangerVM= new();
+            permissionChangerVM.InitValues(SelectedEmployee);
+            DialogueService.ShowWindow<PermissionChangerWindow>(permissionChangerVM);
         }
 
         private void EditEmployee()
@@ -89,6 +106,7 @@ namespace EMAS.ViewModel
         private void RequestAdditionWindow()
         {
             AdditionWindowRequested?.Invoke();
+            DialogueService.ShowWindow<EmployeeAddition>(new EmployeeAdditionVM(DialogueService));
             EmployeeList = new ObservableCollection<Employee>(DataBaseClient.GetInstance().SelectEmployee());
         }
 
@@ -100,6 +118,8 @@ namespace EMAS.ViewModel
             EditEmployeeCommand = new RelayCommand(EditEmployee,() => IsEmployeeSelected);
             ChangePasswordCommand = new RelayCommand(ChangeEmployeePassword, () => IsEmployeeSelected);
             ChangePermissionCommand = new RelayCommand(RequestPermissionsWindow, () => IsEmployeeSelected);
+
+            DialogueService = new WindowsDialogueService();
         }
     }
 }

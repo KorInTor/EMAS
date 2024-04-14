@@ -1,7 +1,4 @@
-﻿using EMAS.ViewModel;
-using EMAS.Windows;
-using System.Diagnostics;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 namespace EMAS.Controls
 {
@@ -13,20 +10,6 @@ namespace EMAS.Controls
         public EquipmentControl()
         {
             InitializeComponent();
-            if (DataContext == null)
-            {
-                Debug.WriteLine("Не найден Data Context!");
-                return;
-            }
-            EquipmentVM dataContext = (EquipmentVM)DataContext;
-            dataContext.AdditionWindowRequested += OpenAdditionWindow;
-        }
-
-        private void OpenAdditionWindow(int obj)
-        {
-            EquipmentAdditionWindow additionWindow = new();
-            additionWindow.DataContext = new EquipmentAdditionVM(obj);
-            additionWindow.ShowDialog();
         }
     }
 }
