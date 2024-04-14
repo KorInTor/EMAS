@@ -158,7 +158,7 @@ namespace EMAS.ViewModel
         {
             AdditionWindowRequested?.Invoke(CurrentLocationId);
             var dataContext = new EquipmentAdditionVM(CurrentLocationId);
-            DialogueService.ShowWidnow<EquipmentAdditionWindow>(dataContext);
+            DialogueService.ShowWindow<EquipmentAdditionWindow>(dataContext);
         }
 
         private void RequestHistoryWindow()

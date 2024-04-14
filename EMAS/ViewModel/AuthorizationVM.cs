@@ -47,7 +47,7 @@ namespace EMAS.ViewModel
             {
                 SessionManager.Login(Username, Password);
                 LoginSucceeded?.Invoke();
-                DialogueService.ShowWidnow<MainMenu>();
+                DialogueService.ShowWindow<MainMenu>();
             }
             catch (ConnectionFailedException)
             {

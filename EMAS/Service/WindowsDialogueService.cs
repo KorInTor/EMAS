@@ -25,7 +25,7 @@ namespace EMAS.Service
             Clipboard.SetText(text);
         }
 
-        public void ShowWidnow<T>(object dataContext) where T : Window, new()
+        public void ShowWindow<T>(object dataContext) where T : Window, new()
         {
             _window = new T
             {
@@ -39,7 +39,7 @@ namespace EMAS.Service
             _window.Close();
         }
 
-        public void ShowWidnow<T>() where T : Window, new()
+        public void ShowWindow<T>() where T : Window, new()
         {
             _window = new T();
             _window.ShowDialog();

@@ -12,8 +12,8 @@ namespace EMAS.Service
         public void ShowSuccesfullMessage(string message, string header = "Успешно.");
         public void ShowFailMessage(string message, string header = "Ошибка!");
         public void ClipboardSetText(string text);
-        public void ShowWidnow<T>(object dataContext) where T : Window, new();
-        public void ShowWidnow<T>() where T : Window, new();
+        public void ShowWindow<T>(object dataContext) where T : Window, new();
+        public void ShowWindow<T>() where T : Window, new();
         public void Close();
     }
 }

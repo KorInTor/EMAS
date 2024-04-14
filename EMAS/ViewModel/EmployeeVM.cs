@@ -86,7 +86,7 @@ namespace EMAS.ViewModel
             PermissionChangeWindowRequested?.Invoke(SelectedEmployee);
             PermissionChangerVM permissionChangerVM= new();
             permissionChangerVM.InitValues(SelectedEmployee);
-            DialogueService.ShowWidnow<PermissionChangerWindow>(permissionChangerVM);
+            DialogueService.ShowWindow<PermissionChangerWindow>(permissionChangerVM);
         }
 
         private void EditEmployee()
@@ -106,7 +106,7 @@ namespace EMAS.ViewModel
         private void RequestAdditionWindow()
         {
             AdditionWindowRequested?.Invoke();
-            DialogueService.ShowWidnow<EmployeeAddition>(new EmployeeAdditionVM(DialogueService));
+            DialogueService.ShowWindow<EmployeeAddition>(new EmployeeAdditionVM(DialogueService));
             EmployeeList = new ObservableCollection<Employee>(DataBaseClient.GetInstance().SelectEmployee());
         }
 
