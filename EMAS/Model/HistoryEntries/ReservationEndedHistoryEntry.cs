@@ -13,9 +13,15 @@ namespace EMAS.Model.HistoryEntry
         {
         }
 
+        public string TypeOfAction
+        {
+            get { return $"Снятие резервации"; }
+        }
+
         public override string ToString()
         {
-            return ($"Дата: {this.Date} Закончил резервирование. Ответственный: {this.Responcible.Fullname}");
+            return ($"Дата: {this.Date} Закончил резервирование. Ответственный: {this.Responsible.Fullname}");
         }
+
     }
 }

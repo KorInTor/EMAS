@@ -1,0 +1,30 @@
+﻿<Window x:Class="EMAS.Windows.Dialogue.HistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EMAS.Windows.Dialogue"
+        xmlns:ViewModel="clr-namespace:EMAS.ViewModel"
+        mc:Ignorable="d"
+        Title="HistoryWindow" Height="500" Width="380">
+    <Window.DataContext>
+        <ViewModel:HistoryVM/>
+    </Window.DataContext>
+    <Grid>
+
+        <ListView Name="HistoryListView" ItemsSource="{Binding History}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Name="HistoryEntryItemStackPanel">
+                        <Button Name="historyEntryButton" Click="historyEntryButton_Click">
+                            <StackPanel>
+                                <TextBox Text="{Binding Responsible}"/>
+                                <TextBox Text="{Binding Date}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Window>

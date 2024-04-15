@@ -12,9 +12,15 @@ namespace EMAS.Model.HistoryEntry
         {
         }
 
+        public string TypeOfAction
+        {
+            get { return $"Добавление"; }
+        }
+
         public override string ToString()
         {
-            return ($"Дата: {this.Date} Добавил в базу. Ответственный: {this.Responcible.Fullname}");
+            return ($"Дата: {this.Date} Добавил в базу. Ответственный: {this.Responsible.Fullname}");
         }
+
     }
 }

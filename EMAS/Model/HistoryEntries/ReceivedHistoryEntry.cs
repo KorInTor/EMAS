@@ -12,9 +12,15 @@ namespace EMAS.Model
         {
         }
 
+        public string TypeOfAction
+        {
+            get { return $"Приём"; }
+        }
+
         public override string ToString()
         {
-            return ($"Дата: {this.Date} Принят. Ответственный: {this.Responcible.Fullname}");
+            return ($"Дата: {this.Date} Принят. Ответственный: {this.Responsible.Fullname}");
         }
+
     }
 }
