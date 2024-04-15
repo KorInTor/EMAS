@@ -17,6 +17,7 @@ namespace EMAS.Service.Connection
         private IEquipmentStateLocationBoundedDataAccess<Reservation> reservationDataAccess;
         private IDataAccess<Employee> employeeDataAccess;
         private IDataAccess<Location> locationDataAccess;
+        private HistoryEntryDataAccess historyEntryDataAccess;
 
         private static DataBaseClient instance;
 
@@ -27,6 +28,7 @@ namespace EMAS.Service.Connection
             reservationDataAccess = new ReservationDataAccess();
             employeeDataAccess = new EmployeeDataAccess();
             locationDataAccess = new LocationDataAccess();
+            historyEntryDataAccess = new HistoryEntryDataAccess();
         }
 
         public static DataBaseClient GetInstance()
@@ -124,6 +126,11 @@ namespace EMAS.Service.Connection
                 namedLocations.Add(location.Id, location.Name);
             }
             return namedLocations;
+        }
+
+        public List<HistoryEntryBase> SelectHistoryEntryByEquipmentId(int id)
+        {
+            return historyEntryDataAccess.SelectByEquipmentId(id);
         }
     }
 }

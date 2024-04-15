@@ -30,6 +30,7 @@ namespace EMAS.ViewModel
         public AuthorizationVM()
         {
             LetMeInCommand = new RelayCommand(FastLogin);
+            DialogueService = new WindowsDialogueService();
         }
 
         public RelayCommand LoginCommand => _loginCommand ??= new RelayCommand(Login);
@@ -37,8 +38,28 @@ namespace EMAS.ViewModel
 
         private void FastLogin()
         {
-            SessionManager.Login("Пряхин", "ps123123");
-            LoginSucceeded?.Invoke();
+            try
+            {
+                SessionManager.Login("Пряхин", "ps123123");
+                LoginSucceeded?.Invoke();
+                DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(6);
+                DialogueService.ShowWindow<MainMenu>();
+            }
+            catch (ConnectionFailedException)
+            {
+                LoginFailed?.Invoke("Проблемы с соединением, обратитесь к администратору.");
+                DialogueService.ShowFailMessage("Проблемы с соединением, обратитесь к администратору.");
+            }
+            catch (InvalidUsernameException)
+            {
+                LoginFailed?.Invoke("Такого пользователя не существует.");
+                DialogueService.ShowFailMessage("Такого пользователя не существует.");
+            }
+            catch (InvalidPasswordException)
+            {
+                LoginFailed?.Invoke("Неправильный пароль.");
+                DialogueService.ShowFailMessage("Неправильный пароль.");
+            }
         }
 
         private void Login()

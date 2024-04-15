@@ -49,7 +49,7 @@ namespace EMAS.Service.Connection.DataAccess
 
         public Employee SelectById(int id)
         {
-            using var connection = ConnectionPool.GetConnection();
+            var connection = ConnectionPool.GetConnection();
             
             string sql = "SELECT fullname, username, email FROM public.employee WHERE id=@employeeId;";
 
@@ -62,7 +62,7 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    PermissionInfo permissionInfo = GetPermissionInfo(reader.GetInt32(id));
+                    PermissionInfo permissionInfo = GetPermissionInfo(id);
                     employee = new Employee(id, reader.GetString(0), reader.GetString(1), reader.GetString(2), permissionInfo);
                 }
             }

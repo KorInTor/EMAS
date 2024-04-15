@@ -30,10 +30,10 @@ namespace EMAS.Service.Connection.DataAccess
             var connection = ConnectionPool.GetConnection();
 
             string query = "SELECT event.date, event.employee_id, event_type.\"name\" " +
-                    "FROM public.\"event\" AS event " +
-                    "JOIN public.equipment_event AS equipmenEvent " +
-                    "JOIN public.event_type AS event_type ON event_type.id = event.event_type " +
-                    "AND event.id = equipmenEvent.event_id AND equipmenEvent.equipment_id = @id";
+              "FROM public.\"event\" AS event " +
+              "JOIN public.equipment_event AS equipmentEvent ON event.id = equipmentEvent.event_id " +
+              "JOIN public.event_type AS event_type ON event_type.id = event.event_type " +
+              "WHERE equipmentEvent.equipment_id = @id";
 
             using var command = new NpgsqlCommand(query, connection);
             command.Parameters.AddWithValue("@id", equipmentId);
@@ -59,6 +59,7 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 Debug.WriteLine("Полученны данные: " + entry.ToString());
             }
+
             return list;
         }
     }
