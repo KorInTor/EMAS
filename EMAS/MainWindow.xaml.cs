@@ -22,7 +22,7 @@ namespace EMAS
         {
             InitializeComponent();
             AuthorizationVM dataContext = (AuthorizationVM)this.DataContext;
-            dataContext.LoginSucceeded += Close;
+            dataContext.LoginSucceeded += Hide;
         }
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
