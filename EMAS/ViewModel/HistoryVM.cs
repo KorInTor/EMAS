@@ -12,13 +12,7 @@ namespace EMAS.ViewModel
 {
     public partial class HistoryVM : ObservableObject
     {
-
         [ObservableProperty]
         private List<HistoryEntryBase> history;
-
-        public HistoryVM()
-        {
-            history = EquipmentController.GetHistoryOfEquipmentPiece();
-        }
     }
 }

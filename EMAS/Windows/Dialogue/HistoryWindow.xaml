@@ -12,14 +12,14 @@
     </Window.DataContext>
     <Grid>
 
-        <ListView Name="HistoryListView" ItemsSource="{Binding History}">
+        <ListView Name="HistoryListView" ItemsSource="{Binding History, Mode=OneWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Name="HistoryEntryItemStackPanel">
-                        <Button Name="historyEntryButton" Click="historyEntryButton_Click">
+                        <Button Name="historyEntryButton" Click="historyEntryButton_Click" HorizontalAlignment="Stretch">
                             <StackPanel>
-                                <TextBox Text="{Binding Responsible}"/>
-                                <TextBox Text="{Binding Date}"/>
+                                <TextBox Text="{Binding TypeOfAction, Mode=OneWay}"/>
+                                <TextBox Text="{Binding Date, Mode=OneWay}"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>

@@ -98,9 +98,9 @@ namespace EMAS.ViewModel
             }
         }
 
-        public static List<HistoryEntryBase> GetHistoryOfEquipmentPiece()
+        public static List<HistoryEntryBase> GetHistoryOfEquipmentPiece(int Id)
         {
-            throw new NotImplementedException();
+            return DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(Id);
         }
     }
 }
