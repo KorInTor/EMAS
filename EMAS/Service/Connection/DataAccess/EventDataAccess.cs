@@ -23,10 +23,7 @@ namespace EMAS.Service.Connection.DataAccess
         {
             get
             {
-                if (_connection is null)
-                {
-                    Connection ??= ConnectionPool.GetConnection();
-                }
+                _connection ??= ConnectionPool.GetConnection();
                 return _connection;
             }
             set => _connection = value;
@@ -36,10 +33,7 @@ namespace EMAS.Service.Connection.DataAccess
         {
             get
             {
-                if (_eventTypes is null)
-                {
-                    _eventTypes = SelectEventTypes();
-                }
+                _eventTypes ??= SelectEventTypes();
                 return _eventTypes;
             }
         }
