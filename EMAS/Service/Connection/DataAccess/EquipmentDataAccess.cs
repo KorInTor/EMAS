@@ -43,8 +43,8 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    List<string> tags = [.. ((string[])reader[9])]; // Считывание tags
-                    list.Add(new Equipment(reader.GetString(11), reader.GetString(8), reader.GetString(12), reader.GetString(5), reader.GetString(4), reader.GetString(6), reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(7), tags));
+                    // Tags rework in progress
+                    list.Add(new Equipment(reader.GetString(11), reader.GetString(8), reader.GetString(12), reader.GetString(5), reader.GetString(4), reader.GetString(6), reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(7), []));
                 }
 
                 foreach (var data in list)
@@ -61,7 +61,7 @@ namespace EMAS.Service.Connection.DataAccess
             var connection = ConnectionPool.GetConnection();
 
             string query = @"
-    SELECT status, inventory_number, description, accuracy_class, measurment_units, measurment_limit, id, name, manufacturer, type, serial_number, tags
+    SELECT status, inventory_number, description, accuracy_class, measurment_units, measurment_limit, id, name, manufacturer, type, serial_number 
     FROM public.equipment
     WHERE id = @Id;
 ";
@@ -85,9 +85,9 @@ namespace EMAS.Service.Connection.DataAccess
                         string manufacturer = reader.GetString(8);
                         string type = reader.GetString(9);
                         string factoryNumber = reader.GetString(10);
-                        List<string> tags = new List<string>((string[])reader[11]);
+                        //List<string> tags = new List<string>((string[])reader[11]); Tags Will be Reworked
 
-                        Equipment equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, tags);
+                        Equipment equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, []);
                         return equipment;
                     }
                 }
@@ -122,10 +122,9 @@ namespace EMAS.Service.Connection.DataAccess
             var connection = ConnectionPool.GetConnection();
 
             string query = @"
-        INSERT INTO public.equipment
-        (id, name, manufacturer, type, measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, tags, location_id, status, description)
-        VALUES(nextval('equipment_id_seq'::regclass), @Name, @Manufacturer, @Type, @Units, @AccuracyClass, @Limit, @FactoryNumber, @RegistrationNumber, @Tags, @LocationId, @Status, @Description);
-    ";
+                INSERT INTO public.equipment
+                (name, manufacturer, type, measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, location_id, status, description)
+                VALUES(@Name, @Manufacturer, @Type, @Units, @AccuracyClass, @Limit, @FactoryNumber, @RegistrationNumber, @LocationId, @Status, @Description) RETURNING id; ";
 
             using (var command = new NpgsqlCommand(query, connection))
             {
@@ -137,15 +136,17 @@ namespace EMAS.Service.Connection.DataAccess
                 command.Parameters.AddWithValue("@Limit", item.Limit);
                 command.Parameters.AddWithValue("@FactoryNumber", item.FactoryNumber);
                 command.Parameters.AddWithValue("@RegistrationNumber", item.RegistrationNumber);
-                command.Parameters.AddWithValue("@Tags", string.Join(",", item.Tags));
+                //command.Parameters.AddWithValue("@Tags", string.Join(",", item.Tags)); Tags Will be Reworked
                 command.Parameters.AddWithValue("@LocationId", locationId);
                 command.Parameters.AddWithValue("@Status", item.Status);
                 command.Parameters.AddWithValue("@Description", item.Description);
 
-                command.ExecuteNonQuery();
+                item.Id = (int)command.ExecuteScalar();
             }
-
             ConnectionPool.ReleaseConnection(connection);
+
+            EventDataAccess eventDataAccess = new();
+            eventDataAccess.Add((SessionManager.UserId, EventDataAccess.EventTypes["Addition"], item.Id));
         }
     }
 }

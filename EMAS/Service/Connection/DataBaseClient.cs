@@ -42,16 +42,19 @@ namespace EMAS.Service.Connection
             if (objectToAdd is Employee newEmployee)
             {
                 employeeDataAccess.Add(newEmployee);
+                return;
             }
 
             if (objectToAdd is Location newLocation)
             {
                 locationDataAccess.Add(newLocation);
+                return;
             }
 
             if (objectToAdd is Delivery newDelivery)
             {
                 deliveryDataAccess.Add(newDelivery);
+                return;
             }
             throw new NotSupportedException("Этот тип не поддерживается");
         }
@@ -61,10 +64,12 @@ namespace EMAS.Service.Connection
             if (objectToAdd is Equipment newEquipment)
             {
                 equipmentDataAccess.AddOnLocation(newEquipment, locationId);
+                return;
             }
             if (objectToAdd is Reservation newReservation)
             {
                 reservationDataAccess.AddOnLocation(newReservation, locationId);
+                return;
             }
             throw new NotSupportedException("Этот тип не поддерживается");
         }
@@ -74,23 +79,29 @@ namespace EMAS.Service.Connection
             if (objectToUpdate is Delivery newDelivery)
             {
                 deliveryDataAccess.Update(newDelivery);
+                return;
             }
             if (objectToUpdate is Equipment newEquipment)
             {
                 equipmentDataAccess.Update(newEquipment);
+                return;
             }
             if (objectToUpdate is Reservation newReservation)
             {
                 reservationDataAccess.Update(newReservation);
+                return;
             }
             if (objectToUpdate is Employee newEmployee)
             {
                 employeeDataAccess.Update(newEmployee);
+                return;
             }
             if (objectToUpdate is Location newLocation)
             {
                 locationDataAccess.Update(newLocation);
+                return;
             }
+            throw new NotSupportedException("Этот тип не поддерживается");
         }
 
         public List<Delivery> GetDeliverysOutOf(int locationId)
