@@ -85,7 +85,7 @@ namespace EMAS.Service.Connection.DataAccess
             foreach (var completedReservation in reservations)
             {
                 using var connection = ConnectionPool.GetConnection();
-                Event newEvent = new(SessionManager.UserId, 0, EventType.ReserveEnded, completedReservation.Equipment.Id);
+                Event newEvent = new(SessionManager.UserId, 0, EventType.ReserveEnded, completedReservation.ReservedObjectsList.Id);
                 eventAccess.Add(newEvent);
 
                 using var command = new NpgsqlCommand("UPDATE \"event\".reservation SET end_event_id=@start_event_id, WHERE start_event_id=@end_event_id ", connection);
@@ -109,7 +109,7 @@ namespace EMAS.Service.Connection.DataAccess
             foreach(var objectToAdd in reservations)
             {
                 var connection = ConnectionPool.GetConnection();
-                Event newEvent = new(SessionManager.UserId, 0, EventType.Reserved, objectToAdd.Equipment.Id);
+                Event newEvent = new(SessionManager.UserId, 0, EventType.Reserved, objectToAdd.ReservedObjectsList.Id);
                 eventAccess.Add(newEvent);
                 objectToAdd.Id = newEvent.Id;
 

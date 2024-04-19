@@ -11,7 +11,7 @@ namespace EMAS.Model
     {
         private long _id;
 
-        private Equipment _equipment;
+        private List<IStorableObject> _reservedObjectsList;
 
         private DateTime _startDate;
 
@@ -27,10 +27,10 @@ namespace EMAS.Model
             set => SetProperty(ref _id, value);
         }
 
-        public Equipment Equipment
+        public List<IStorableObject> ReservedObjectsList
         {
-            get => _equipment;
-            set => SetProperty(ref _equipment, value);
+            get => _reservedObjectsList;
+            set => SetProperty(ref _reservedObjectsList, value);
         }
 
         public DateTime StartDate
@@ -57,20 +57,20 @@ namespace EMAS.Model
             set => SetProperty(ref _locationId, value);
         }
 
-        public Reservation(long id, DateTime startDate, Employee reservedBy, string additionalInfo, Equipment equipment)
+        public Reservation(long id, DateTime startDate, Employee reservedBy, string additionalInfo, List<IStorableObject> objectsToReserv)
         {
             Id = id;
             StartDate = startDate;
             ReservedBy = reservedBy;
             AdditionalInfo = additionalInfo;
-            Equipment = equipment;
+            ReservedObjectsList = objectsToReserv;
         }
 
         public Reservation() 
         {
             StartDate = DateTime.MinValue;
 
-            Equipment = new();
+            ReservedObjectsList = new();
         }
     }
 }

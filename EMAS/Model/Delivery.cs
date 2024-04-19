@@ -11,7 +11,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about active delivery,
     /// </summary>
-    public class Delivery : ObservableObject , IObjectState, ILocationBounded 
+    public class Delivery : ObservableObject , IObjectState, ILocationBounded
     {
         /// <summary>
         /// Stores event from Dispatch event from dataBase.
@@ -23,10 +23,7 @@ namespace EMAS.Model
         /// </summary>
         private DateTime _dispatchDate;
 
-        /// <summary>
-        /// What equipment is in delivery.
-        /// </summary>
-        private Equipment _packageList;
+        private List<IStorableObject> _packageList;
 
         /// <summary>
         /// Stores destination <see cref="Location"/> id.
@@ -60,7 +57,7 @@ namespace EMAS.Model
         /// <summary>
         /// Returns equipment that are in current delivery.
         /// </summary>
-        public Equipment PackageList
+        public List<IStorableObject> PackageList
         {
             get => _packageList;
             set => SetProperty(ref _packageList, value);
@@ -84,25 +81,13 @@ namespace EMAS.Model
             set => SetProperty(ref _departureId, value);
         }
 
-        /// <summary>
-        /// Creates outgoing Delivery.
-        /// </summary>
-        /// <param name="EquipmentList">Equipment that will be sended.</param>
-        public Delivery(Equipment Equipment, int destinationId)
-        {
-            DispatchDate = DateTime.Now;
-
-            this.PackageList = Equipment;
-
-        }
-
-        public Delivery(long dispatchEventId,int departureId ,int destinationId, DateTime date, Equipment equipment)
+        public Delivery(long dispatchEventId,int departureId ,int destinationId, DateTime date, List<IStorableObject> storableObjects)
         {
             Id = dispatchEventId;
 
             DispatchDate = date;
 
-            PackageList = equipment;
+            PackageList = storableObjects;
 
             DestinationId = destinationId;
             DepartureId = departureId;
