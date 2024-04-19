@@ -50,7 +50,7 @@ namespace EMAS.ViewModel
         public DeliveryControlVM()
         {
             DesiredDelivery.PropertyChanged += FilterDeliveries;
-            DesiredDelivery.Equipment.PropertyChanged += FilterDeliveries;
+            DesiredDelivery.PackageList.PropertyChanged += FilterDeliveries;
 
             ConfirmDeliveryCommand = new RelayCommand(ConfirmDelivery, CanConfirmDelivery);
             ClearFiltersCommand = new RelayCommand(ClearFilters);
@@ -60,12 +60,12 @@ namespace EMAS.ViewModel
         {
             //No memory leaks on my duty @Danil.
             DesiredDelivery.PropertyChanged -= FilterDeliveries;
-            DesiredDelivery.Equipment.PropertyChanged -= FilterDeliveries;
+            DesiredDelivery.PackageList.PropertyChanged -= FilterDeliveries;
 
             DesiredDelivery = new();
 
             DesiredDelivery.PropertyChanged += FilterDeliveries;
-            DesiredDelivery.Equipment.PropertyChanged += FilterDeliveries;
+            DesiredDelivery.PackageList.PropertyChanged += FilterDeliveries;
         }
 
         private bool CanConfirmDelivery()
@@ -91,17 +91,17 @@ namespace EMAS.ViewModel
             {
                 var properties = new List<Func<Delivery, bool>>
                 {
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Name) || delivery.Equipment.Name.Contains(DesiredDelivery.Equipment.Name),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Description) || delivery.Equipment.Description.Contains(DesiredDelivery.Equipment.Description),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Type) || delivery.Equipment.Type.Contains(DesiredDelivery.Equipment.Type),
-                    delivery => DesiredDelivery.Equipment.Id == 0 || delivery.Equipment.Id == DesiredDelivery.Equipment.Id,
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Units) || delivery.Equipment.Units.Contains(DesiredDelivery.Equipment.Units),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Limit) || delivery.Equipment.Limit.Contains(DesiredDelivery.Equipment.Limit),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.AccuracyClass) || delivery.Equipment.AccuracyClass.Contains(DesiredDelivery.Equipment.AccuracyClass),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Manufacturer) || delivery.Equipment.Manufacturer.Contains(DesiredDelivery.Equipment.Manufacturer),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.RegistrationNumber) || delivery.Equipment.RegistrationNumber.Contains(DesiredDelivery.Equipment.RegistrationNumber),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.FactoryNumber) || delivery.Equipment.FactoryNumber.Contains(DesiredDelivery.Equipment.FactoryNumber),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Status) || delivery.Equipment.Status.Contains(DesiredDelivery.Equipment.Status)
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Name) || delivery.PackageList.Name.Contains(DesiredDelivery.PackageList.Name),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Description) || delivery.PackageList.Description.Contains(DesiredDelivery.PackageList.Description),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Type) || delivery.PackageList.Type.Contains(DesiredDelivery.PackageList.Type),
+                    delivery => DesiredDelivery.PackageList.Id == 0 || delivery.PackageList.Id == DesiredDelivery.PackageList.Id,
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Units) || delivery.PackageList.Units.Contains(DesiredDelivery.PackageList.Units),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Limit) || delivery.PackageList.Limit.Contains(DesiredDelivery.PackageList.Limit),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.AccuracyClass) || delivery.PackageList.AccuracyClass.Contains(DesiredDelivery.PackageList.AccuracyClass),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Manufacturer) || delivery.PackageList.Manufacturer.Contains(DesiredDelivery.PackageList.Manufacturer),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.RegistrationNumber) || delivery.PackageList.RegistrationNumber.Contains(DesiredDelivery.PackageList.RegistrationNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.FactoryNumber) || delivery.PackageList.FactoryNumber.Contains(DesiredDelivery.PackageList.FactoryNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Status) || delivery.PackageList.Status.Contains(DesiredDelivery.PackageList.Status)
                 };
 
                 filteredList = source.Where(delivery => properties.All(property => property(delivery))).ToList();
@@ -122,17 +122,17 @@ namespace EMAS.ViewModel
             {
                 var properties = new List<Func<Delivery, bool>>
                 {
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Name) || delivery.Equipment.Name.Contains(DesiredDelivery.Equipment.Name),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Description) || delivery.Equipment.Description.Contains(DesiredDelivery.Equipment.Description),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Type) || delivery.Equipment.Type.Contains(DesiredDelivery.Equipment.Type),
-                    delivery => DesiredDelivery.Equipment.Id == 0 || delivery.Equipment.Id == DesiredDelivery.Equipment.Id,
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Units) || delivery.Equipment.Units.Contains(DesiredDelivery.Equipment.Units),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Limit) || delivery.Equipment.Limit.Contains(DesiredDelivery.Equipment.Limit),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.AccuracyClass) || delivery.Equipment.AccuracyClass.Contains(DesiredDelivery.Equipment.AccuracyClass),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Manufacturer) || delivery.Equipment.Manufacturer.Contains(DesiredDelivery.Equipment.Manufacturer),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.RegistrationNumber) || delivery.Equipment.RegistrationNumber.Contains(DesiredDelivery.Equipment.RegistrationNumber),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.FactoryNumber) || delivery.Equipment.FactoryNumber.Contains(DesiredDelivery.Equipment.FactoryNumber),
-                    delivery => string.IsNullOrEmpty(DesiredDelivery.Equipment.Status) || delivery.Equipment.Status.Contains(DesiredDelivery.Equipment.Status),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Name) || delivery.PackageList.Name.Contains(DesiredDelivery.PackageList.Name),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Description) || delivery.PackageList.Description.Contains(DesiredDelivery.PackageList.Description),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Type) || delivery.PackageList.Type.Contains(DesiredDelivery.PackageList.Type),
+                    delivery => DesiredDelivery.PackageList.Id == 0 || delivery.PackageList.Id == DesiredDelivery.PackageList.Id,
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Units) || delivery.PackageList.Units.Contains(DesiredDelivery.PackageList.Units),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Limit) || delivery.PackageList.Limit.Contains(DesiredDelivery.PackageList.Limit),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.AccuracyClass) || delivery.PackageList.AccuracyClass.Contains(DesiredDelivery.PackageList.AccuracyClass),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Manufacturer) || delivery.PackageList.Manufacturer.Contains(DesiredDelivery.PackageList.Manufacturer),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.RegistrationNumber) || delivery.PackageList.RegistrationNumber.Contains(DesiredDelivery.PackageList.RegistrationNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.FactoryNumber) || delivery.PackageList.FactoryNumber.Contains(DesiredDelivery.PackageList.FactoryNumber),
+                    delivery => string.IsNullOrEmpty(DesiredDelivery.PackageList.Status) || delivery.PackageList.Status.Contains(DesiredDelivery.PackageList.Status),
 
                     delivery => DesiredDelivery.Id == 0 || delivery.Id == DesiredDelivery.Id,
                     delivery => DesiredDelivery.DispatchDate == DateTime.MinValue || delivery.DispatchDate == DesiredDelivery.DispatchDate,

@@ -1,5 +1,6 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using EMAS.Model;
+﻿using EMAS.Model;
+using EMAS.Model.Event;
+using EMAS.Service.Connection.DataAccess.Interface;
 using EMAS.ViewModel;
 using Npgsql;
 using System;
@@ -13,11 +14,6 @@ namespace EMAS.Service.Connection.DataAccess
 {
     public class EquipmentDataAccess : ILocationBoundedDataAccess<Equipment>
     {
-        public void Add(Equipment objectToAdd)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Delete(Equipment objectToDelete)
         {
             throw new NotImplementedException();
@@ -70,26 +66,24 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 command.Parameters.AddWithValue("@Id", id);
 
-                using (var reader = command.ExecuteReader())
+                using var reader = command.ExecuteReader();
+                if (reader.Read())
                 {
-                    if (reader.Read())
-                    {
-                        string status = reader.GetString(0);
-                        string registrationNumber = reader.GetString(1);
-                        string description = reader.GetString(2);
-                        string accuracyClass = reader.IsDBNull(3) ? null : reader.GetString(3);
-                        string units = reader.GetString(4);
-                        string limit = reader.GetString(5);
-                        int equipmentId = reader.GetInt32(6);
-                        string name = reader.GetString(7);
-                        string manufacturer = reader.GetString(8);
-                        string type = reader.GetString(9);
-                        string factoryNumber = reader.GetString(10);
-                        //List<string> tags = new List<string>((string[])reader[11]); Tags Will be Reworked
+                    string status = reader.GetString(0);
+                    string registrationNumber = reader.GetString(1);
+                    string description = reader.GetString(2);
+                    string accuracyClass = reader.IsDBNull(3) ? null : reader.GetString(3);
+                    string units = reader.GetString(4);
+                    string limit = reader.GetString(5);
+                    int equipmentId = reader.GetInt32(6);
+                    string name = reader.GetString(7);
+                    string manufacturer = reader.GetString(8);
+                    string type = reader.GetString(9);
+                    string factoryNumber = reader.GetString(10);
+                    //List<string> tags = new List<string>((string[])reader[11]); Tags Will be Reworked
 
-                        Equipment equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, []);
-                        return equipment;
-                    }
+                    Equipment equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, []);
+                    return equipment;
                 }
             }
 
@@ -119,34 +113,54 @@ namespace EMAS.Service.Connection.DataAccess
 
         public void AddOnLocation(Equipment item, int locationId)
         {
-            var connection = ConnectionPool.GetConnection();
+            AddOnLocation([item],locationId);
+        }
 
-            string query = @"
+        public void Delete(Equipment[] objectToDelete)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update(Equipment[] objectToUpdate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddOnLocation(Equipment[] items, int locationId)
+        {
+            foreach (var equipment in items)
+            {
+                var connection = ConnectionPool.GetConnection();
+
+                string query = @"
                 INSERT INTO public.equipment
                 (name, manufacturer, type, measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, location_id, status, description)
                 VALUES(@Name, @Manufacturer, @Type, @Units, @AccuracyClass, @Limit, @FactoryNumber, @RegistrationNumber, @LocationId, @Status, @Description) RETURNING id; ";
 
-            using (var command = new NpgsqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@Name", item.Name);
-                command.Parameters.AddWithValue("@Manufacturer", item.Manufacturer);
-                command.Parameters.AddWithValue("@Type", item.Type);
-                command.Parameters.AddWithValue("@Units", item.Units);
-                command.Parameters.AddWithValue("@AccuracyClass", item.AccuracyClass ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@Limit", item.Limit);
-                command.Parameters.AddWithValue("@FactoryNumber", item.FactoryNumber);
-                command.Parameters.AddWithValue("@RegistrationNumber", item.RegistrationNumber);
-                //command.Parameters.AddWithValue("@Tags", string.Join(",", item.Tags)); Tags Will be Reworked
-                command.Parameters.AddWithValue("@LocationId", locationId);
-                command.Parameters.AddWithValue("@Status", item.Status);
-                command.Parameters.AddWithValue("@Description", item.Description);
+                using (var command = new NpgsqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Name", equipment.Name);
+                    command.Parameters.AddWithValue("@Manufacturer", equipment.Manufacturer);
+                    command.Parameters.AddWithValue("@Type", equipment.Type);
+                    command.Parameters.AddWithValue("@Units", equipment.Units);
+                    command.Parameters.AddWithValue("@AccuracyClass", equipment.AccuracyClass ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@Limit", equipment.Limit);
+                    command.Parameters.AddWithValue("@FactoryNumber", equipment.FactoryNumber);
+                    command.Parameters.AddWithValue("@RegistrationNumber", equipment.RegistrationNumber);
+                    //command.Parameters.AddWithValue("@Tags", string.Join(",", item.Tags)); Tags Will be Reworked
+                    command.Parameters.AddWithValue("@LocationId", locationId);
+                    command.Parameters.AddWithValue("@Status", equipment.Status);
+                    command.Parameters.AddWithValue("@Description", equipment.Description);
 
-                item.Id = (int)command.ExecuteScalar();
+                    equipment.Id = (int)command.ExecuteScalar();
+                }
+                ConnectionPool.ReleaseConnection(connection);
+
+                EventDataAccess eventDataAccess = new();
+
+                Event newEvent = new(SessionManager.UserId, 0, EventType.Addition, equipment.Id);
+                eventDataAccess.Add(newEvent);
             }
-            ConnectionPool.ReleaseConnection(connection);
-
-            EventDataAccess eventDataAccess = new();
-            eventDataAccess.Add((SessionManager.UserId, EventDataAccess.EventTypes["Addition"], item.Id));
         }
     }
 }

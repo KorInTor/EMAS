@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using EMAS.Service.Connection.DataAccess.Interface;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,7 @@ namespace EMAS.Service.Connection.DataAccess
         { 
             get 
             {
-                if (_connection is null)
-                {
-                    Connection = ConnectionPool.GetConnection();
-                }
+                _connection ??= ConnectionPool.GetConnection();
                 return _connection;
             }
             set => _connection = value; 
@@ -39,7 +37,17 @@ namespace EMAS.Service.Connection.DataAccess
             ConnectionPool.ReleaseConnection(Connection);
         }
 
+        public void Add((long, int)[] objectToAdd)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Delete((long, int) objectToDelete)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Delete((long, int)[] objectToDelete)
         {
             throw new NotImplementedException();
         }
@@ -55,6 +63,11 @@ namespace EMAS.Service.Connection.DataAccess
         }
 
         public void Update((long, int) objectToUpdate)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update((long, int)[] objectToUpdate)
         {
             throw new NotImplementedException();
         }

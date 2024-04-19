@@ -1,4 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Features;
+using EMAS.Model.Event;
+using EMAS.Service.Connection.DataAccess.Interface;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -9,10 +11,8 @@ using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess
 {
-    public class EventDataAccess : IDataAccess<ValueTuple<int, int, int>>
+    public class EventDataAccess : IDataAccess<Event>
     {
-        public long LastEventId { get; private set; }
-
         private readonly EquipmentInEventDataAccess EqEventDataAccess = new();
 
         private static Dictionary<string, short> _eventTypes;
@@ -29,74 +29,56 @@ namespace EMAS.Service.Connection.DataAccess
             set => _connection = value;
         }
 
-        public static Dictionary<string, short> EventTypes
-        {
-            get
-            {
-                _eventTypes ??= SelectEventTypes();
-                return _eventTypes;
-            }
-        }
-
         /// <summary>
         /// Inserts new Event in DataBase.
         /// </summary>
-        /// <param name="objectToAdd">Item1 = EmployeeID, Item2 = EventTypeId (Can Get From <see cref="EventTypes"/>), Item3 = EquipmentId</param>
-        public void Add((int, int, int) objectToAdd)
+        /// <param name="newEvent"></param>
+        public void Add(Event newEvent)
         {
             using var command = new NpgsqlCommand("INSERT INTO public.event (employee_id, event_type) VALUES (@emp_id,@eventTypeId) RETURNING id ", Connection);
-            command.Parameters.AddWithValue("@emp_id", objectToAdd.Item1);
-            command.Parameters.AddWithValue("@eventTypeId", objectToAdd.Item2);
+            command.Parameters.AddWithValue("@emp_id", newEvent.EmployeeId);
+            command.Parameters.AddWithValue("@eventTypeId", (int)newEvent.EventType);
 
-            LastEventId = (long)command.ExecuteScalar();
+            newEvent.Id = (long)command.ExecuteScalar();
 
             ConnectionPool.ReleaseConnection(Connection);
 
-            EqEventDataAccess.Add((LastEventId, objectToAdd.Item3));
+            EqEventDataAccess.Add((newEvent.Id, newEvent.ObjectId));
         }
 
-        public void Delete((int, int, int) objectToDelete)
+        public void Delete(Event objectToDelete)
         {
             throw new NotImplementedException();
         }
 
-        public List<(int, int, int)> Select()
+        public List<Model.Event.Event> Select()
         {
             throw new NotImplementedException();
         }
 
-        public (int, int, int) SelectById(int id)
+        public Model.Event.Event SelectById(int id)
         {
             throw new NotImplementedException();
         }
 
-        public void Update((int, int, int) objectToUpdate)
+        public void Update(Model.Event.Event objectToUpdate)
         {
             throw new NotImplementedException();
         }
 
-        private static Dictionary<string, short> SelectEventTypes()
+        public void Add(Model.Event.Event[] objectToAdd)
         {
-            var eventTypes = new Dictionary<string,short>();
+            throw new NotImplementedException();
+        }
 
-            string sql = "SELECT id, \"name\" FROM public.event_type;";
-            using var command = new NpgsqlCommand(sql, Connection);
+        public void Delete(Model.Event.Event[] objectToDelete)
+        {
+            throw new NotImplementedException();
+        }
 
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    eventTypes.Add(reader.GetString(1), reader.GetInt16(0));
-                }
-
-                foreach (var item in eventTypes)
-                {
-                    Debug.WriteLine($"Получено тип события:{item.Key} - {item.Value}");
-                }
-
-            }
-
-            return eventTypes;
+        public void Update(Model.Event.Event[] objectToUpdate)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,36 +1,18 @@
 ﻿using EMAS.Model;
+using EMAS.Model.Event;
+using EMAS.Service.Connection.DataAccess.Interface;
 using Npgsql;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess
 {
-    public class ReservationDataAccess : IEquipmentStateLocationBoundedDataAccess<Reservation>
+    public class ReservationDataAccess : IObjectStateLocationBoundedDataAccess<Reservation>
     {
         private readonly EventDataAccess eventAccess = new();
 
         public void Add(Reservation objectToAdd)
         {
-            var connection = ConnectionPool.GetConnection();
-            eventAccess.Add((SessionManager.UserId, EventDataAccess.EventTypes["Reserved"], objectToAdd.Equipment.Id));
-            objectToAdd.Id = eventAccess.LastEventId;
-
-            string query = "INSERT INTO \"event\".reservation (start_event_id, location_id, additional_info) VALUES(@start_event_id, @location_id, @additional_info);";
-            using var command = new NpgsqlCommand(query, connection);
-
-            command.Parameters.AddWithValue("@start_event_id", objectToAdd.Id);
-            command.Parameters.AddWithValue("@location_id", objectToAdd.LocationId);
-            command.Parameters.AddWithValue("@additional_info", objectToAdd.AdditionalInfo);
-
-            command.ExecuteNonQuery();
-
-            Debug.WriteLine("Успешно добавлена резервация");
-
-            ConnectionPool.ReleaseConnection(connection);
+            Add([objectToAdd]);
         }
 
         public void Delete(Reservation objectToDelete)
@@ -54,17 +36,7 @@ namespace EMAS.Service.Connection.DataAccess
         }
         public void Complete(Reservation completedReservation)
         {
-            using var connection = ConnectionPool.GetConnection();
-            eventAccess.Add((SessionManager.UserId, EventDataAccess.EventTypes["ReserveEnded"], completedReservation.Equipment.Id));
-
-            using var command = new NpgsqlCommand("UPDATE \"event\".reservation SET end_event_id=@start_event_id, WHERE start_event_id=@end_event_id ", connection);
-
-            command.Parameters.AddWithValue("@start_event_id", completedReservation.Id);
-            command.Parameters.AddWithValue("@end_event_id", eventAccess.LastEventId);
-
-            command.ExecuteNonQuery();
-
-            ConnectionPool.ReleaseConnection(connection);
+            Complete([completedReservation]);
         }
 
         public void SelectById(long Id)
@@ -97,10 +69,73 @@ namespace EMAS.Service.Connection.DataAccess
             while (reader.Read())
             {
                 reservations.Add(new Reservation(reader.GetInt64(2), reader.GetDateTime(0), employeeAccess.SelectById(reader.GetInt32(4)), reader.GetString(3), equipmentAccess.SelectById(reader.GetInt32(1))));
-                Debug.WriteLine($"Получили delivery идущее ИЗ Объекта с id - {locationId}");
+                Debug.WriteLine($"Получили Reservation идущее ИЗ Объекта с id - {locationId}");
             }
             ConnectionPool.ReleaseConnection(connection);
             return reservations;
+        }
+
+        public void AddOnLocation(Reservation[] item, int locationId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Complete(Reservation[] reservations)
+        {
+            foreach (var completedReservation in reservations)
+            {
+                using var connection = ConnectionPool.GetConnection();
+                Event newEvent = new(SessionManager.UserId, 0, EventType.ReserveEnded, completedReservation.Equipment.Id);
+                eventAccess.Add(newEvent);
+
+                using var command = new NpgsqlCommand("UPDATE \"event\".reservation SET end_event_id=@start_event_id, WHERE start_event_id=@end_event_id ", connection);
+
+                command.Parameters.AddWithValue("@start_event_id", completedReservation.Id);
+                command.Parameters.AddWithValue("@end_event_id", newEvent.Id);
+
+                command.ExecuteNonQuery();
+
+                ConnectionPool.ReleaseConnection(connection);
+            }
+        }
+
+        Reservation IObjectStateDataAccess<Reservation>.SelectById(long Id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(Reservation[] reservations)
+        {
+            foreach(var objectToAdd in reservations)
+            {
+                var connection = ConnectionPool.GetConnection();
+                Event newEvent = new(SessionManager.UserId, 0, EventType.Reserved, objectToAdd.Equipment.Id);
+                eventAccess.Add(newEvent);
+                objectToAdd.Id = newEvent.Id;
+
+                string query = "INSERT INTO \"event\".reservation (start_event_id, location_id, additional_info) VALUES(@start_event_id, @location_id, @additional_info);";
+                using var command = new NpgsqlCommand(query, connection);
+
+                command.Parameters.AddWithValue("@start_event_id", objectToAdd.Id);
+                command.Parameters.AddWithValue("@location_id", objectToAdd.LocationId);
+                command.Parameters.AddWithValue("@additional_info", objectToAdd.AdditionalInfo);
+
+                command.ExecuteNonQuery();
+
+                Debug.WriteLine("Успешно добавлена резервация");
+
+                ConnectionPool.ReleaseConnection(connection);
+            }
+        }
+
+        public void Delete(Reservation[] objectToDelete)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update(Reservation[] objectToUpdate)
+        {
+            throw new NotImplementedException();
         }
     }
 }

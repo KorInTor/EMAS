@@ -3,6 +3,7 @@ using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.HistoryEntry;
 using EMAS.Service.Connection.DataAccess;
+using EMAS.Service.Connection.DataAccess.Interface;
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Cryptography;
@@ -12,9 +13,9 @@ namespace EMAS.Service.Connection
 {
     public class DataBaseClient
     {
-        private IEquipmentStateLocationBoundedDataAccess<Delivery> deliveryDataAccess;
+        private IObjectStateLocationBoundedDataAccess<Delivery> deliveryDataAccess;
         private ILocationBoundedDataAccess<Equipment> equipmentDataAccess;
-        private IEquipmentStateLocationBoundedDataAccess<Reservation> reservationDataAccess;
+        private IObjectStateLocationBoundedDataAccess<Reservation> reservationDataAccess;
         private IDataAccess<Employee> employeeDataAccess;
         private IDataAccess<Location> locationDataAccess;
         private HistoryEntryDataAccess historyEntryDataAccess;
@@ -56,6 +57,40 @@ namespace EMAS.Service.Connection
                 deliveryDataAccess.Add(newDelivery);
                 return;
             }
+
+            if (objectToAdd is Reservation newReservation)
+            {
+                reservationDataAccess.Add(newReservation);
+                return;
+            }
+            throw new NotSupportedException("Этот тип не поддерживается");
+        }
+
+        public void Add(object[] objectToAdd)
+        {
+            if (objectToAdd is Employee[] newEmployee)
+            {
+                employeeDataAccess.Add(newEmployee);
+                return;
+            }
+
+            if (objectToAdd is Location[] newLocation)
+            {
+                locationDataAccess.Add(newLocation);
+                return;
+            }
+
+            if (objectToAdd is Delivery[] newDelivery)
+            {
+                deliveryDataAccess.Add(newDelivery);
+                return;
+            }
+
+            if (objectToAdd is Reservation[] newReservation)
+            {
+                reservationDataAccess.Add(newReservation);
+                return;
+            }
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
@@ -67,6 +102,21 @@ namespace EMAS.Service.Connection
                 return;
             }
             if (objectToAdd is Reservation newReservation)
+            {
+                reservationDataAccess.AddOnLocation(newReservation, locationId);
+                return;
+            }
+            throw new NotSupportedException("Этот тип не поддерживается");
+        }
+
+        public void AddOnLocation(ILocationBounded[] objectToAdd, int locationId)
+        {
+            if (objectToAdd is Equipment[] newEquipment)
+            {
+                equipmentDataAccess.AddOnLocation(newEquipment, locationId);
+                return;
+            }
+            if (objectToAdd is Reservation[] newReservation)
             {
                 reservationDataAccess.AddOnLocation(newReservation, locationId);
                 return;

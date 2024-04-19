@@ -11,7 +11,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about active delivery,
     /// </summary>
-    public class Delivery : ObservableObject , IEquipmentState, ILocationBounded 
+    public class Delivery : ObservableObject , IObjectState, ILocationBounded 
     {
         /// <summary>
         /// Stores event from Dispatch event from dataBase.
@@ -26,7 +26,7 @@ namespace EMAS.Model
         /// <summary>
         /// What equipment is in delivery.
         /// </summary>
-        private Equipment _equipment;
+        private Equipment _packageList;
 
         /// <summary>
         /// Stores destination <see cref="Location"/> id.
@@ -60,10 +60,10 @@ namespace EMAS.Model
         /// <summary>
         /// Returns equipment that are in current delivery.
         /// </summary>
-        public Equipment Equipment
+        public Equipment PackageList
         {
-            get => _equipment;
-            set => SetProperty(ref _equipment, value);
+            get => _packageList;
+            set => SetProperty(ref _packageList, value);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace EMAS.Model
         {
             DispatchDate = DateTime.Now;
 
-            this.Equipment = Equipment;
+            this.PackageList = Equipment;
 
         }
 
@@ -102,7 +102,7 @@ namespace EMAS.Model
 
             DispatchDate = date;
 
-            Equipment = equipment;
+            PackageList = equipment;
 
             DestinationId = destinationId;
             DepartureId = departureId;
@@ -112,19 +112,7 @@ namespace EMAS.Model
         {
             DispatchDate = DateTime.MinValue;
 
-            Equipment = new();
-        }
-
-        public Delivery(int departureId, int destinationId, DateTime date, Equipment equipment)
-        {
-            Id = 0;
-
-            DispatchDate = date;
-
-            Equipment = equipment;
-
-            DestinationId = destinationId;
-            DepartureId = departureId;
+            PackageList = new();
         }
     }
 }
