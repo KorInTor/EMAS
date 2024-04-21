@@ -15,6 +15,8 @@ namespace EMAS.Model
 
         private DateTime _startDate;
 
+        private DateTime _endDate;
+
         private Employee _reservedBy;
 
         private string _additionalInfo;
@@ -37,6 +39,12 @@ namespace EMAS.Model
         {
             get => _startDate;
             set => SetProperty(ref _startDate, value);
+        }
+
+        public DateTime EndDate
+        {
+            get => _endDate;
+            set => SetProperty(ref _endDate, value);
         }
 
         public Employee ReservedBy

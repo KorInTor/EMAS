@@ -23,6 +23,8 @@ namespace EMAS.Model
         /// </summary>
         private DateTime _dispatchDate;
 
+        private DateTime _arrivalDate;
+
         private List<IStorableObject> _packageList;
 
         /// <summary>
@@ -52,6 +54,12 @@ namespace EMAS.Model
         {
             get => _dispatchDate;
             set => SetProperty(ref _dispatchDate, value);
+        }
+
+        public DateTime ArrivalDate
+        {
+            get => _arrivalDate;
+            set => SetProperty(ref _arrivalDate, value);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using EMAS.Exceptions;
 using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Model.HistoryEntry;
 using EMAS.ViewModel;
 using Npgsql;
@@ -17,22 +18,21 @@ namespace EMAS.Service.Connection.DataAccess
         public List<HistoryEntryBase> SelectByEquipmentId(int equipmentId)
         {
             var list = new List<HistoryEntryBase>();
-            var eventConstructors = new Dictionary<string, Func<Employee, DateOnly, HistoryEntryBase>>
+            var eventConstructors = new Dictionary<EventType, Func<Employee, DateOnly, HistoryEntryBase>>
             {
-                { "Addition", (responcible, date) => new AdditionHistoryEntry(responcible, date) },
-                { "Sent", (responcible, date) => new SentHistoryEntry(responcible, date) },
-                { "Arrived", (responcible, date) => new ReceivedHistoryEntry(responcible, date) },
-                { "Decommissioned", (responcible, date) => new DecommissionedHistoryEntry(responcible, date) },
-                { "Reserved", (responcible, date) => new ReservedHistoryEntry(responcible, date) },
-                { "ReserveEnded", (responcible, date) => new ReservationEndedHistoryEntry(responcible, date) }
+                { EventType.Addition, (responcible, date) => new AdditionHistoryEntry(responcible, date) },
+                { EventType.Sent, (responcible, date) => new SentHistoryEntry(responcible, date) },
+                { EventType.Arrived, (responcible, date) => new ReceivedHistoryEntry(responcible, date) },
+                { EventType.Decommissioned, (responcible, date) => new DecommissionedHistoryEntry(responcible, date) },
+                { EventType.Reserved, (responcible, date) => new ReservedHistoryEntry(responcible, date) },
+                { EventType.ReserveEnded, (responcible, date) => new ReservationEndedHistoryEntry(responcible, date) }
             };
 
             var connection = ConnectionPool.GetConnection();
 
-            string query = "SELECT event.date, event.employee_id, event_type.\"name\" " +
+            string query = "SELECT event.date, event.employee_id, event.event_type " +
               "FROM public.\"event\" AS event " +
               "JOIN public.equipment_event AS equipmentEvent ON event.id = equipmentEvent.event_id " +
-              "JOIN public.event_type AS event_type ON event_type.id = event.event_type " +
               "WHERE equipmentEvent.equipment_id = @id";
 
             using var command = new NpgsqlCommand(query, connection);
@@ -43,15 +43,15 @@ namespace EMAS.Service.Connection.DataAccess
                 var employeeAccess = new EmployeeDataAccess();
                 Employee responcible = employeeAccess.SelectById(reader.GetInt32(1));
                 DateOnly date = DateOnly.FromDateTime(reader.GetDateTime(0));
-                string eventType = reader.GetString(2);
+                short eventType = reader.GetInt16(2);
 
-                if (eventConstructors.TryGetValue(eventType, out var constructor))
+                if (eventConstructors.TryGetValue((EventType)eventType, out var constructor))
                 {
                     list.Add(constructor(responcible, date));
                 }
                 else
                 {
-                    throw new UnknownEventTypeException($"Полученый тип события = '{eventType}' оказался неизвестным");
+                    throw new UnknownEventTypeException($"Полученый тип события (id= '{eventType}') оказался неизвестным");
                 }
             }
             ConnectionPool.ReleaseConnection(connection);

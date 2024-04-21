@@ -156,11 +156,13 @@ namespace EMAS.Service.Connection.DataAccess
                 }
                 ConnectionPool.ReleaseConnection(connection);
 
-                EventDataAccess eventDataAccess = new();
-
-                Event newEvent = new(SessionManager.UserId, 0, EventType.Addition, equipment.Id);
-                eventDataAccess.Add(newEvent);
+                
             }
+
+            EventDataAccess eventDataAccess = new();
+
+            StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Addition, DateTime.Now, new List<IStorableObject>(items));
+            eventDataAccess.Add(newEvent);
         }
     }
 }

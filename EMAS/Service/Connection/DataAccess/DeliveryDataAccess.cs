@@ -16,6 +16,7 @@ namespace EMAS.Service.Connection.DataAccess
     public class DeliveryDataAccess : IObjectStateLocationBoundedDataAccess<Delivery>
     {
         private readonly EventDataAccess eventAccess = new();
+        private readonly StorableObjectInEventDataAccess storableObjectInEventDataAccess = new();
         private readonly string schemaName = "\"event\"";
         private readonly string tableName = "delivery";
         private string FullTableName => schemaName + tableName;
@@ -46,15 +47,12 @@ namespace EMAS.Service.Connection.DataAccess
 
         public List<Delivery> SelectOnLocation(int locationId)
         {
-            var equipmentAccess = new EquipmentDataAccess();
             var deliveries = new List<Delivery>();
 
-            string query = "SELECT E.date, EqEvent.equipment_id, D.destination_id, D.dispatch_event_id " +
+            string query = "SELECT E.date, D.destination_id, D.dispatch_event_id " +
                                 "FROM \"event\".delivery AS D " +
                                 "JOIN public.\"event\" AS E ON E.id = D.dispatch_event_id " +
-                                "JOIN public.equipment_event AS EqEvent ON EqEvent.event_id = D.dispatch_event_id " +
                                 "WHERE D.arrival_event_id IS NULL AND D.departure_id = @locationId ";
-
 
             var connection = ConnectionPool.GetConnection();
 
@@ -64,7 +62,7 @@ namespace EMAS.Service.Connection.DataAccess
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
-                deliveries.Add(new Delivery(reader.GetInt64(3), locationId, reader.GetInt32(2), reader.GetDateTime(0), equipmentAccess.SelectById(reader.GetInt32(1))));
+                deliveries.Add(new Delivery(reader.GetInt64(2), locationId, reader.GetInt32(1), reader.GetDateTime(0), storableObjectInEventDataAccess.SelectObjectsInEvent(reader.GetInt64(2))));
                 Debug.WriteLine($"Получили delivery идущее ИЗ Объекта с id - {locationId}");
             }
 
@@ -85,16 +83,16 @@ namespace EMAS.Service.Connection.DataAccess
 
         public void Add(Delivery[] objectToAdd)
         {
-            string query = "INSERT INTO " + FullTableName + " (dispatch_event_id, destination_id, departure_id) VALUES(@dispatch_event_id, @destination_id, @departure_id);";
+            string query = "INSERT INTO " + FullTableName + " (dispatch_event_id, destination_id, departure_id) VALUES (@dispatch_event_id, @destination_id, @departure_id);";
             var connection = ConnectionPool.GetConnection();
 
             foreach (var delivery in objectToAdd)
             {
-                Event newEvent = new(SessionManager.UserId, 0, EventType.Sent, delivery.PackageList.Id);
+                StorableObjectEvent deliveryEvent = new(SessionManager.UserId, 0, EventType.Sent, delivery.DispatchDate, delivery.PackageList);
 
-                eventAccess.Add(newEvent);
+                eventAccess.Add(deliveryEvent);
 
-                delivery.Id = newEvent.Id;
+                delivery.Id = deliveryEvent.Id;
                 using var command = new NpgsqlCommand(query, connection);
 
                 command.Parameters.AddWithValue("@dispatch_event_id", delivery.Id);
@@ -128,13 +126,22 @@ namespace EMAS.Service.Connection.DataAccess
         {
             foreach (var delivery in objectToComplete)
             {
-                Event newEvent = new(SessionManager.UserId, 0, EventType.Arrived, delivery.PackageList.Id);
+                StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Arrived, delivery.DispatchDate ,delivery.PackageList);
 
                 eventAccess.Add(newEvent);
 
                 var equipmentAccess = new EquipmentDataAccess();
-                equipmentAccess.UpdateLocation((delivery.PackageList, delivery.DestinationId));
-
+                foreach(IStorableObject storableObject in delivery.PackageList)
+                {
+                    if (storableObject is Equipment equipmentInDelivery)
+                    {
+                        equipmentAccess.UpdateLocation((equipmentInDelivery, delivery.DestinationId));
+                    }
+                    else
+                    {
+                        throw new NotSupportedException();
+                    }
+                }
 
                 var connection = ConnectionPool.GetConnection();
                 using var command = new NpgsqlCommand("UPDATE" + FullTableName + "SET arrival_event_id=@arrival_event_id, WHERE dispatch_event_id=@sendedEventId ", connection);
