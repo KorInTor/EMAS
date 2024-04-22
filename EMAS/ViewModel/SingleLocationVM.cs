@@ -11,13 +11,13 @@ namespace EMAS.ViewModel
     /// <summary>
     /// Хранит в себе все VM классы для работы с equipment.
     /// </summary>
-    public partial class MainEquipmentVM : ObservableObject
+    public partial class SingleLocationVM : ObservableObject
     {
         [ObservableProperty]
         private Location _locationInfo = new();
         public List<string> Permissions { get; set; }
         //New VM goes here.
-        public EquipmentVM EquipmentVM { get; set; } = new();
+        public EquipmentManagerVM EquipmentVM { get; set; } = new();
         public DeliveryControlVM DeliveryControlVM { get; set;} = new DeliveryControlVM(typeof(Equipment));
         
 

@@ -15,7 +15,7 @@ namespace EMAS.ViewModel
     /// <summary>
     /// So called Content Dispencer ;P
     /// </summary>
-    public partial class EquipmentController : ObservableObject
+    public partial class LocationController : ObservableObject
     {
         private DataChangeChecker _monitor;
 
@@ -25,9 +25,9 @@ namespace EMAS.ViewModel
         [ObservableProperty]
         private List<Location> _locations = [];
         private PermissionInfo _permissions = SessionManager.PermissionInfo;
-        public MainEquipmentVM MainEquipmentVM { get; set; } = new();
+        public SingleLocationVM MainEquipmentVM { get; set; } = new();
 
-        public EquipmentController()
+        public LocationController()
         {
             Locations = DataBaseClient.GetInstance().SelectLocations();
             InitLocationsData();
