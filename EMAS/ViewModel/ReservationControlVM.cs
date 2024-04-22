@@ -36,7 +36,6 @@ namespace EMAS.ViewModel
         public ReservationControlVM()
         {
             DesiredReservation.PropertyChanged += FilterReservations;
-            DesiredReservation.ReservedObjectsList.PropertyChanged += FilterReservations;
 
             ClearFilterCommand = new RelayCommand(ClearFilters);
             EndReservationCommand = new RelayCommand(RequestReservationCompletion, CanEndReservation);
@@ -50,12 +49,10 @@ namespace EMAS.ViewModel
         private void ClearFilters()
         {
             DesiredReservation.PropertyChanged -= FilterReservations;
-            DesiredReservation.ReservedObjectsList.PropertyChanged -= FilterReservations;
 
             DesiredReservation = new();
 
             DesiredReservation.PropertyChanged += FilterReservations;
-            DesiredReservation.ReservedObjectsList.PropertyChanged += FilterReservations;
         }
 
         private void FilterReservations(object? sender, PropertyChangedEventArgs e)
@@ -70,58 +67,8 @@ namespace EMAS.ViewModel
                 return;
             }
 
-            if (sender is Equipment)
-            {
-                var properties = new List<Func<Reservation, bool>>
-                {
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Name) || reservation.ReservedObjectsList.Name.Contains(DesiredReservation.ReservedObjectsList.Name),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Description) || reservation.ReservedObjectsList.Description.Contains(DesiredReservation.ReservedObjectsList.Description),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Type) || reservation.ReservedObjectsList.Type.Contains(DesiredReservation.ReservedObjectsList.Type),
-                    reservation => DesiredReservation.ReservedObjectsList.Id == 0 || reservation.ReservedObjectsList.Id == DesiredReservation.ReservedObjectsList.Id,
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Units) || reservation.ReservedObjectsList.Units.Contains(DesiredReservation.ReservedObjectsList.Units),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Limit) || reservation.ReservedObjectsList.Limit.Contains(DesiredReservation.ReservedObjectsList.Limit),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.AccuracyClass) || reservation.ReservedObjectsList.AccuracyClass.Contains(DesiredReservation.ReservedObjectsList.AccuracyClass),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Manufacturer) || reservation.ReservedObjectsList.Manufacturer.Contains(DesiredReservation.ReservedObjectsList.Manufacturer),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.RegistrationNumber) || reservation.ReservedObjectsList.RegistrationNumber.Contains(DesiredReservation.ReservedObjectsList.RegistrationNumber),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.FactoryNumber) || reservation.ReservedObjectsList.FactoryNumber.Contains(DesiredReservation.ReservedObjectsList.FactoryNumber),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Status) || reservation.ReservedObjectsList.Status.Contains(DesiredReservation.ReservedObjectsList.Status)
-                };
+            //TODO: Add Actual Reservation;
 
-                filteredList = ReservationSourceList.Where(reservation => properties.All(property => property(reservation))).ToList();
-            }
-            else if (sender is Reservation)
-            {
-                var properties = new List<Func<Reservation, bool>>
-                {
-                    reservation => DesiredReservation.Id == 0 || reservation.Id == DesiredReservation.Id,
-                    reservation => DesiredReservation.StartDate == DateTime.MinValue || reservation.StartDate == DesiredReservation.StartDate,
-                    reservation => DesiredReservation.ReservedBy.Id == 0 || reservation.ReservedBy.Id == DesiredReservation.ReservedBy.Id
-                };
-
-                filteredList = ReservationSourceList.Where(reservation => properties.All(property => property(reservation))).ToList();
-            }
-            else if (sender is ReservationControlVM && e.PropertyName == nameof(ReservationSourceList))
-            {
-                var properties = new List<Func<Reservation, bool>>
-                {
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Name) || reservation.ReservedObjectsList.Name.Contains(DesiredReservation.ReservedObjectsList.Name),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Description) || reservation.ReservedObjectsList.Description.Contains(DesiredReservation.ReservedObjectsList.Description),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Type) || reservation.ReservedObjectsList.Type.Contains(DesiredReservation.ReservedObjectsList.Type),
-                    reservation => DesiredReservation.ReservedObjectsList.Id == 0 || reservation.ReservedObjectsList.Id == DesiredReservation.ReservedObjectsList.Id,
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Units) || reservation.ReservedObjectsList.Units.Contains(DesiredReservation.ReservedObjectsList.Units),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Limit) || reservation.ReservedObjectsList.Limit.Contains(DesiredReservation.ReservedObjectsList.Limit),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.AccuracyClass) || reservation.ReservedObjectsList.AccuracyClass.Contains(DesiredReservation.ReservedObjectsList.AccuracyClass),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Manufacturer) || reservation.ReservedObjectsList.Manufacturer.Contains(DesiredReservation.ReservedObjectsList.Manufacturer),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.RegistrationNumber) || reservation.ReservedObjectsList.RegistrationNumber.Contains(DesiredReservation.ReservedObjectsList.RegistrationNumber),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.FactoryNumber) || reservation.ReservedObjectsList.FactoryNumber.Contains(DesiredReservation.ReservedObjectsList.FactoryNumber),
-                    reservation => string.IsNullOrEmpty(DesiredReservation.ReservedObjectsList.Status) || reservation.ReservedObjectsList.Status.Contains(DesiredReservation.ReservedObjectsList.Status),
-
-                    reservation => DesiredReservation.Id == 0 || reservation.Id == DesiredReservation.Id,
-                    reservation => DesiredReservation.StartDate == DateTime.MinValue || reservation.StartDate == DesiredReservation.StartDate,
-                    reservation => DesiredReservation.ReservedBy.Id == 0 || reservation.ReservedBy.Id == DesiredReservation.ReservedBy.Id
-                };
-                filteredList = ReservationSourceList.Where(reservation => properties.All(property => property(reservation))).ToList();
-            }
             FilteredReservations = new ObservableCollection<Reservation>(filteredList);
         }
 

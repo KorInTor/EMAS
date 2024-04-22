@@ -18,7 +18,7 @@ namespace EMAS.ViewModel
         public List<string> Permissions { get; set; }
         //New VM goes here.
         public EquipmentVM EquipmentVM { get; set; } = new();
-        public DeliveryControlVM DeliveryControlVM { get; set;} = new();
+        public DeliveryControlVM DeliveryControlVM { get; set;} = new DeliveryControlVM(typeof(Equipment));
         
 
         partial void OnLocationInfoChanged(Location value)
