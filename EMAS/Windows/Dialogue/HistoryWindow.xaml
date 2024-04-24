@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS.Windows.Dialogue"
         xmlns:ViewModel="clr-namespace:EMAS.ViewModel"
+        xmlns:Controls="clr-namespace:EMAS.Controls"
         mc:Ignorable="d"
         Title="HistoryWindow" Height="500" Width="380">
     <Window.DataContext>
@@ -12,19 +13,18 @@
     </Window.DataContext>
     <Grid>
 
-        <ListView Name="HistoryListView" ItemsSource="{Binding History, Mode=OneWay}">
-            <ListView.ItemTemplate>
+        <ListBox Name="HistoryListBox" ItemsSource="{Binding History, Mode=OneWay}">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+            
+            <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel Name="HistoryEntryItemStackPanel">
-                        <Button Name="historyEntryButton" Click="historyEntryButton_Click" HorizontalAlignment="Stretch">
-                            <StackPanel>
-                                <TextBox Text="{Binding TypeOfAction, Mode=OneWay}"/>
-                                <TextBox Text="{Binding Date, Mode=OneWay}"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                    <Controls:HistoryEntryControl/>
                 </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </Window>

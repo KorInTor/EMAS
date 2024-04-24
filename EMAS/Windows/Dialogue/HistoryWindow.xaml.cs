@@ -1,6 +1,7 @@
 ﻿using EMAS.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,28 +23,8 @@ namespace EMAS.Windows.Dialogue
     {
         public HistoryWindow()
         {
-            InitializeComponent();
+            InitializeComponent();            
         }
 
-        private void historyEntryButton_Click(object sender, RoutedEventArgs e)
-        {
-            var button = (Button)sender;
-            var itemStackPanel = (StackPanel)button.Parent;
-
-            TextBox actionType = new();
-            TextBox responsible = new();
-            TextBox contacts = new();
-            TextBox dateAndTime = new();
-
-            actionType.Text = $"{((HistoryEntryBase)button.DataContext).TypeOfAction}";
-            responsible.Text = $"Ответственный: {((HistoryEntryBase)button.DataContext).Responsible.Fullname}";
-            contacts.Text = $"Контакты: {((HistoryEntryBase)button.DataContext).Responsible.Email}";
-            dateAndTime.Text = $"Время: {((HistoryEntryBase)button.DataContext).Date}";
-
-            itemStackPanel.Children.Add(actionType);
-            itemStackPanel.Children.Add(dateAndTime);
-            itemStackPanel.Children.Add(responsible);
-            itemStackPanel.Children.Add(contacts);
-        }
     }
 }
