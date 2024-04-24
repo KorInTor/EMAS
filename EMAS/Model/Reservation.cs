@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 
 namespace EMAS.Model
 {
-    public class Reservation : ObservableObject , IEquipmentState, ILocationBounded
+    public class Reservation : ObservableObject , IObjectState, ILocationBounded
     {
         private long _id;
 
-        private Equipment _equipment;
+        private List<IStorableObject> _reservedObjectsList;
 
         private DateTime _startDate;
+
+        private DateTime _endDate;
 
         private Employee _reservedBy;
 
@@ -27,16 +29,22 @@ namespace EMAS.Model
             set => SetProperty(ref _id, value);
         }
 
-        public Equipment Equipment
+        public List<IStorableObject> ReservedObjectsList
         {
-            get => _equipment;
-            set => SetProperty(ref _equipment, value);
+            get => _reservedObjectsList;
+            set => SetProperty(ref _reservedObjectsList, value);
         }
 
         public DateTime StartDate
         {
             get => _startDate;
             set => SetProperty(ref _startDate, value);
+        }
+
+        public DateTime EndDate
+        {
+            get => _endDate;
+            set => SetProperty(ref _endDate, value);
         }
 
         public Employee ReservedBy
@@ -57,20 +65,20 @@ namespace EMAS.Model
             set => SetProperty(ref _locationId, value);
         }
 
-        public Reservation(long id, DateTime startDate, Employee reservedBy, string additionalInfo, Equipment equipment)
+        public Reservation(long id, DateTime startDate, Employee reservedBy, string additionalInfo, List<IStorableObject> objectsToReserv)
         {
             Id = id;
             StartDate = startDate;
             ReservedBy = reservedBy;
             AdditionalInfo = additionalInfo;
-            Equipment = equipment;
+            ReservedObjectsList = objectsToReserv;
         }
 
         public Reservation() 
         {
             StartDate = DateTime.MinValue;
 
-            Equipment = new();
+            ReservedObjectsList = new();
         }
     }
 }

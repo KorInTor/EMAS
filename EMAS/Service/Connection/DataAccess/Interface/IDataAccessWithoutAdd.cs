@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMAS.Service.Connection.DataAccess
+namespace EMAS.Service.Connection.DataAccess.Interface
 {
-    public interface IDataAccess<T>
+    public interface IDataAccessWithoutAdd<T>
     {
-        void Add(T objectToAdd);
         void Delete(T objectToDelete);
         void Update(T objectToUpdate);
+        void Delete(T[] objectToDelete);
+        void Update(T[] objectToUpdate);
         List<T> Select();
         T SelectById(int id);
     }

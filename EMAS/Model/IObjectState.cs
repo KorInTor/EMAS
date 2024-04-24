@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EMAS.Model
 {
-    public interface IEquipmentState
+    public interface IObjectState
     {
         public long Id { get; set; }
     }

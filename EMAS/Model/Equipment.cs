@@ -11,7 +11,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about equipment.
     /// </summary>
-    public class Equipment : ObservableObject, IEquatable<Equipment> , ILocationBounded
+    public class Equipment : ObservableObject, IEquatable<Equipment> , ILocationBounded, IStorableObject
     {
         /// <summary>
         /// Unique id of Equipment.
@@ -73,6 +73,8 @@ namespace EMAS.Model
         /// List of tags.
         /// </summary>
         private List<string> _tags;
+
+        private int _locationId;
 
         public Equipment(){ }
 
@@ -206,6 +208,11 @@ namespace EMAS.Model
         {
             get => _factoryNumber;
             set => SetProperty(ref _factoryNumber, value);
+        }
+        public int LocationId 
+        {
+            get => _locationId;
+            set => SetProperty(ref _locationId, value);
         }
 
         public bool Equals(Equipment? other)

@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml.Office2010.Excel;
 using EMAS.Model;
 using EMAS.Model.Enum;
+using EMAS.Service.Connection.DataAccess.Interface;
 using EMAS.ViewModel;
 using Npgsql;
 using System;
@@ -200,6 +201,21 @@ namespace EMAS.Service.Connection.DataAccess
         public PermissionInfo GetPermissionInfo(int employeeId)
         {
             return new PermissionInfo(IsEmployeeAdmin(employeeId), SelectEmployeePermissions(employeeId));
+        }
+
+        public void Add(Employee[] objectToAdd)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Delete(Employee[] objectToDelete)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Update(Employee[] objectToUpdate)
+        {
+            throw new NotImplementedException();
         }
     }
 }

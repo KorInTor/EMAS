@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Service.Connection;
 using EMAS.Service.Connection.DataAccess;
 using System;
@@ -16,36 +17,44 @@ namespace EMAS.ViewModel
     /// <summary>
     /// So called Content Dispencer ;P
     /// </summary>
-    public partial class EquipmentController : ObservableObject
+    public partial class LocationController : ObservableObject
     {
-        private DataChangeChecker _monitor;
-
         [ObservableProperty]
         private Location _currentLocation;
 
         [ObservableProperty]
         private List<Location> _locations = [];
         private PermissionInfo _permissions = SessionManager.PermissionInfo;
-        public MainEquipmentVM MainEquipmentVM { get; set; } = new();
-
-        public EquipmentController()
+        public SingleLocationVM MainEquipmentVM { get; set; } = new();
+        
+        public LocationController()
         {
             Locations = DataBaseClient.GetInstance().SelectLocations();
-            InitLocationsData();
-
-            _monitor = new DataChangeChecker(Locations.Select(location => location.Id).ToList());
-            _monitor.DataChanged += async (id) => UpdateEquipmentData(id);
+            DataBaseClient.GetInstance().SyncData(Locations);
+            DataBaseClient.GetInstance().NewEventsOccured += ShowNewEventsInfo;
+            Task.Run(SyncWithDataBase);
         }
 
-        private async Task UpdateEquipmentData(int ID)
+        private void TestFoo(int obj)
         {
-            foreach (var location in Locations)
+            DataBaseClient.GetInstance().SyncData(Locations);
+            MainEquipmentVM.UpdateLocationData(CurrentLocation);
+        }
+
+        private void ShowNewEventsInfo(List<StorableObjectEvent> list)
+        {
+            MainEquipmentVM.UpdateLocationData(CurrentLocation);
+        }
+
+        private async Task SyncWithDataBase()
+        {
+            do
             {
-                if (location.Id == ID)
-                {
-                    location.Equipments = DataBaseClient.GetInstance().SelectEquipmentOn(location.Id);
-                }
+                DataBaseClient.GetInstance().SyncData(Locations);
+
+                await Task.Delay(1000);
             }
+            while (true);
         }
 
         partial void OnCurrentLocationChanged(Location value)
@@ -54,10 +63,8 @@ namespace EMAS.ViewModel
             {
                 return;
             }
-            _monitor.StopActiveListeners();
-            _monitor.InitListener(value.Id);
             MainEquipmentVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
-            MainEquipmentVM.LocationInfo = CurrentLocation;
+            MainEquipmentVM.LocationInfo = value;
         }
 
         private void InitLocationsData()

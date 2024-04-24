@@ -34,7 +34,7 @@ namespace EMAS.Model
         private List<Delivery> _incomingDeliviries;
 
         private List<Reservation> _reservations;
-
+        
         /// <summary>
         /// Return unique id of this site.
         /// </summary>
@@ -139,6 +139,16 @@ namespace EMAS.Model
 
         public Location()
         {
+        }
+
+        public Location(Location newLocation)
+        {
+            this.Id = newLocation.Id;
+            this.Name = newLocation.Name;
+            Equipments = newLocation.Equipments;
+            IncomingDeliveries = newLocation.IncomingDeliveries;
+            OutgoingDeliveries = newLocation.OutgoingDeliveries;
+            Reservations = newLocation.Reservations;
         }
     }
 }

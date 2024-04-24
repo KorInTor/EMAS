@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="EquipmentAdditionWindow" Height="450" Width="800">
     <Window.DataContext>
-        <ViewModel:EquipmentVM/>
+        <ViewModel:EquipmentManagerVM/>
     </Window.DataContext>
     <Grid Margin="3,0,3,0">
         <Grid.ColumnDefinitions>
