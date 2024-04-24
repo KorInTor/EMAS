@@ -1,11 +1,7 @@
 ﻿using EMAS.Model;
+using EMAS.Service.Connection.DataAccess.Interface;
 using Npgsql;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess
 {
@@ -13,10 +9,30 @@ namespace EMAS.Service.Connection.DataAccess
     {
         public void Add(Location objectToAdd)
         {
-            throw new NotImplementedException();
+            Add([objectToAdd]);
+        }
+
+        public void Add(Location[] objectToAdd)
+        {
+            foreach (Location location in objectToAdd)
+            {
+                var connection = ConnectionPool.GetConnection();
+
+                string sql = "INSERT INTO public.\"location\" (\"name\") VALUES(@name) returning id;";
+                using var command = new NpgsqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@name", location.Name);
+
+                command.ExecuteNonQuery();
+                //objectToAdd.Id = (int)command.ExecuteScalar();
+            }
         }
 
         public void Delete(Location objectToDelete)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Delete(Location[] objectToDelete)
         {
             throw new NotImplementedException();
         }
@@ -55,7 +71,22 @@ namespace EMAS.Service.Connection.DataAccess
 
         public void Update(Location objectToUpdate)
         {
-            throw new NotImplementedException();
+            Update([objectToUpdate]);
+        }
+
+        public void Update(Location[] objectToUpdate)
+        {
+            foreach (var location in objectToUpdate)
+            {
+                var connection = ConnectionPool.GetConnection();
+
+                string sql = "UPDATE public.\"location\" SET \"name\"=@name WHERE id=@id;";
+                using var command = new NpgsqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@name", location.Name);
+                command.Parameters.AddWithValue("@id", location.Id);
+
+                command.ExecuteNonQuery();
+            }
         }
     }
 }

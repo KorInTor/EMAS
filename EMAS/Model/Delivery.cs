@@ -11,7 +11,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about active delivery,
     /// </summary>
-    public class Delivery : ObservableObject , IEquipmentState, ILocationBounded 
+    public class Delivery : ObservableObject , IObjectState, ILocationBounded
     {
         /// <summary>
         /// Stores event from Dispatch event from dataBase.
@@ -23,10 +23,9 @@ namespace EMAS.Model
         /// </summary>
         private DateTime _dispatchDate;
 
-        /// <summary>
-        /// What equipment is in delivery.
-        /// </summary>
-        private Equipment _equipment;
+        private DateTime _arrivalDate;
+
+        private List<IStorableObject> _packageList;
 
         /// <summary>
         /// Stores destination <see cref="Location"/> id.
@@ -57,13 +56,19 @@ namespace EMAS.Model
             set => SetProperty(ref _dispatchDate, value);
         }
 
+        public DateTime ArrivalDate
+        {
+            get => _arrivalDate;
+            set => SetProperty(ref _arrivalDate, value);
+        }
+
         /// <summary>
         /// Returns equipment that are in current delivery.
         /// </summary>
-        public Equipment Equipment
+        public List<IStorableObject> PackageList
         {
-            get => _equipment;
-            set => SetProperty(ref _equipment, value);
+            get => _packageList;
+            set => SetProperty(ref _packageList, value);
         }
 
         /// <summary>
@@ -84,25 +89,13 @@ namespace EMAS.Model
             set => SetProperty(ref _departureId, value);
         }
 
-        /// <summary>
-        /// Creates outgoing Delivery.
-        /// </summary>
-        /// <param name="EquipmentList">Equipment that will be sended.</param>
-        public Delivery(Equipment Equipment, int destinationId)
-        {
-            DispatchDate = DateTime.Now;
-
-            this.Equipment = Equipment;
-
-        }
-
-        public Delivery(long dispatchEventId,int departureId ,int destinationId, DateTime date, Equipment equipment)
+        public Delivery(long dispatchEventId,int departureId ,int destinationId, DateTime date, List<IStorableObject> storableObjects)
         {
             Id = dispatchEventId;
 
             DispatchDate = date;
 
-            Equipment = equipment;
+            PackageList = storableObjects;
 
             DestinationId = destinationId;
             DepartureId = departureId;
@@ -112,19 +105,7 @@ namespace EMAS.Model
         {
             DispatchDate = DateTime.MinValue;
 
-            Equipment = new();
-        }
-
-        public Delivery(int departureId, int destinationId, DateTime date, Equipment equipment)
-        {
-            Id = 0;
-
-            DispatchDate = date;
-
-            Equipment = equipment;
-
-            DestinationId = destinationId;
-            DepartureId = departureId;
+            PackageList = new();
         }
     }
 }

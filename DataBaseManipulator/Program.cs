@@ -111,6 +111,7 @@ internal class Program
                 case '2':
                     {
                         ClearTable("public.equipment");
+                        ClearTable("public.\"event\"");
                         break;
                     }
                 case '3':

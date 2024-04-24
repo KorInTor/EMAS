@@ -11,22 +11,27 @@ namespace EMAS.ViewModel
     /// <summary>
     /// Хранит в себе все VM классы для работы с equipment.
     /// </summary>
-    public partial class MainEquipmentVM : ObservableObject
+    public partial class SingleLocationVM : ObservableObject
     {
         [ObservableProperty]
         private Location _locationInfo = new();
         public List<string> Permissions { get; set; }
         //New VM goes here.
-        public EquipmentVM EquipmentVM { get; set; } = new();
-        public DeliveryControlVM DeliveryControlVM { get; set;} = new();
+        public EquipmentManagerVM EquipmentVM { get; set; } = new();
+        public DeliveryControlVM DeliveryControlVM { get; set;} = new DeliveryControlVM(typeof(Equipment));
         
 
         partial void OnLocationInfoChanged(Location value)
         {
             //Updating VMs Data here;
-            EquipmentVM.EquipmentSourceList = LocationInfo.Equipments;
+            EquipmentVM.EquipmentSourceList = new(LocationInfo.Equipments);
             EquipmentVM.ChangeCommandAccess(Permissions);
             DeliveryControlVM.ChagneSourceList(LocationInfo.IncomingDeliveries,LocationInfo.OutgoingDeliveries);
+        }
+
+        public void UpdateLocationData(Location newLocation)
+        {
+            LocationInfo = new(newLocation);
         }
     }
 }

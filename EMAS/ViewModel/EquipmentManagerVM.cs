@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace EMAS.ViewModel
 {
-    public partial class EquipmentVM : ObservableObject
+    public partial class EquipmentManagerVM : ObservableObject
     {
         public event Action<int> HistoryWindowRequested;
         public event Action<int> AdditionWindowRequested;
@@ -54,7 +54,7 @@ namespace EMAS.ViewModel
         [ObservableProperty]
         private Equipment _desiredEquipment = new();
         public static IWindowsDialogueService DialogueService { get; private set; }
-        public EquipmentVM()
+        public EquipmentManagerVM()
         {
             ClearFiltersCommand = new RelayCommand(ClearFilters);
             OpenHistoryWindowCommand = new RelayCommand(RequestHistoryWindow);

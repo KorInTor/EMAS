@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         Title="EquipmentWindow" Height="450" Width="800">
     <Window.DataContext>
-        <viewmodel:EquipmentController/>
+        <viewmodel:LocationController/>
     </Window.DataContext>
     <Grid>
         <TabControl x:Name="MainTabControl" SelectedItem="{Binding CurrentLocation}" ItemsSource="{Binding Locations}" DisplayMemberPath="Name">

@@ -6,11 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMAS.Service.Connection.DataAccess
+namespace EMAS.Service.Connection.DataAccess.Interface
 {
-    public interface IEquipmentStateDataAccess<T> : IDataAccess<T> where T : IEquipmentState
+    public interface IObjectStateDataAccess<T> : IDataAccess<T> where T : IObjectState
     {
         void Complete(T objectToComplete);
-        void SelectById(long Id);
+        void Complete(T[] objectToComplete);
+        T SelectById(long Id);
     }
 }
