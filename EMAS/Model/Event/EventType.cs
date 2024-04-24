@@ -13,6 +13,7 @@ namespace EMAS.Model.Event
         Decommissioned = 3,
         Reserved = 4,
         ReserveEnded = 5,
-        Addition = 6
+        Addition = 6,
+        DataChanged = 7
     }
 }

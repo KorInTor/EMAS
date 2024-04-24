@@ -40,7 +40,9 @@ namespace EMAS.Service.Connection.DataAccess
                 while (reader.Read())
                 {
                     // Tags rework in progress
-                    list.Add(new Equipment(reader.GetString(11), reader.GetString(8), reader.GetString(12), reader.GetString(5), reader.GetString(4), reader.GetString(6), reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(7), []));
+                    var equipment = new Equipment(reader.GetString(11), reader.GetString(8), reader.GetString(12), reader.GetString(5), reader.GetString(4), reader.GetString(6), reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(7), []);
+                    equipment.LocationId = reader.GetInt32(10);
+                    list.Add(equipment);
                 }
 
                 foreach (var data in list)
@@ -55,12 +57,12 @@ namespace EMAS.Service.Connection.DataAccess
         public Equipment SelectById(int id)
         {
             var connection = ConnectionPool.GetConnection();
+            Equipment equipment = null;
 
             string query = @"
-    SELECT status, inventory_number, description, accuracy_class, measurment_units, measurment_limit, id, name, manufacturer, type, serial_number 
-    FROM public.equipment
-    WHERE id = @Id;
-";
+                    SELECT status, inventory_number, description, accuracy_class, measurment_units, measurment_limit, id, name, manufacturer, type, serial_number, location_id 
+                    FROM public.equipment
+                    WHERE id = @Id;";
 
             using (var command = new NpgsqlCommand(query, connection))
             {
@@ -82,14 +84,17 @@ namespace EMAS.Service.Connection.DataAccess
                     string factoryNumber = reader.GetString(10);
                     //List<string> tags = new List<string>((string[])reader[11]); Tags Will be Reworked
 
-                    Equipment equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, []);
-                    return equipment;
+                    equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, [])
+                    {
+                        LocationId = reader.GetInt32(11)
+                    };
                 }
             }
 
             ConnectionPool.ReleaseConnection(connection);
-
-            throw new ArgumentException("No equipment found with the provided id.");
+            if (equipment is null)
+                throw new ArgumentException("No equipment found with the provided id.");
+            return equipment;
         }
 
 
@@ -155,8 +160,6 @@ namespace EMAS.Service.Connection.DataAccess
                     equipment.Id = (int)command.ExecuteScalar();
                 }
                 ConnectionPool.ReleaseConnection(connection);
-
-                
             }
 
             EventDataAccess eventDataAccess = new();

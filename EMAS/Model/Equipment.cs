@@ -74,6 +74,8 @@ namespace EMAS.Model
         /// </summary>
         private List<string> _tags;
 
+        private int _locationId;
+
         public Equipment(){ }
 
         public Equipment(string status, string registrationNumber, string description)
@@ -206,6 +208,11 @@ namespace EMAS.Model
         {
             get => _factoryNumber;
             set => SetProperty(ref _factoryNumber, value);
+        }
+        public int LocationId 
+        {
+            get => _locationId;
+            set => SetProperty(ref _locationId, value);
         }
 
         public bool Equals(Equipment? other)

@@ -24,9 +24,14 @@ namespace EMAS.ViewModel
         partial void OnLocationInfoChanged(Location value)
         {
             //Updating VMs Data here;
-            EquipmentVM.EquipmentSourceList = LocationInfo.Equipments;
+            EquipmentVM.EquipmentSourceList = new(LocationInfo.Equipments);
             EquipmentVM.ChangeCommandAccess(Permissions);
             DeliveryControlVM.ChagneSourceList(LocationInfo.IncomingDeliveries,LocationInfo.OutgoingDeliveries);
+        }
+
+        public void UpdateLocationData(Location newLocation)
+        {
+            LocationInfo = new(newLocation);
         }
     }
 }

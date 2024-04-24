@@ -1,6 +1,6 @@
-﻿using DocumentFormat.OpenXml.Office2010.PowerPoint;
-using EMAS.Exceptions;
+﻿using EMAS.Exceptions;
 using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Model.HistoryEntry;
 using EMAS.Service.Connection.DataAccess;
 using EMAS.Service.Connection.DataAccess.Interface;
@@ -19,7 +19,20 @@ namespace EMAS.Service.Connection
         private IDataAccess<Employee> employeeDataAccess;
         private IDataAccess<Location> locationDataAccess;
         private HistoryEntryDataAccess historyEntryDataAccess;
-
+        private long lastEventId;
+        public event Action<List<StorableObjectEvent>> NewEventsOccured;
+        public long LastEventId
+        {
+            get
+            {
+                return lastEventId;
+            }
+            private set
+            {
+                lastEventId = value;
+            }
+        }
+        private EventDataAccess eventDataAccess;
         private static DataBaseClient instance;
 
         private DataBaseClient()
@@ -30,6 +43,7 @@ namespace EMAS.Service.Connection
             employeeDataAccess = new EmployeeDataAccess();
             locationDataAccess = new LocationDataAccess();
             historyEntryDataAccess = new HistoryEntryDataAccess();
+            eventDataAccess = new();
         }
 
         public static DataBaseClient GetInstance()
@@ -192,6 +206,131 @@ namespace EMAS.Service.Connection
         public List<HistoryEntryBase> SelectHistoryEntryByEquipmentId(int id)
         {
             return historyEntryDataAccess.SelectByEquipmentId(id);
+        }
+
+        public void SyncData(List<Location> locationsToSync)
+        {
+            long lastDataBaseEventId;
+            StorableObjectEvent? lastEvent = eventDataAccess.SelectLast();
+
+            if (lastEvent is null)
+            {
+                lastDataBaseEventId = 0;
+            }
+            else
+            {
+                lastDataBaseEventId = lastEvent.Id;
+            }
+
+            if (lastDataBaseEventId == LastEventId)
+            {
+                //TODO Add return value that indicates what changed;
+                Debug.WriteLine("Data is UpToDate");
+                return;
+            }
+            Debug.WriteLine("UpdatingData");
+
+            List<StorableObjectEvent> newSOEvents = eventDataAccess.SelectNewEventsAfter(LastEventId);
+            LastEventId = lastDataBaseEventId;
+
+            List<IObjectState> objectStates = [];
+            foreach (var location in locationsToSync)
+            {
+                objectStates.AddRange(location.OutgoingDeliveries);
+            }
+
+            var locationEventsDictionary = new Dictionary<int, List<StorableObjectEvent>>();
+            foreach (var newSOEvent in newSOEvents)
+            {
+                var locationId = newSOEvent.ObjectsInEvent.First().LocationId;
+                if (!locationEventsDictionary.ContainsKey(locationId))
+                {
+                    locationEventsDictionary[locationId] = new List<StorableObjectEvent>();
+                }
+                locationEventsDictionary[locationId].Add(newSOEvent);
+            }
+
+            foreach (var location in locationsToSync)
+            {
+                var locationId = location.Id;
+                if (!locationEventsDictionary.ContainsKey(locationId))
+                    continue;
+
+                var locationEvents = locationEventsDictionary[locationId];
+                foreach (var newSOEvent in locationEvents)
+                {
+                    switch (newSOEvent.EventType)
+                    {
+                        case EventType.Arrived:
+                            {
+                                location.OutgoingDeliveries.RemoveAll(delivery => delivery.Id == newSOEvent.Id);
+                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                                {
+                                    if (storableObject is Equipment equipment)
+                                    {
+                                        location.Equipments.Add(equipment);
+                                        break;
+                                    }
+                                }
+                                throw new Exception("Объект прибыл на неизвестную локацию");
+                                break;
+                            }
+                        case EventType.Sent:
+                            {
+                                var newDelivery = deliveryDataAccess.SelectById(newSOEvent.Id);
+                                location.OutgoingDeliveries.Add(newDelivery);
+                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                                {
+                                    if (storableObject is Equipment equipmentInEvent)
+                                    {
+                                        location.Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                                    }
+                                }
+                                break;
+                            }
+                        case EventType.Decommissioned:
+                            {
+                                throw new NotImplementedException();
+                            }
+                        case EventType.Reserved:
+                            {
+                                throw new NotImplementedException();
+                                break;
+                            }
+                        case EventType.ReserveEnded:
+                            {
+                                throw new NotImplementedException();
+                                break;
+                            }
+                        case EventType.Addition:
+                            {
+                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                                {
+                                    if (storableObject is Equipment equipmentInEvent)
+                                        location.Equipments.Add(equipmentInEvent);
+                                }
+                                break;
+                            }
+                        case EventType.DataChanged:
+                            {
+                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                                {
+                                    if (storableObject is Equipment equipmentInEvent)
+                                    {
+                                        location.Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                                        location.Equipments.Add(equipmentInEvent);
+                                    }
+                                }
+                                break;
+                            }
+                        default:
+                            {
+                                throw new NotImplementedException();
+                            }
+                    }
+                }
+                NewEventsOccured?.Invoke(newSOEvents);
+            }
         }
     }
 }
