@@ -165,7 +165,7 @@ namespace EMAS.ViewModel
         private void RequestHistoryWindow()
         {
             HistoryVM historyVM = new HistoryVM();
-            historyVM.History = EquipmentController.GetHistoryOfEquipmentPiece(SelectedEquipment.Id);
+            historyVM.History = LocationController.GetHistoryOfEquipmentPiece(SelectedEquipment.Id);
             DialogueService.ShowWindow<HistoryWindow>(historyVM);
         }
 
