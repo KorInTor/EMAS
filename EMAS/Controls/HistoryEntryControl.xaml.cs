@@ -21,45 +21,17 @@ namespace EMAS.Controls
     /// </summary>
     public partial class HistoryEntryControl : UserControl
     {
-        bool isPushed;   
         public HistoryEntryControl()
         {
             InitializeComponent();
-            isPushed = false;
         }
 
         private void historyEntryButton_Click(object sender, RoutedEventArgs e)
         {
-            var button = (Button)sender;
-            var itemStackPanel = (StackPanel)button.Parent;
-
-            if(isPushed == true)
-            {
-                for (int i = itemStackPanel.Children.Count - 1; i >= 0; i--)
-                {
-                    if (itemStackPanel.Children[i] is TextBlock)
-                        itemStackPanel.Children.RemoveAt(i);
-                }
-                isPushed = false;
-                return;
-            }
-
-            TextBlock actionType = new();
-            TextBlock responsible = new();
-            TextBlock contacts = new();
-            TextBlock dateAndTime = new();
-
-            actionType.Text = $"{((HistoryEntryBase)button.DataContext).TypeOfAction}";
-            responsible.Text = $"Ответственный: {((HistoryEntryBase)button.DataContext).Responsible.Fullname}";
-            contacts.Text = $"Контакты: {((HistoryEntryBase)button.DataContext).Responsible.Email}";
-            dateAndTime.Text = $"Время: {((HistoryEntryBase)button.DataContext).Date}";
-
-            itemStackPanel.Children.Add(actionType);
-            itemStackPanel.Children.Add(dateAndTime);
-            itemStackPanel.Children.Add(responsible);
-            itemStackPanel.Children.Add(contacts);
-
-            isPushed = true;
+            if (FullInfoStackPanel.Visibility == Visibility.Collapsed)
+                FullInfoStackPanel.Visibility = Visibility.Visible;
+            else
+                FullInfoStackPanel.Visibility = Visibility.Collapsed;
         }
     }
 }
