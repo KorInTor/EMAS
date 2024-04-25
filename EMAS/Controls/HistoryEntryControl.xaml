@@ -13,5 +13,11 @@
                 <TextBlock Text="{Binding Date, Mode=OneWay}"/>
             </StackPanel>
         </Button>
+        <StackPanel Name="FullInfoStackPanel" Visibility="Collapsed">
+            <TextBlock Text="{Binding TypeOfAction, Mode=OneWay}"/>
+            <TextBlock Text="{Binding Responsible.Fullname, Mode=OneWay}"/>
+            <TextBlock Text="{Binding Responsible.Email, Mode=OneWay}"/>
+            <TextBlock Text="{Binding Date, Mode=OneWay}"/>
+        </StackPanel>
     </StackPanel>
 </UserControl>
