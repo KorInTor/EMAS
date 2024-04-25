@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
 using EMAS.Model.Event;
 using EMAS.Service.Connection;
+using EMAS.Service.Connection.DataAccess;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -102,6 +103,11 @@ namespace EMAS.ViewModel
             {
                 location.IncomingDeliveries = incomingDeliveries[location.Id];
             }
+        }
+
+        public static List<HistoryEntryBase> GetHistoryOfEquipmentPiece(int Id)
+        {
+            return DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(Id);
         }
     }
 }

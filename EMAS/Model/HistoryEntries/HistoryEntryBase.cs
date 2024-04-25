@@ -19,7 +19,7 @@ namespace EMAS.Model
         /// <summary>
         /// Who responcible.
         /// </summary>
-        private Employee _responcible;
+        private Employee _responsible;
 
         /// <summary>
         /// Returns date when event happend.
@@ -36,18 +36,23 @@ namespace EMAS.Model
             }
         }
 
+        public string TypeOfAction
+        {
+            get { return $"Событие"; }
+        }
+
         /// <summary>
         /// Returns employee that is responcible for event.
         /// </summary>
-        public Employee Responcible
+        public Employee Responsible
         {
             get
             {
-                return _responcible;
+                return _responsible;
             }
             set
             {
-                _responcible = value;
+                _responsible = value;
             }
         }
 
@@ -58,7 +63,7 @@ namespace EMAS.Model
         /// <param name="date">Custom date.</param>
         public HistoryEntryBase(Employee e, DateOnly date)
         {
-            Responcible = e;
+            Responsible = e;
             Date = date;
         }
 
@@ -67,5 +72,6 @@ namespace EMAS.Model
         /// </summary>
         /// <returns>String that contains info about entry.</returns>
         public abstract override string ToString();
+
     }
 }
