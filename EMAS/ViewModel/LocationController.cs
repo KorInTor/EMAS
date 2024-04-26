@@ -51,7 +51,7 @@ namespace EMAS.ViewModel
             {
                 DataBaseClient.GetInstance().SyncData(Locations);
 
-                await Task.Delay(1000);
+                await Task.Delay(900000);
             }
             while (true);
         }

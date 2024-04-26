@@ -20,6 +20,8 @@ namespace EMAS.ViewModel
         [ObservableProperty]
         private List<Equipment> _equipmentSourceList = new();
 
+        private List<SelectableObject<Equipment>> FiltrationSource { get; set; } = new();
+
         public int CurrentLocationId;
 
         [ObservableProperty]
@@ -46,13 +48,14 @@ namespace EMAS.ViewModel
         public Dictionary<string, RelayCommand> _namedCommands = [];
 
         [ObservableProperty]
-        private Equipment _selectedEquipment;
+        private SelectableObject<Equipment> _selectedEquipment;
 
         [ObservableProperty]
-        private ObservableCollection<Equipment> _filteredEquipmentList;
+        private ObservableCollection<SelectableObject<Equipment>> _filteredEquipmentList;
 
         [ObservableProperty]
         private Equipment _desiredEquipment = new();
+
         public static IWindowsDialogueService DialogueService { get; private set; }
         public EquipmentManagerVM()
         {
@@ -84,12 +87,6 @@ namespace EMAS.ViewModel
         {
             throw new NotImplementedException();
         }
-
-        partial void OnEquipmentSourceListChanged(List<Equipment> value)
-        {
-            FilterEquipment(this, new PropertyChangedEventArgs(nameof(EquipmentSourceList)));
-        }
-
         public void ChangeCommandAccess(List<string> permissions)
         {
             CanAdd = false;
@@ -128,30 +125,44 @@ namespace EMAS.ViewModel
             NamedCommands = newNamedCommandList;
         }
 
+        public void ChangeSourceList(List<Equipment> newSource)
+        {
+            EquipmentSourceList = newSource;
+            FiltrationSource.Clear();
+            foreach (var equipment in EquipmentSourceList)
+            {
+                FiltrationSource.Add(new(equipment));
+            }
+            FilterEquipment(this, new PropertyChangedEventArgs(nameof(EquipmentSourceList)));
+        }
+
         private void FilterEquipment(object? sender, PropertyChangedEventArgs e)
         {
             Debug.WriteLine($"Поменялось свойство фильтрации:{e.PropertyName}");
-            if (EquipmentSourceList.Count == 0)
+            if (FiltrationSource.Count == 0)
             {
                 FilteredEquipmentList = [];
                 return;
             }
 
-            var filteredList = EquipmentSourceList.Where(equipment =>
-                (string.IsNullOrEmpty(DesiredEquipment.Name) || equipment.Name.Contains(DesiredEquipment.Name)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.Description) || equipment.Description.Contains(DesiredEquipment.Description)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.Type) || equipment.Type.Contains(DesiredEquipment.Type)) &&
-                (DesiredEquipment.Id == 0 || equipment.Id == DesiredEquipment.Id) &&
-                (string.IsNullOrEmpty(DesiredEquipment.Units) || equipment.Units.Contains(DesiredEquipment.Units)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.Limit) || equipment.Limit.Contains(DesiredEquipment.Limit)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.AccuracyClass) || equipment.AccuracyClass.Contains(DesiredEquipment.AccuracyClass)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.Manufacturer) || equipment.Manufacturer.Contains(DesiredEquipment.Manufacturer)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.RegistrationNumber) || equipment.RegistrationNumber.Contains(DesiredEquipment.RegistrationNumber)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.FactoryNumber) || equipment.FactoryNumber.Contains(DesiredEquipment.FactoryNumber)) &&
-                (string.IsNullOrEmpty(DesiredEquipment.Status) || equipment.Status.Contains(DesiredEquipment.Status))
-             ).ToList();
+            var filteredList = FiltrationSource.Where(selectableObject =>
+            {
+                if (selectableObject.Object is not Equipment equipment) return false;
 
-            FilteredEquipmentList = new ObservableCollection<Equipment>(filteredList);
+                return (string.IsNullOrEmpty(DesiredEquipment.Name) || equipment.Name.Contains(DesiredEquipment.Name)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Description) || equipment.Description.Contains(DesiredEquipment.Description)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Type) || equipment.Type.Contains(DesiredEquipment.Type)) &&
+                    (DesiredEquipment.Id == 0 || equipment.Id == DesiredEquipment.Id) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Units) || equipment.Units.Contains(DesiredEquipment.Units)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Limit) || equipment.Limit.Contains(DesiredEquipment.Limit)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.AccuracyClass) || equipment.AccuracyClass.Contains(DesiredEquipment.AccuracyClass)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Manufacturer) || equipment.Manufacturer.Contains(DesiredEquipment.Manufacturer)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.RegistrationNumber) || equipment.RegistrationNumber.Contains(DesiredEquipment.RegistrationNumber)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.FactoryNumber) || equipment.FactoryNumber.Contains(DesiredEquipment.FactoryNumber)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Status) || equipment.Status.Contains(DesiredEquipment.Status));
+            }).ToList();
+
+            FilteredEquipmentList = new (filteredList);
         }
 
         private void RequestAdditionWindow()
@@ -163,7 +174,7 @@ namespace EMAS.ViewModel
 
         private void RequestHistoryWindow()
         {
-            HistoryWindowRequested?.Invoke(SelectedEquipment.Id);
+            HistoryWindowRequested?.Invoke(SelectedEquipment.Object.Id);
         }
 
         private void ClearFilters()

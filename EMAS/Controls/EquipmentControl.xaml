@@ -8,7 +8,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <d:UserControl.DataContext>
-        <ViewModel:EquipmentVM/>
+        <ViewModel:EquipmentManagerVM/>
     </d:UserControl.DataContext>
     <Grid>
         <Grid.RowDefinitions>
@@ -31,20 +31,20 @@
                 <DataGridTemplateColumn Header="">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox/>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
-                <DataGridTextColumn Header="Марка" Binding="{Binding Name, Mode=OneWay}" />
-                <DataGridTextColumn Header="Тип" Binding="{Binding Type, Mode=OneWay}" />
-                <DataGridTextColumn Header="Заводской номер" Binding="{Binding FactoryNumber, Mode=OneWay}"/>
-                <DataGridTextColumn Header="Единицы измерений" Binding="{Binding Units, Mode=OneWay}" />
-                <DataGridTextColumn Header="Предел измерений" Binding="{Binding Limit, Mode=OneWay}" />
-                <DataGridTextColumn Header="Класс точности" Binding="{Binding AccuracyClass, Mode=OneWay}" />
-                <DataGridTextColumn Header="Инвентарный номер" Binding="{Binding FactoryNumber, Mode=OneWay}"/>
-                <DataGridTextColumn Header="Статсуc" Binding="{Binding Status, Mode=OneWay}"/>
-                <DataGridTextColumn Header="Описание" Binding="{Binding Description, Mode=OneWay}"/>
+                <DataGridTextColumn Header="ID" Binding="{Binding Object.Id, Mode=OneWay}" />
+                <DataGridTextColumn Header="Марка" Binding="{Binding Object.Name, Mode=OneWay}" />
+                <DataGridTextColumn Header="Тип" Binding="{Binding Object.Type, Mode=OneWay}" />
+                <DataGridTextColumn Header="Заводской номер" Binding="{Binding Object.FactoryNumber, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Единицы измерений" Binding="{Binding Object.Units, Mode=OneWay}" />
+                <DataGridTextColumn Header="Предел измерений" Binding="{Binding Object.Limit, Mode=OneWay}" />
+                <DataGridTextColumn Header="Класс точности" Binding="{Binding Object.AccuracyClass, Mode=OneWay}" />
+                <DataGridTextColumn Header="Инвентарный номер" Binding="{Binding Object.FactoryNumber, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Статсуc" Binding="{Binding Object.Status, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Описание" Binding="{Binding Object.Description, Mode=OneWay}"/>
                 <DataGridTemplateColumn Header="История">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -99,6 +99,7 @@
                 <!--Доавбить фильтр по тэгам-->
                 <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="10" Command="{Binding ClearFiltersCommand}"/>
                 <Button Content="Добавить" Grid.Column="0" Grid.Row="10" Command="{Binding OpenAdditionWindow}"/>
+                <Button Content="Отправить" Grid.Column="0" Grid.Row="10" Command="{Binding OpenDeliveryWindow}"/>
             </Grid>
         </Border>
     </Grid>
