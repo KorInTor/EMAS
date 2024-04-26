@@ -16,7 +16,7 @@ namespace EMAS.Service.Connection.DataAccess
     public class DeliveryDataAccess
     {
         private readonly EventDataAccess eventAccess = new();
-        private readonly string schemaName = "\"event\"";
+        private readonly string schemaName = "\"event\".";
         private readonly StorableObjectInEventDataAccess storableObjectInEventDataAccess = new();
         private readonly string tableName = "delivery";
         public string FullTableName => schemaName + tableName;
@@ -28,7 +28,7 @@ namespace EMAS.Service.Connection.DataAccess
 
         public void Add(Delivery[] objectToAdd)
         {
-            string query = "INSERT INTO " + FullTableName + " (dispatch_event_id, destination_id, departure_id) VALUES (@dispatch_event_id, @destination_id, @departure_id);";
+            string query = "INSERT INTO " + FullTableName + " (dispatch_event_id, destination_id, departure_id ,dispatch_info) VALUES (@dispatch_event_id, @destination_id, @departure_id ,@dispatch_info); ";
             var connection = ConnectionPool.GetConnection();
 
             foreach (var delivery in objectToAdd)
@@ -43,6 +43,7 @@ namespace EMAS.Service.Connection.DataAccess
                 command.Parameters.AddWithValue("@dispatch_event_id", delivery.Id);
                 command.Parameters.AddWithValue("@destination_id", delivery.DestinationId);
                 command.Parameters.AddWithValue("@departure_id", delivery.DepartureId);
+                command.Parameters.AddWithValue("@dispatch_info", delivery.DispatchComment);
 
                 command.ExecuteNonQuery();
             }
@@ -133,7 +134,7 @@ namespace EMAS.Service.Connection.DataAccess
 
             Delivery? foundDelivery = null;
 
-            string query = "SELECT D.departue_id D.destination_id, D.dispatch_info " +
+            string query = "SELECT D.departure_id, D.destination_id, D.dispatch_info " +
                                 "FROM "+FullTableName+" AS D " +
                                 "WHERE D.dispatch_event_id = @Id ";
 
@@ -161,7 +162,7 @@ namespace EMAS.Service.Connection.DataAccess
         {
             Delivery? foundDelivery = null;
 
-            string query = "SELECT D.dispatch_event_id D.departue_id D.destination_id, D.dispatch_info " +
+            string query = "SELECT D.dispatch_event_id, D.departure_id D.destination_id, D.dispatch_info " +
                                 "FROM " + FullTableName + " AS D " +
                                 "WHERE D.arrival_event_id = @Id ";
 

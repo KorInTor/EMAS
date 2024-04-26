@@ -73,6 +73,8 @@ namespace EMAS.Model
             set => SetProperty(ref comment, value);
         }
 
+        public string ShortInfo => $"Материал Id = {this.Id}";
+
         public bool Equals(MaterialPiece? other)
         {
             if (other == null || GetType() != other.GetType())

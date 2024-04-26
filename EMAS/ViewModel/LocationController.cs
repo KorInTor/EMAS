@@ -2,8 +2,10 @@
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
 using EMAS.Model.Event;
+using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.Service.Connection.DataAccess;
+using EMAS.Windows.Dialogue;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,13 +28,37 @@ namespace EMAS.ViewModel
         private List<Location> _locations = [];
         private PermissionInfo _permissions = SessionManager.PermissionInfo;
         public SingleLocationVM MainEquipmentVM { get; set; } = new();
-        
+        public IWindowsDialogueService DialogueService { get; set; }
         public LocationController()
         {
             Locations = DataBaseClient.GetInstance().SelectLocations();
             DataBaseClient.GetInstance().SyncData(Locations);
             DataBaseClient.GetInstance().NewEventsOccured += ShowNewEventsInfo;
+            DialogueService = new WindowsDialogueService();
+            MainEquipmentVM.EquipmentVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
             Task.Run(SyncWithDataBase);
+        }
+
+        private void ShowDeliveryCreationWindow(int arg1, IStorableObject[] arg2)
+        {
+            DeliveryCreationVM deliveryCreationVM = new DeliveryCreationVM([..arg2], LocationIdNameDictionary,arg1,DialogueService);
+            deliveryCreationVM.DeliveryCreated += TryAddDelivery;
+            DialogueService.ShowWindow<DeliveryCreationWindow>(deliveryCreationVM);
+            
+        }
+
+        private void TryAddDelivery(Delivery delivery)
+        {
+            try
+            {
+                DataBaseClient.GetInstance().Add(delivery);
+                DialogueService.Close();
+                DialogueService.ShowSuccesfullMessage("Доставка добавлена успешно");
+            }
+            catch(Exception exception)
+            {
+                DialogueService.ShowFailMessage(exception.Message);
+            }
         }
 
         private void TestFoo(int obj)
@@ -52,7 +78,7 @@ namespace EMAS.ViewModel
             {
                 DataBaseClient.GetInstance().SyncData(Locations);
 
-                await Task.Delay(900000);
+                await Task.Delay(10000);
             }
             while (true);
         }
@@ -108,6 +134,19 @@ namespace EMAS.ViewModel
         public static List<HistoryEntryBase> GetHistoryOfEquipmentPiece(int Id)
         {
             return DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(Id);
+        }
+
+        public Dictionary<int,string> LocationIdNameDictionary
+        {
+            get
+            {
+                Dictionary<int, string> loationIdNameDictionary = [];
+                foreach (Location location in Locations)
+                {
+                    loationIdNameDictionary.Add(location.Id, location.Name);
+                }
+                return loationIdNameDictionary;
+            }
         }
     }
 }
