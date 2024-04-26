@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -10,6 +11,10 @@ namespace EMAS.Model
 {
     internal class MaterialPiece :ObservableObject, IEquatable<MaterialPiece>, IStorableObject, ILocationBounded
     {
+        private int id;
+
+        private int locationId;
+
         private string type;
 
         private string units;
@@ -24,8 +29,16 @@ namespace EMAS.Model
 
 
 
-        public int Id { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public int LocationId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int Id
+        {
+            get => id;
+            set => SetProperty(ref id, value);
+        }
+        public int LocationId
+        {
+            get => locationId;
+            set => SetProperty(ref locationId, value);
+        }
 
         public string Type
         {
