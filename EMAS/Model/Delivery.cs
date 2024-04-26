@@ -44,6 +44,55 @@ namespace EMAS.Model
         private string _dispatchComment;
 
         /// <summary>
+        /// Дополнительная информация про поступление.
+        /// </summary>
+        private string? _arrivalComment = null;
+
+        /// <summary>
+        /// Дата и время поступления.
+        /// </summary>
+        private DateTime _arrivalDate = DateTime.MinValue;
+
+        /// <summary>
+        /// Возвращает коментарий о поступлении.
+        /// </summary>
+        public string ArrivalComment
+        {
+            get
+            {
+                if (IsCompleted)
+                    return _arrivalComment;
+                else
+                    throw new InvalidOperationException("Доставка не заполнена значениями");
+            }
+        }
+
+        /// <summary>
+        /// Возвращает дату поступления.
+        /// </summary>
+        public DateTime ArrivalDate
+        {
+            get
+            {
+                if (IsCompleted)
+                    return _arrivalDate;
+                else
+                    throw new InvalidOperationException("Доставка не заполнена значениями");
+            }
+        }
+
+        /// <summary>
+        /// Возвращает true если значения требуемые для завершения доставки установлены, иначе false.
+        /// </summary>
+        public bool IsCompleted
+        {
+            get
+            {
+                return _arrivalComment != null && _arrivalDate != DateTime.MinValue;
+            }
+        }
+
+        /// <summary>
         /// Id of event, unique through all <see cref="IObjectState"/>.
         /// </summary>
         public long Id
@@ -51,7 +100,6 @@ namespace EMAS.Model
             get => _id;
             set => SetProperty(ref _id, value);
         }
-
 
         /// <summary>
         /// Returns date of dispatch.
@@ -89,6 +137,9 @@ namespace EMAS.Model
             set => SetProperty(ref _departureId, value);
         }
 
+        /// <summary>
+        /// Возвращает и задёт коментарий о отправлении.
+        /// </summary>
         public string DispatchComment
         {
             get
@@ -123,6 +174,17 @@ namespace EMAS.Model
             DispatchDate = DateTime.MinValue;
 
             PackageList = [];
+        }
+
+        /// <summary>
+        /// Инициализирует доставку значениями нужнымт для пожтверждения.
+        /// </summary>
+        /// <param name="arrivalDate">Дата поступления.</param>
+        /// <param name="arrivalComment">Коментарий о поступлении.</param>
+        public void Complete(DateTime arrivalDate, string arrivalComment)
+        {
+            _arrivalComment = arrivalComment;
+            _arrivalDate = arrivalDate;
         }
     }
 }
