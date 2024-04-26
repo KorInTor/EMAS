@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using EMAS.Model.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -161,6 +162,27 @@ namespace EMAS.Model
             DispatchComment = departureInfo;
 
             PackageList = storableObjects;
+
+            DestinationId = destinationId;
+            DepartureId = departureId;
+        }
+
+        /// <summary>
+        /// Позволяе инициализировать новую доставку из значений <see cref="StorableObjectEvent"/>.
+        /// </summary>
+        /// <param name="dispatchEvent"></param>
+        /// <param name="departureId">Id локации ОТправлени.</param>
+        /// <param name="destinationId">Id локации НАправления.</param>
+        /// <param name="departureInfo">Дополнительный коментарий по отрпавке.</param>
+        public Delivery(StorableObjectEvent dispatchEvent,int departureId, int destinationId, string departureInfo)
+        {
+            Id = dispatchEvent.Id;
+
+            DispatchDate = dispatchEvent.DateTime;
+
+            DispatchComment = departureInfo;
+
+            PackageList = dispatchEvent.ObjectsInEvent;
 
             DestinationId = destinationId;
             DepartureId = departureId;
