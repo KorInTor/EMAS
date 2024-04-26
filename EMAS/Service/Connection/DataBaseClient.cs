@@ -13,7 +13,7 @@ namespace EMAS.Service.Connection
 {
     public class DataBaseClient
     {
-        private IObjectStateLocationBoundedDataAccess<Delivery> deliveryDataAccess;
+        private DeliveryDataAccess deliveryDataAccess;
         private ILocationBoundedDataAccess<Equipment> equipmentDataAccess;
         private IObjectStateLocationBoundedDataAccess<Reservation> reservationDataAccess;
         private IDataAccess<Employee> employeeDataAccess;
@@ -224,7 +224,6 @@ namespace EMAS.Service.Connection
 
             if (lastDataBaseEventId == LastEventId)
             {
-                //TODO Add return value that indicates what changed;
                 Debug.WriteLine("Data is UpToDate");
                 return;
             }
@@ -239,98 +238,90 @@ namespace EMAS.Service.Connection
                 objectStates.AddRange(location.OutgoingDeliveries);
             }
 
-            var locationEventsDictionary = new Dictionary<int, List<StorableObjectEvent>>();
-            foreach (var newSOEvent in newSOEvents)
-            {
-                var locationId = newSOEvent.ObjectsInEvent.First().LocationId;
-                if (!locationEventsDictionary.ContainsKey(locationId))
-                {
-                    locationEventsDictionary[locationId] = new List<StorableObjectEvent>();
-                }
-                locationEventsDictionary[locationId].Add(newSOEvent);
-            }
-
+            var locationIdDictionary = new Dictionary<int, Location>();
             foreach (var location in locationsToSync)
             {
-                var locationId = location.Id;
-                if (!locationEventsDictionary.ContainsKey(locationId))
-                    continue;
-
-                var locationEvents = locationEventsDictionary[locationId];
-                foreach (var newSOEvent in locationEvents)
-                {
-                    switch (newSOEvent.EventType)
-                    {
-                        case EventType.Arrived:
-                            {
-                                location.OutgoingDeliveries.RemoveAll(delivery => delivery.Id == newSOEvent.Id);
-                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
-                                {
-                                    if (storableObject is Equipment equipment)
-                                    {
-                                        location.Equipments.Add(equipment);
-                                        break;
-                                    }
-                                }
-                                throw new Exception("Объект прибыл на неизвестную локацию");
-                                break;
-                            }
-                        case EventType.Sent:
-                            {
-                                var newDelivery = deliveryDataAccess.SelectById(newSOEvent.Id);
-                                location.OutgoingDeliveries.Add(newDelivery);
-                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
-                                {
-                                    if (storableObject is Equipment equipmentInEvent)
-                                    {
-                                        location.Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
-                                    }
-                                }
-                                break;
-                            }
-                        case EventType.Decommissioned:
-                            {
-                                throw new NotImplementedException();
-                            }
-                        case EventType.Reserved:
-                            {
-                                throw new NotImplementedException();
-                                break;
-                            }
-                        case EventType.ReserveEnded:
-                            {
-                                throw new NotImplementedException();
-                                break;
-                            }
-                        case EventType.Addition:
-                            {
-                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
-                                {
-                                    if (storableObject is Equipment equipmentInEvent)
-                                        location.Equipments.Add(equipmentInEvent);
-                                }
-                                break;
-                            }
-                        case EventType.DataChanged:
-                            {
-                                foreach (var storableObject in newSOEvent.ObjectsInEvent)
-                                {
-                                    if (storableObject is Equipment equipmentInEvent)
-                                    {
-                                        location.Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
-                                        location.Equipments.Add(equipmentInEvent);
-                                    }
-                                }
-                                break;
-                            }
-                        default:
-                            {
-                                throw new NotImplementedException();
-                            }
-                    }
-                }
-                NewEventsOccured?.Invoke(newSOEvents);
+                locationIdDictionary.Add(location.Id,location);
             }
+
+            foreach (var newSOEvent in newSOEvents)
+            {
+                switch (newSOEvent.EventType)
+                {
+                    case EventType.Arrived:
+                        {
+                            Delivery arrivedDelivery = deliveryDataAccess.SelectCompletedByArrivalId(newSOEvent.Id);
+                            locationIdDictionary[arrivedDelivery.DepartureId].OutgoingDeliveries.RemoveAll(delivery => delivery.Id == arrivedDelivery.Id);
+                            locationIdDictionary[arrivedDelivery.DestinationId].IncomingDeliveries.RemoveAll(delivery => delivery.Id == arrivedDelivery.Id);
+
+                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            {
+                                if (storableObject is Equipment equipment)
+                                {
+                                    locationIdDictionary[arrivedDelivery.DestinationId].Equipments.Add(equipment);
+                                    break;
+                                }
+                            }
+                            throw new Exception("Объект прибыл на неизвестную локацию");
+                            break;
+                        }
+                    case EventType.Sent:
+                        {
+                            var newDelivery = deliveryDataAccess.SelectById(newSOEvent.Id);
+                            locationIdDictionary[newDelivery.DepartureId].OutgoingDeliveries.Add(newDelivery);
+                            locationIdDictionary[newDelivery.DestinationId].IncomingDeliveries.Add(newDelivery);
+
+                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            {
+                                if (storableObject is Equipment equipmentInEvent)
+                                {
+                                    locationIdDictionary[newDelivery.DepartureId].Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                                }
+                            }
+                            break;
+                        }
+                    case EventType.Decommissioned:
+                        {
+                            throw new NotImplementedException();
+                        }
+                    case EventType.Reserved:
+                        {
+                            throw new NotImplementedException();
+                            break;
+                        }
+                    case EventType.ReserveEnded:
+                        {
+                            throw new NotImplementedException();
+                            break;
+                        }
+                    case EventType.Addition:
+                        {
+                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            {
+                                if (storableObject is Equipment equipmentInEvent)
+                                    locationIdDictionary[equipmentInEvent.LocationId].Equipments.Add(equipmentInEvent);
+                            }
+                            break;
+                        }
+                    case EventType.DataChanged:
+                        {
+                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            {
+                                if (storableObject is Equipment equipmentInEvent)
+                                {
+                                    locationIdDictionary[equipmentInEvent.LocationId].Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                                    locationIdDictionary[equipmentInEvent.LocationId].Equipments.Add(equipmentInEvent);
+                                }
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            throw new NotImplementedException();
+                        }
+                }
+            }
+            NewEventsOccured?.Invoke(newSOEvents);
         }
     }
 }
