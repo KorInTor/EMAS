@@ -16,6 +16,7 @@ namespace EMAS.ViewModel
     {
         public event Action<int> HistoryWindowRequested;
         public event Action<int> AdditionWindowRequested;
+        public event Action<int,IStorableObject[]> DeliveryCreationRequested;
 
         [ObservableProperty]
         private List<Equipment> _equipmentSourceList = new();
@@ -36,13 +37,13 @@ namespace EMAS.ViewModel
         private bool _canEdit;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(OpenDeliveryWindow))]
+        [NotifyCanExecuteChangedFor(nameof(CreateDeliveryCommand))]
         private bool _canSend;
 
         public RelayCommand OpenAdditionWindow { get; set; }
         public RelayCommand OpenHistoryWindowCommand { get; set; }
         public RelayCommand OpenEditWindow { get; set; }
-        public RelayCommand OpenDeliveryWindow { get; set; }
+        public RelayCommand CreateDeliveryCommand { get; set; }
 
         [ObservableProperty]
         public Dictionary<string, RelayCommand> _namedCommands = [];
@@ -63,7 +64,7 @@ namespace EMAS.ViewModel
             OpenHistoryWindowCommand = new RelayCommand(RequestHistoryWindow);
             OpenAdditionWindow = new RelayCommand(RequestAdditionWindow, () => CanAdd);
             OpenEditWindow = new RelayCommand(RequestEditWindow, () => CanEdit);
-            OpenDeliveryWindow = new RelayCommand(RequestDeliveryCreationWindow, () => CanSend);
+            CreateDeliveryCommand = new RelayCommand(RequestDeliveryCreation, () => CanSend);
 
             InitCommandDictionary();
             DesiredEquipment.PropertyChanged += FilterEquipment;
@@ -75,18 +76,27 @@ namespace EMAS.ViewModel
         {
             NamedCommands.Add("Добавить", OpenAdditionWindow);
             NamedCommands.Add("Изменить", OpenEditWindow);
-            NamedCommands.Add("Отправить", OpenDeliveryWindow);
+            NamedCommands.Add("Отправить", CreateDeliveryCommand);
         }
 
-        private void RequestDeliveryCreationWindow()
+        private void RequestDeliveryCreation()
         {
-            throw new NotImplementedException();
+            List<IStorableObject> objectsToSend = new();
+
+            foreach (var selectableEquipment in FilteredEquipmentList)
+            {
+                if (selectableEquipment.IsSelected)
+                    objectsToSend.Add(selectableEquipment.Object);
+            }
+
+            DeliveryCreationRequested?.Invoke(CurrentLocationId,[.. objectsToSend]);
         }
 
         private void RequestEditWindow()
         {
             throw new NotImplementedException();
         }
+
         public void ChangeCommandAccess(List<string> permissions)
         {
             CanAdd = false;
@@ -115,7 +125,7 @@ namespace EMAS.ViewModel
                         case PermissionType.DeliveryAccess:
                         {
                             CanSend = true;
-                                newNamedCommandList.Add("Отправить", OpenDeliveryWindow);
+                                newNamedCommandList.Add("Отправить", CreateDeliveryCommand);
                             break;
                         }
                     }

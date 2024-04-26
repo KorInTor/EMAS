@@ -99,7 +99,7 @@
                 <!--Доавбить фильтр по тэгам-->
                 <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="10" Command="{Binding ClearFiltersCommand}"/>
                 <Button Content="Добавить" Grid.Column="0" Grid.Row="10" Command="{Binding OpenAdditionWindow}"/>
-                <Button Content="Отправить" Grid.Column="0" Grid.Row="10" Command="{Binding OpenDeliveryWindow}"/>
+                <Button Content="Отправить" Grid.Column="0" Grid.Row="10" Command="{Binding CreateDeliveryCommand}"/>
             </Grid>
         </Border>
     </Grid>
