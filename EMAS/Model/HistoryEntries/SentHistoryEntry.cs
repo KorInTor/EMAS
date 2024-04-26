@@ -11,10 +11,14 @@ namespace EMAS.Model.HistoryEntry
         public SentHistoryEntry(Employee e, DateOnly date) : base(e, date)
         {
         }
+        public string TypeOfAction
+        {
+            get { return $"Отправление"; }
+        }
 
         public override string ToString()
         {
-            return ($"Дата: {this.Date} Отправлен. Ответственный: {this.Responcible.Fullname}");
+            return ($"Дата: {this.Date} Отправлен. Ответственный: {this.Responsible.Fullname}");
         }
     }
 }

@@ -5,6 +5,7 @@ using EMAS.Model.Enum;
 using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.Windows;
+using EMAS.Windows.Dialogue;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -184,7 +185,9 @@ namespace EMAS.ViewModel
 
         private void RequestHistoryWindow()
         {
-            HistoryWindowRequested?.Invoke(SelectedEquipment.Object.Id);
+            HistoryVM historyVM = new HistoryVM();
+            historyVM.History = LocationController.GetHistoryOfEquipmentPiece(SelectedEquipment.Object.Id);
+            DialogueService.ShowWindow<HistoryWindow>(historyVM);
         }
 
         private void ClearFilters()
@@ -201,5 +204,6 @@ namespace EMAS.ViewModel
             DesiredEquipment.FactoryNumber = string.Empty;
             DesiredEquipment.Status = string.Empty;
         }
+
     }
 }
