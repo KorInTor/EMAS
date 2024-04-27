@@ -239,14 +239,8 @@ namespace EMAS.Service.Connection
             }
             Debug.WriteLine("UpdatingData");
 
-            List<StorableObjectEvent> newSOEvents = eventDataAccess.SelectEventsAfter(LastEventId);
+            List<StorableObjectEvent> newStorableObjectEvents = eventDataAccess.SelectEventsAfter(LastEventId);
             LastEventId = lastDataBaseEventId;
-
-            List<IObjectState> objectStates = [];
-            foreach (var location in locationsToSync)
-            {
-                objectStates.AddRange(location.OutgoingDeliveries);
-            }
 
             var locationIdDictionary = new Dictionary<int, Location>();
             foreach (var location in locationsToSync)
@@ -254,17 +248,17 @@ namespace EMAS.Service.Connection
                 locationIdDictionary.Add(location.Id,location);
             }
 
-            foreach (var newSOEvent in newSOEvents)
+            foreach (var newStorableObjectEvent in newStorableObjectEvents)
             {
-                switch (newSOEvent.EventType)
+                switch (newStorableObjectEvent.EventType)
                 {
                     case EventType.Arrived:
                         {
-                            Delivery arrivedDelivery = deliveryDataAccess.SelectCompletedByArrivalId(newSOEvent.Id);
+                            Delivery arrivedDelivery = deliveryDataAccess.SelectCompletedByArrivalId(newStorableObjectEvent.Id);
                             locationIdDictionary[arrivedDelivery.DepartureId].OutgoingDeliveries.RemoveAll(delivery => delivery.Id == arrivedDelivery.Id);
                             locationIdDictionary[arrivedDelivery.DestinationId].IncomingDeliveries.RemoveAll(delivery => delivery.Id == arrivedDelivery.Id);
 
-                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
                             {
                                 if (storableObject is Equipment equipment)
                                 {
@@ -275,11 +269,11 @@ namespace EMAS.Service.Connection
                         }
                     case EventType.Sent:
                         {
-                            var newDelivery = deliveryDataAccess.SelectById(newSOEvent.Id);
+                            var newDelivery = deliveryDataAccess.SelectById(newStorableObjectEvent.Id);
                             locationIdDictionary[newDelivery.DepartureId].OutgoingDeliveries.Add(newDelivery);
                             locationIdDictionary[newDelivery.DestinationId].IncomingDeliveries.Add(newDelivery);
 
-                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
                             {
                                 if (storableObject is Equipment equipmentInEvent)
                                 {
@@ -304,7 +298,7 @@ namespace EMAS.Service.Connection
                         }
                     case EventType.Addition:
                         {
-                            AdditionEvent additionEvent = (AdditionEvent)newSOEvent;
+                            AdditionEvent additionEvent = (AdditionEvent)newStorableObjectEvent;
                             foreach (var storableObject in additionEvent.ObjectsInEvent)
                             {
                                 if (storableObject is Equipment equipmentInEvent)
@@ -314,7 +308,7 @@ namespace EMAS.Service.Connection
                         }
                     case EventType.DataChanged:
                         {
-                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
                             {
                                 if (storableObject is Equipment equipmentInEvent)
                                 {
@@ -330,7 +324,7 @@ namespace EMAS.Service.Connection
                         }
                 }
             }
-            NewEventsOccured?.Invoke(newSOEvents);
+            NewEventsOccured?.Invoke(newStorableObjectEvents);
         }
     }
 }
