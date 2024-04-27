@@ -17,6 +17,8 @@ namespace EMAS.Service.Connection
 
         private static string _connectionString;
 
+        private static short _openedConnections = 0;
+
         public static string ConnectionString
         {
             get
@@ -39,6 +41,8 @@ namespace EMAS.Service.Connection
         {
             var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
+            _openedConnections++;
+            Debug.WriteLine($"Открыто соединений:{_openedConnections}");
             return connection;
             lock (_connections)
             {
@@ -46,14 +50,12 @@ namespace EMAS.Service.Connection
                 {
                     var conn = _connections[0];
                     _connections.RemoveAt(0);
-                    Debug.WriteLine($"Отсалось соединений:{_connections.Count}");
                     return conn;
                 }
                 else if (_connections.Count < _maxConnections)
                 {
                     var conn = new NpgsqlConnection(ConnectionString);
                     conn.Open();
-                    Debug.WriteLine($"Отсалось соединений:{_connections.Count}");
                     return conn;
                 }
                 else
@@ -64,7 +66,6 @@ namespace EMAS.Service.Connection
                     }
                     var conn = _connections[0];
                     _connections.RemoveAt(0);
-                    Debug.WriteLine($"Отсалось соединений:{_connections.Count}");
                     return conn;
                 }
             }
@@ -73,11 +74,13 @@ namespace EMAS.Service.Connection
         public static void ReleaseConnection(NpgsqlConnection conn)
         {
             conn.Close();
+            conn.Dispose();
+            _openedConnections--;
+            Debug.WriteLine($"Открыто соединений:{_openedConnections}");
             return;
             lock (_connections)
             {
                 _connections.Add(conn);
-                Debug.WriteLine($"Отсалось соединений:{_connections.Count}");
             }
         }
 
