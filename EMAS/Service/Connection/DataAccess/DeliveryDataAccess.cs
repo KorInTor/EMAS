@@ -93,7 +93,7 @@ namespace EMAS.Service.Connection.DataAccess
                 }
 
                 var connection = ConnectionPool.GetConnection();
-                using var command = new NpgsqlCommand("UPDATE" + FullTableName + "SET arrival_event_id=@arrival_event_id, arrival_info=@arrivalComment WHERE dispatch_event_id=@sendedEventId ", connection);
+                using var command = new NpgsqlCommand("UPDATE " + FullTableName + " SET arrival_event_id=@arrival_event_id, arrival_info=@arrivalComment WHERE dispatch_event_id=@sendedEventId ", connection);
                 command.Parameters.AddWithValue("@arrival_event_id", newEvent.Id);
                 command.Parameters.AddWithValue("@sendedEventId", delivery.Id);
                 command.Parameters.AddWithValue("@arrivalComment", delivery.ArrivalComment);
@@ -162,7 +162,7 @@ namespace EMAS.Service.Connection.DataAccess
         {
             Delivery? foundDelivery = null;
 
-            string query = "SELECT D.dispatch_event_id, D.departure_id D.destination_id, D.dispatch_info " +
+            string query = "SELECT D.dispatch_event_id, D.departure_id, D.destination_id, D.dispatch_info " +
                                 "FROM " + FullTableName + " AS D " +
                                 "WHERE D.arrival_event_id = @Id ";
 
@@ -178,6 +178,7 @@ namespace EMAS.Service.Connection.DataAccess
                 foundDelivery = new(eventAccess.SelectById(reader.GetInt32(0)), reader.GetInt32(1), reader.GetInt32(2), reader.GetString(3));
             }
 
+            ConnectionPool.ReleaseConnection(connection);
             return foundDelivery;
         }
 

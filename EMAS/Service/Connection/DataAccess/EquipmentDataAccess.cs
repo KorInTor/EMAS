@@ -107,7 +107,7 @@ namespace EMAS.Service.Connection.DataAccess
         {
             var connection = ConnectionPool.GetConnection();
 
-            using var command = new NpgsqlCommand("UPDATE \"public\".equipment SET location_id=@newLocationId, WHERE id=@equipmentId ", connection);
+            using var command = new NpgsqlCommand("UPDATE \"public\".equipment SET location_id=@newLocationId WHERE id=@equipmentId ", connection);
             command.Parameters.AddWithValue("@newLocationId", equipmentAndLocationId.Item2);
             command.Parameters.AddWithValue("@equipmentId", equipmentAndLocationId.Item1.Id);
 
@@ -164,7 +164,7 @@ namespace EMAS.Service.Connection.DataAccess
 
             EventDataAccess eventDataAccess = new();
 
-            StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Addition, DateTime.Now, new List<IStorableObject>(items));
+            AdditionEvent newEvent = new(SessionManager.UserId, 0, EventType.Addition, DateTime.Now, new List<IStorableObject>(items),locationId);
             eventDataAccess.Add(newEvent);
         }
     }

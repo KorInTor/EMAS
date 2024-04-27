@@ -3,11 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:EMAS.Windows.Dialogue"
-        xmlns:Controls="clr-namespace:EMAS.Controls" x:Class="EMAS.Windows.Dialogue.DeliveryCreationWindow"
+        xmlns:local="clr-namespace:EMAS.Windows.Dialogue.Delivery"
+        xmlns:delivery="clr-namespace:EMAS.Controls.Delivery" x:Class="EMAS.Windows.Dialogue.Delivery.DeliveryCreationWindow"
         mc:Ignorable="d"
         Title="Создание доставки" Height="450" Width="800">
     <Grid>
-        <Controls:DeliveryCreationControl DataContext="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DeliveryCreationWindow}}}"/>
+        <delivery:DeliveryCreationControl DataContext="{Binding DataContext, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DeliveryCreationWindow}}}"/>
     </Grid>
 </Window>

@@ -27,7 +27,7 @@ namespace EMAS.ViewModel
             EquipmentVM.CurrentLocationId = LocationInfo.Id;
             EquipmentVM.ChangeSourceList(LocationInfo.Equipments);
             EquipmentVM.ChangeCommandAccess(Permissions);
-            DeliveryControlVM.ChagneSourceList(LocationInfo.IncomingDeliveries,LocationInfo.OutgoingDeliveries);
+            DeliveryControlVM.ChagneSourceList(LocationInfo.IncomingDeliveries,LocationInfo.OutgoingDeliveries,true);
         }
 
         public void UpdateLocationData(Location newLocation)

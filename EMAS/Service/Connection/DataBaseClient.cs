@@ -168,6 +168,16 @@ namespace EMAS.Service.Connection
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
+        public void Complete(object objecToComplete)
+        {
+            if(objecToComplete is Delivery completedDelivery)
+            {
+                deliveryDataAccess.Complete(completedDelivery);
+                return;
+            }
+            throw new NotSupportedException("Этот тип не поддерживается");
+        }
+
         public List<Delivery> GetDeliverysOutOf(int locationId)
         {
             return deliveryDataAccess.SelectOnLocation(locationId);
@@ -229,7 +239,7 @@ namespace EMAS.Service.Connection
             }
             Debug.WriteLine("UpdatingData");
 
-            List<StorableObjectEvent> newSOEvents = eventDataAccess.SelectNewEventsAfter(LastEventId);
+            List<StorableObjectEvent> newSOEvents = eventDataAccess.SelectEventsAfter(LastEventId);
             LastEventId = lastDataBaseEventId;
 
             List<IObjectState> objectStates = [];
@@ -259,10 +269,8 @@ namespace EMAS.Service.Connection
                                 if (storableObject is Equipment equipment)
                                 {
                                     locationIdDictionary[arrivedDelivery.DestinationId].Equipments.Add(equipment);
-                                    break;
                                 }
                             }
-                            throw new Exception("Объект прибыл на неизвестную локацию");
                             break;
                         }
                     case EventType.Sent:
@@ -296,10 +304,11 @@ namespace EMAS.Service.Connection
                         }
                     case EventType.Addition:
                         {
-                            foreach (var storableObject in newSOEvent.ObjectsInEvent)
+                            AdditionEvent additionEvent = (AdditionEvent)newSOEvent;
+                            foreach (var storableObject in additionEvent.ObjectsInEvent)
                             {
                                 if (storableObject is Equipment equipmentInEvent)
-                                    locationIdDictionary[equipmentInEvent.LocationId].Equipments.Add(equipmentInEvent);
+                                    locationIdDictionary[additionEvent.LocationId].Equipments.Add(equipmentInEvent);
                             }
                             break;
                         }

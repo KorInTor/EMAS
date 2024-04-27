@@ -6,6 +6,7 @@ using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.Service.Connection.DataAccess;
 using EMAS.Windows.Dialogue;
+using EMAS.Windows.Dialogue.Delivery;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,16 +36,41 @@ namespace EMAS.ViewModel
             DataBaseClient.GetInstance().SyncData(Locations);
             DataBaseClient.GetInstance().NewEventsOccured += ShowNewEventsInfo;
             DialogueService = new WindowsDialogueService();
+
             MainEquipmentVM.EquipmentVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
+            MainEquipmentVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
+
             Task.Run(SyncWithDataBase);
+        }
+
+        private void ShowDeliveryConfiramtionWindow(Delivery delivery)
+        {
+            DeliveryConfirmationVM deliveryConfirmationVM = new(delivery,DialogueService);
+            deliveryConfirmationVM.DeliveryCompleted += TryCompleteDelivery;
+            DialogueService.ShowWindow<DeliveryConfirmationWindow>(deliveryConfirmationVM);
+            deliveryConfirmationVM.DeliveryCompleted -= TryCompleteDelivery;
+        }
+
+        private void TryCompleteDelivery(Delivery delivery)
+        {
+            try
+            {
+                DataBaseClient.GetInstance().Complete(delivery);
+                DialogueService.Close();
+                DialogueService.ShowSuccesfullMessage("Подтверждение успешно");
+            }
+            catch (Exception exception)
+            {
+                DialogueService.ShowFailMessage(exception.Message);
+            }
         }
 
         private void ShowDeliveryCreationWindow(int arg1, IStorableObject[] arg2)
         {
-            DeliveryCreationVM deliveryCreationVM = new DeliveryCreationVM([..arg2], LocationIdNameDictionary,arg1,DialogueService);
+            DeliveryCreationVM deliveryCreationVM = new([..arg2], LocationIdNameDictionary,arg1,DialogueService);
             deliveryCreationVM.DeliveryCreated += TryAddDelivery;
             DialogueService.ShowWindow<DeliveryCreationWindow>(deliveryCreationVM);
-            
+            deliveryCreationVM.DeliveryCreated -= TryAddDelivery;
         }
 
         private void TryAddDelivery(Delivery delivery)
@@ -147,6 +173,12 @@ namespace EMAS.ViewModel
                 }
                 return loationIdNameDictionary;
             }
+        }
+
+        [RelayCommand]
+        private void SynchronizeData()
+        {
+            DataBaseClient.GetInstance().SyncData(Locations);
         }
     }
 }

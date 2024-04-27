@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Service;
+using EMAS.Windows.Dialogue.Delivery;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +16,7 @@ namespace EMAS.ViewModel
 {
     public partial class DeliveryControlVM : ObservableObject
     {
-        public event Action<long> DeliveryConfirmationRequested;
+        public event Action<Delivery> DeliveryConfirmationRequested;
 
         [ObservableProperty]
         private ObservableCollection<Delivery> _filteredDeliveries;
@@ -42,12 +44,14 @@ namespace EMAS.ViewModel
 
         private bool _canUserChangeDelivery = false;
 
+        public IWindowsDialogueService DialogueService { get; set; } = new WindowsDialogueService();
+
         public RelayCommand ConfirmDeliveryCommand { get; set; }
         public RelayCommand ClearFiltersCommand { get; set; }
 
         private void ConfirmDelivery()
         {
-            DeliveryConfirmationRequested?.Invoke(SelectedDelivery.Id);
+            DeliveryConfirmationRequested?.Invoke(SelectedDelivery);
         }
 
         public DeliveryControlVM(Type type)
@@ -97,13 +101,14 @@ namespace EMAS.ViewModel
             
             //TODO: Add Actual Filter Logic;
 
-            FilteredDeliveries = new ObservableCollection<Delivery>(filteredList);
+            FilteredDeliveries = new ObservableCollection<Delivery>(source);
         }
 
         partial void OnSelectedDeliveryChanged(Delivery value)
         {
             ConfirmDeliveryCommand.NotifyCanExecuteChanged();
-            PackageList = SelectedDelivery.PackageList;
+            if (SelectedDelivery != null)
+                PackageList = SelectedDelivery.PackageList;
         }
 
         partial void OnIsIncomingSelectedChanged(bool value)

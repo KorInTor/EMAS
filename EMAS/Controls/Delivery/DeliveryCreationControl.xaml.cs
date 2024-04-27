@@ -10,16 +10,17 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace EMAS.Windows.Dialogue
+namespace EMAS.Controls.Delivery
 {
     /// <summary>
-    /// Логика взаимодействия для DeliveryCreationWindow.xaml
+    /// Логика взаимодействия для DeliveryCreationControl.xaml
     /// </summary>
-    public partial class DeliveryCreationWindow : Window
+    public partial class DeliveryCreationControl : UserControl
     {
-        public DeliveryCreationWindow()
+        public DeliveryCreationControl()
         {
             InitializeComponent();
         }

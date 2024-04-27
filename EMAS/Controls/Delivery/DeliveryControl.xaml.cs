@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace EMAS.Controls
+namespace EMAS.Controls.Delivery
 {
     /// <summary>
     /// Логика взаимодействия для DeliveryControl.xaml

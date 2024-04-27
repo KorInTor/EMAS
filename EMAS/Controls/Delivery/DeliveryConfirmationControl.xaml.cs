@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace EMAS.Controls
+namespace EMAS.Controls.Delivery
 {
     /// <summary>
-    /// Логика взаимодействия для DeliveryCreationControl.xaml
+    /// Логика взаимодействия для DeliveryConfirmationCotrol.xaml
     /// </summary>
-    public partial class DeliveryCreationControl : UserControl
+    public partial class DeliveryConfirmationControl : UserControl
     {
-        public DeliveryCreationControl()
+        public DeliveryConfirmationControl()
         {
             InitializeComponent();
         }

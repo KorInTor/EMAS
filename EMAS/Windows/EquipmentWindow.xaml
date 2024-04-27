@@ -6,13 +6,26 @@
         xmlns:local="clr-namespace:EMAS.Windows"
         xmlns:controlls="clr-namespace:EMAS.Controls"
         xmlns:viewmodel="clr-namespace:EMAS.ViewModel"
+        xmlns:properties="clr-namespace:EMAS.Properties"
         mc:Ignorable="d"
-        Title="EquipmentWindow" Height="450" Width="800">
+        Title="EquipmentWindow" Height="1100" Width="1200">
     <Window.DataContext>
         <viewmodel:LocationController/>
     </Window.DataContext>
     <Grid>
-        <TabControl x:Name="MainTabControl" SelectedItem="{Binding CurrentLocation}" ItemsSource="{Binding Locations}" DisplayMemberPath="Name">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0">
+            <Button Command="{Binding SynchronizeDataCommand}" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="{Binding Source={x:Static properties:Resources.synchronizeIcon}}" Width="30" Height="30"/>
+                    <TextBlock Text="Синхронизировать" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <TabControl x:Name="MainTabControl" SelectedItem="{Binding CurrentLocation}" ItemsSource="{Binding Locations}" DisplayMemberPath="Name" Grid.Row="1">
             <TabControl.ContentTemplate>
                 <DataTemplate>
                     <controlls:MainEquipmentControll DataContext="{Binding DataContext.MainEquipmentVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EquipmentWindow}}}"/>

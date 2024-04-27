@@ -69,5 +69,15 @@ namespace EMAS.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
+        public static byte[] synchronizeIcon {
+            get {
+                object obj = ResourceManager.GetObject("synchronizeIcon", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }
