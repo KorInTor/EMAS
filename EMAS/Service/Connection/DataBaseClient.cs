@@ -220,24 +220,8 @@ namespace EMAS.Service.Connection
 
         public void SyncData(List<Location> locationsToSync)
         {
-            long lastDataBaseEventId;
-            StorableObjectEvent? lastEvent = eventDataAccess.SelectLast();
-
-            if (lastEvent is null)
-            {
-                lastDataBaseEventId = 0;
-            }
-            else
-            {
-                lastDataBaseEventId = lastEvent.Id;
-            }
-
-            if (lastDataBaseEventId == LastEventId)
-            {
-                Debug.WriteLine("Data is UpToDate");
+            if (IsDataUpToDate(out long lastDataBaseEventId))
                 return;
-            }
-            Debug.WriteLine("UpdatingData");
 
             List<StorableObjectEvent> newStorableObjectEvents = eventDataAccess.SelectEventsAfter(LastEventId);
             LastEventId = lastDataBaseEventId;
@@ -245,7 +229,7 @@ namespace EMAS.Service.Connection
             var locationIdDictionary = new Dictionary<int, Location>();
             foreach (var location in locationsToSync)
             {
-                locationIdDictionary.Add(location.Id,location);
+                locationIdDictionary.Add(location.Id, location);
             }
 
             foreach (var newStorableObjectEvent in newStorableObjectEvents)
@@ -325,6 +309,28 @@ namespace EMAS.Service.Connection
                 }
             }
             NewEventsOccured?.Invoke(newStorableObjectEvents);
+        }
+
+        private bool IsDataUpToDate(out long lastDataBaseEventId)
+        {
+            StorableObjectEvent? lastEvent = eventDataAccess.SelectLast();
+
+            if (lastEvent is null)
+            {
+                lastDataBaseEventId = 0;
+            }
+            else
+            {
+                lastDataBaseEventId = lastEvent.Id;
+            }
+
+            if (lastDataBaseEventId == LastEventId)
+            {
+                Debug.WriteLine("Data is UpToDate");
+                return true;
+            }
+            Debug.WriteLine("Data is OutDated");
+            return false;
         }
     }
 }
