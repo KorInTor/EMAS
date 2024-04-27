@@ -38,7 +38,7 @@ namespace EMAS.ViewModel
 
         partial void OnArriveDateChanged(DateTime value)
         {
-            if (ArriveDate >= _deliveryToComplete.DispatchDate && ArriveComment != string.Empty)
+            if (ArriveDate >= _deliveryToComplete.DispatchDate && ArriveComment.Trim(new char[] { ' ', '.', ',', '\r', '\n' }) != string.Empty)
                 CanCompleteDelivery = true;
             else
                 CanCompleteDelivery = false;
@@ -46,7 +46,7 @@ namespace EMAS.ViewModel
 
         partial void OnArriveCommentChanged(string value)
         {
-            if (ArriveDate >= _deliveryToComplete.DispatchDate && ArriveComment != string.Empty)
+            if (ArriveDate >= _deliveryToComplete.DispatchDate && ArriveComment.Trim(new char[] { ' ', '.', ',', '\r', '\n' }) != string.Empty)
                 CanCompleteDelivery = true;
             else
                 CanCompleteDelivery = false;

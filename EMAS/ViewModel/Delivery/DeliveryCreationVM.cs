@@ -14,24 +14,28 @@ namespace EMAS.ViewModel
 {
     public partial class DeliveryCreationVM : ObservableObject
     {
-        public event Action<Delivery> DeliveryCreated;
-
-        public ObservableCollection<IStorableObject> StorableObjectsInDelivery { get; set; }
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(ConfrimDeliveryCreationCommand))]
+        private bool _canCreate;
 
         [ObservableProperty]
-        private IStorableObject _selectedObject;
+        private string _departureComment;
 
         [ObservableProperty]
         private KeyValuePair<int, string> _selectedDestination;
 
         [ObservableProperty]
-        private string _departureComment;
-
-        public Dictionary<int, string> LocationIdDictionary { get; set; }
+        private IStorableObject _selectedObject;
 
         private int departureLocationId;
 
+        public string DepartureLocationName { get; private set; }
+
         public IWindowsDialogueService DialogueService { get; set; }
+
+        public Dictionary<int, string> LocationIdDictionary { get; set; }
+
+        public ObservableCollection<IStorableObject> StorableObjectsInDelivery { get; set; }
 
         public DeliveryCreationVM(ObservableCollection<IStorableObject> storableObjectsInDelivery, Dictionary<int, string> locationIdDictionary, int departureLocationId, IWindowsDialogueService windowsDialogueService)
         {
@@ -52,15 +56,11 @@ namespace EMAS.ViewModel
             {
                 Debug.WriteLine(storable.ShortInfo);
             }
+            SelectedDestination = LocationIdDictionary.First();
+            CanCreate = false;
         }
 
-        public DeliveryCreationVM()
-        {
-        }
-
-        public string DepartureLocationName { get; private set; }
-
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanCreate))]
         private void ConfrimDeliveryCreation()
         {
             DeliveryCreated?.Invoke(new Delivery(0, departureLocationId, SelectedDestination.Key, DepartureComment, DateTime.Now, new(StorableObjectsInDelivery)));
@@ -73,7 +73,7 @@ namespace EMAS.ViewModel
                 DialogueService.Close();
             if (StorableObjectsInDelivery.Last().Id == SelectedObject.Id)
             {
-                StorableObjectsInDelivery.RemoveAt(StorableObjectsInDelivery.Count-1);
+                StorableObjectsInDelivery.RemoveAt(StorableObjectsInDelivery.Count - 1);
                 SelectedObject = StorableObjectsInDelivery.Last();
             }
             else
@@ -81,5 +81,15 @@ namespace EMAS.ViewModel
                 StorableObjectsInDelivery.Remove(SelectedObject);
             }
         }
+
+        partial void OnDepartureCommentChanged(string value)
+        {
+            if (value.Trim(new char[] { ' ', '.', ',', '\r', '\n' }) != string.Empty)
+                CanCreate = true;
+            else 
+                CanCreate = false;
+        }
+
+        public event Action<Delivery> DeliveryCreated;
     }
 }

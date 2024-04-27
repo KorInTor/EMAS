@@ -30,38 +30,40 @@ namespace EMAS.Service.Connection.DataAccess
         /// <param name="newEvent"></param>
         public void Add(StorableObjectEvent newEvent)
         {
-            var Connection = ConnectionPool.GetConnection();
+            Add([newEvent]);
+        }
 
-            using var command = new NpgsqlCommand("INSERT INTO public.event (employee_id, event_type, date) VALUES (@emp_id,@eventTypeId,@date) RETURNING id ", Connection);
-            command.Parameters.AddWithValue("@emp_id", newEvent.EmployeeId);
-            command.Parameters.AddWithValue("@eventTypeId", (int)newEvent.EventType);
-            command.Parameters.AddWithValue("@date", newEvent.DateTime);
+        public void Add(StorableObjectEvent[] newEvents)
+        {
+            var connection = ConnectionPool.GetConnection();
+            Dictionary<long, IStorableObject[]> preparedEquipmentEventObjectRelation = [];
 
-            newEvent.Id = (long)command.ExecuteScalar();
-
-            if (newEvent is AdditionEvent additionEvent)
+            foreach (var newEvent in newEvents)
             {
-                using var command1 = new NpgsqlCommand("INSERT INTO \"event\".addition\r\n(event_id, location_id)\r\nVALUES(@id, @locatioId); ", Connection);
-                command1.Parameters.AddWithValue("@id", additionEvent.Id);
-                command1.Parameters.AddWithValue("@locatioId", additionEvent.LocationId);
-                command1.ExecuteScalar();
+                using var command = new NpgsqlCommand("INSERT INTO public.event (employee_id, event_type, date) VALUES (@emp_id,@eventTypeId,@date) RETURNING id ", connection);
+                command.Parameters.AddWithValue("@emp_id", newEvent.EmployeeId);
+                command.Parameters.AddWithValue("@eventTypeId", (int)newEvent.EventType);
+                command.Parameters.AddWithValue("@date", newEvent.DateTime);
+
+                newEvent.Id = (long)command.ExecuteScalar();
+
+                if (newEvent is AdditionEvent additionEvent)
+                    InsertAdditionEvent(connection, additionEvent);
+
+                preparedEquipmentEventObjectRelation.Add(newEvent.Id, newEvent.ObjectsInEvent.ToArray());
             }
+            ConnectionPool.ReleaseConnection(connection);
 
-            foreach (var storableObject in newEvent.ObjectsInEvent)
-            {
-                if (storableObject is Equipment)
-                {
-                    objectEventDataAccess.ObjectName = "equipment";
-                    objectEventDataAccess.Add((newEvent.Id,storableObject.Id));
-                }
+            objectEventDataAccess.Add(preparedEquipmentEventObjectRelation);
+        }
 
-                else 
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            ConnectionPool.ReleaseConnection(Connection);
+        private void InsertAdditionEvent(NpgsqlConnection connection, AdditionEvent additionEvent)
+        {
+            using var command = new NpgsqlCommand("INSERT INTO \"event\".addition (event_id, location_id) VALUES(@id, @locatioId); ", connection);
+            command.Parameters.AddWithValue("@id", additionEvent.Id);
+            command.Parameters.AddWithValue("@locatioId", additionEvent.LocationId);
+            command.ExecuteScalar();
+            command.Dispose();
         }
 
         public void Delete(StorableObjectEvent objectToDelete)
@@ -131,11 +133,7 @@ namespace EMAS.Service.Connection.DataAccess
 
             using var command = new NpgsqlCommand(query, Connection);
             {
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    lastId = reader.GetInt64(0);
-                }
+                lastId = (long?)command.ExecuteScalar();
                 ConnectionPool.ReleaseConnection(Connection);
             }
 
@@ -189,16 +187,27 @@ namespace EMAS.Service.Connection.DataAccess
     {
         public string ObjectName { get; set; } = string.Empty;
 
-        public void Add(ValueTuple<long, int> eventObjectRelation)
+        public void Add(Dictionary<long, IStorableObject[]> evenIdsObjectRelation)
         {
-            var Connection = ConnectionPool.GetConnection();
+            var connection = ConnectionPool.GetConnection();
+            foreach (var eventIdObjectRelation in evenIdsObjectRelation)
+            {
+                foreach (var storableObject in eventIdObjectRelation.Value)
+                {
+                    if (storableObject is Equipment)
+                        ObjectName = "equipment";
+                    else
+                        throw new NotImplementedException();
+                    string query = "INSERT INTO public." + ObjectName + "_event (" + ObjectName + "_id, event_id) VALUES (@object_id ,@event_id) ";
+                    using var command = new NpgsqlCommand(query, connection);
 
-            using var command = new NpgsqlCommand("INSERT INTO public." + ObjectName + "_event (" + ObjectName + "_id, event_id) VALUES (@object_id ,@event_id) ", Connection);
-            command.Parameters.AddWithValue("@event_id", eventObjectRelation.Item1);
-            command.Parameters.AddWithValue("@object_id", eventObjectRelation.Item2);
+                    command.Parameters.AddWithValue("@event_id", eventIdObjectRelation.Key);
+                    command.Parameters.AddWithValue("@object_id", storableObject.Id);
 
-            command.ExecuteNonQuery();
-            ConnectionPool.ReleaseConnection(Connection);
+                    command.ExecuteNonQuery();
+                }
+            }
+            ConnectionPool.ReleaseConnection(connection);
         }
 
         public List<IStorableObject> SelectObjectsInEvent(long id)
@@ -231,21 +240,7 @@ namespace EMAS.Service.Connection.DataAccess
                     using var reader = command.ExecuteReader();
                     while (reader.Read())
                     {
-                        try
-                        {
-                            objectsInEvent.Add(equipmentDataAccess.SelectById(reader.GetInt32(1)));
-                        }
-                        catch (Exception ex)
-                        {
-                            try
-                            {
-                                objectsInEvent.Add(materialDataAccess.SelectById(reader.GetInt32(2)));
-                            }
-                            catch
-                            {
-                                throw new NotImplementedException();
-                            }
-                        }
+                        objectsInEvent.Add(equipmentDataAccess.SelectById(reader.GetInt32(1)));
                     }
                 }
                 EventIdObjectsDictionary.Add(id, objectsInEvent.ToArray());

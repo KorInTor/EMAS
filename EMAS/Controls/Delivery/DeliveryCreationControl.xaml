@@ -45,7 +45,7 @@
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="2" VerticalAlignment="Stretch">
             <Label Content="Место назначения"/>
-            <ListBox ItemsSource="{Binding LocationIdDictionary}" SelectedItem="{Binding SelectedDestination}" DisplayMemberPath="Value"/>
+            <ListBox ItemsSource="{Binding LocationIdDictionary}" SelectedItem="{Binding SelectedDestination, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Value"/>
         </StackPanel>
         <ListBox Grid.Row="1" Grid.ColumnSpan="3" ItemsSource="{Binding StorableObjectsInDelivery}" SelectedItem="{Binding SelectedObject}" Tag="{Binding DataContext, RelativeSource={RelativeSource Self}}">
             <ListBox.ItemTemplate>
@@ -64,7 +64,7 @@
         </ListBox>
         <StackPanel Grid.Row="2" Grid.ColumnSpan="3">
             <Label Content="Дополнительный коментарий"/>
-            <TextBox AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DepartureComment}"/>
+            <TextBox AcceptsReturn="True" TextWrapping="Wrap" Text="{Binding DepartureComment, UpdateSourceTrigger=PropertyChanged}"/>
         </StackPanel>
         <Button Grid.Row="3" Grid.Column="1" Content="Отправить" Command="{Binding ConfrimDeliveryCreationCommand}"/>
     </Grid>
