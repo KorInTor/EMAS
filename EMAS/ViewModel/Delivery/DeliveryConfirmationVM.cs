@@ -38,18 +38,20 @@ namespace EMAS.ViewModel
 
         partial void OnArriveDateChanged(DateTime value)
         {
-            if (ArriveDate >= _deliveryToComplete.DispatchDate && ArriveComment.Trim(new char[] { ' ', '.', ',', '\r', '\n' }) != string.Empty)
-                CanCompleteDelivery = true;
-            else
-                CanCompleteDelivery = false;
+            CanCompleteDelivery = CanCompelte();
         }
 
         partial void OnArriveCommentChanged(string value)
         {
-            if (ArriveDate >= _deliveryToComplete.DispatchDate && ArriveComment.Trim(new char[] { ' ', '.', ',', '\r', '\n' }) != string.Empty)
-                CanCompleteDelivery = true;
-            else
-                CanCompleteDelivery = false;
+            CanCompleteDelivery = CanCompelte();
+        }
+        private bool CanCompelte()
+        {
+            if (ArriveDate == null || ArriveComment == null)
+                return false;
+            if (ArriveComment.Trim([' ', '.', ',', '\r', '\n']) == string.Empty || ArriveDate < _deliveryToComplete.DispatchDate)
+                return false;
+            return true;
         }
 
         [RelayCommand(CanExecute = nameof(CanCompleteDelivery))]
