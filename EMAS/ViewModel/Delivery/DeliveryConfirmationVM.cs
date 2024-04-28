@@ -1,0 +1,64 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using EMAS.Model;
+using EMAS.Service;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EMAS.ViewModel
+{
+    public partial class DeliveryConfirmationVM : ObservableObject
+    {
+        public event Action<Delivery> DeliveryCompleted;
+
+        private Delivery _deliveryToComplete;
+
+        [ObservableProperty]
+        private DateTime _arriveDate;
+
+        [ObservableProperty]
+        private string _arriveComment;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(MakeDeliveryCompletedCommand))]
+        private bool _canCompleteDelivery;
+
+        IWindowsDialogueService DialogueService { get; set; }
+
+        public DeliveryConfirmationVM(Delivery deliveryToComplete,IWindowsDialogueService dialogueService)
+        {
+            _deliveryToComplete = deliveryToComplete;
+            DialogueService = dialogueService;
+            ArriveDate = DateTime.Now;
+            ArriveComment = string.Empty;
+        }
+
+        partial void OnArriveDateChanged(DateTime value)
+        {
+            CanCompleteDelivery = CanCompelte();
+        }
+
+        partial void OnArriveCommentChanged(string value)
+        {
+            CanCompleteDelivery = CanCompelte();
+        }
+        private bool CanCompelte()
+        {
+            if (ArriveDate == null || ArriveComment == null)
+                return false;
+            if (ArriveComment.Trim([' ', '.', ',', '\r', '\n']) == string.Empty || ArriveDate < _deliveryToComplete.DispatchDate)
+                return false;
+            return true;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanCompleteDelivery))]
+        private void MakeDeliveryCompleted()
+        {
+            _deliveryToComplete.Complete(ArriveDate,ArriveComment);
+            DeliveryCompleted?.Invoke(_deliveryToComplete);
+        }
+    }
+}

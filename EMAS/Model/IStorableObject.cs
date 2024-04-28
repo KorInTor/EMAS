@@ -10,5 +10,6 @@ namespace EMAS.Model
     {
         public int Id { get; set; }
         public int LocationId { get; set; }
+        public string ShortInfo { get; }
     }
 }

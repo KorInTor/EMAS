@@ -215,6 +215,8 @@ namespace EMAS.Model
             set => SetProperty(ref _locationId, value);
         }
 
+        public string ShortInfo => $"Оборуование: Id = {this.Id}";
+
         public bool Equals(Equipment? other)
         {
             if (other == null || GetType() != other.GetType())

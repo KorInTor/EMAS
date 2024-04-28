@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ namespace EMAS.Service.Connection
         private static int _maxConnections = 5;
 
         private static string _connectionString;
+
+        private static short _openedConnections = 0;
 
         public static string ConnectionString
         {
@@ -36,6 +39,11 @@ namespace EMAS.Service.Connection
 
         public static NpgsqlConnection GetConnection()
         {
+            var connection = new NpgsqlConnection(ConnectionString);
+            connection.Open();
+            _openedConnections++;
+            Debug.WriteLine($"Открыто соединений:{_openedConnections}");
+            return connection;
             lock (_connections)
             {
                 if (_connections.Count > 0)
@@ -65,6 +73,11 @@ namespace EMAS.Service.Connection
 
         public static void ReleaseConnection(NpgsqlConnection conn)
         {
+            conn.Close();
+            conn.Dispose();
+            _openedConnections--;
+            Debug.WriteLine($"Открыто соединений:{_openedConnections}");
+            return;
             lock (_connections)
             {
                 _connections.Add(conn);
