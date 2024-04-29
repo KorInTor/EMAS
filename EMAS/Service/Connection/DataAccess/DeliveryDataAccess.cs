@@ -61,19 +61,14 @@ namespace EMAS.Service.Connection.DataAccess
 
         public void Complete(Delivery[] objectToComplete)
         {
+            if (!CanComplete(objectToComplete))
+                throw new EventAlreadyCompletedException();
+
             foreach (var delivery in objectToComplete)
             {
                 if (!delivery.IsCompleted)
                     throw new InvalidOperationException("Доставка не заполнена нужными значениями, невозможно закончить.");
-
-                var connection1 = ConnectionPool.GetConnection();
-                using var command1 = new NpgsqlCommand("SELECT arrival_event_id FROM" + FullTableName + " WHERE dispatch_event_id=@sendedEventId ", connection1);
-                command1.Parameters.AddWithValue("@sendedEventId", delivery.Id);
-                if (command1.ExecuteScalar() != null)
-                    throw new EventAlreadyCompletedException();
-
-                ConnectionPool.ReleaseConnection(connection1);
-
+                
                 StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Arrived, delivery.ArrivalDate, delivery.PackageList);
 
                 eventAccess.Add(newEvent);
@@ -101,6 +96,28 @@ namespace EMAS.Service.Connection.DataAccess
 
                 ConnectionPool.ReleaseConnection(connection);
             }
+        }
+
+        private bool CanComplete(Delivery[] objectToComplete)
+        {
+            var connection = ConnectionPool.GetConnection();
+            foreach (var delivery in objectToComplete)
+            {
+                using var command = new NpgsqlCommand("SELECT arrival_event_id FROM" + FullTableName + " WHERE dispatch_event_id=@sendedEventId ", connection);
+                command.Parameters.AddWithValue("@sendedEventId", delivery.Id);
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    if (!reader.IsDBNull(0))
+                    {
+                        return false;
+                    }
+                }
+                
+            }
+            
+            ConnectionPool.ReleaseConnection(connection);
+            return true;
         }
 
         public void Delete(Delivery objectToDelete)
@@ -148,7 +165,7 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 foundDelivery = new(disptach_event_info,reader.GetInt32(0),reader.GetInt32(1),reader.GetString(2));
             }
-
+            ConnectionPool.ReleaseConnection(connection);
             return foundDelivery;
         }
 
