@@ -13,6 +13,7 @@ using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media.Media3D;
 
 namespace EMAS.Service.Connection.DataAccess
 {
@@ -166,6 +167,24 @@ namespace EMAS.Service.Connection.DataAccess
             return [..SelectByIds([.. newEventsIds])];
         }
 
+        public StorableObjectEvent SelectLastForStorableObject(IStorableObject storableObject)
+        {
+            return SelectLastEventsForStorableObject([storableObject]).First().Value;
+        }
+
+        public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObject(IStorableObject[] storableObjects)
+        {
+            var storableObjectLastEventIdDictionary = objectEventDataAccess.SelectLastEventsIdsForStroableObjects(storableObjects);
+            var storableObjectLastEvent = new Dictionary<IStorableObject, StorableObjectEvent>();
+
+            foreach (var storableObjectLastEventId in storableObjectLastEventIdDictionary)
+            {
+                storableObjectLastEvent.Add(storableObjectLastEventId.Key,SelectById(storableObjectLastEventId.Value));
+            }
+
+            return storableObjectLastEvent;
+        }
+
         private Dictionary<long, int?> GetLocationIdsForAdditionEvents(long[] eventIds, NpgsqlConnection connection)
         {
             Dictionary<long, int?> additionIdLocationIdDictionary = [];
@@ -213,6 +232,46 @@ namespace EMAS.Service.Connection.DataAccess
         public List<IStorableObject> SelectObjectsInEvent(long id)
         {
             return new List<IStorableObject>(SelectObjectsInEvents([id])[id]);
+        }
+
+        public Dictionary<IStorableObject, long> SelectLastEventsIdsForStroableObjects(IStorableObject[] storableObjects)
+        {
+            var connection = ConnectionPool.GetConnection();
+            Dictionary<IStorableObject, long> storableObjectIdLastEventIdDictionary = [];
+            string equipmentQuery = "SELECT e.id " +
+                "FROM public.\"event\" AS e " +
+                "JOIN public.equipment_event AS eq_ev ON eq_ev.event_id = e.id " +
+            "WHERE eq_ev.equipment_id = @id ORDER BY id DESC LIMIT 1";
+            string materialQuery = "SELECT e.id " +
+                "FROM public.\"event\" AS e " +
+                "JOIN public.material_event AS mat_ev ON mat_ev.event_id = e.id " +
+            "WHERE mat_ev.material_id=@id ORDER BY id DESC LIMIT 1";
+
+            foreach (var stroableObject in storableObjects)
+            {
+                string query;
+                if (stroableObject is Equipment)
+                {
+                    query = equipmentQuery;
+                }
+                else if (stroableObject is Material)
+                {
+                    query = materialQuery;
+                }
+                else
+                    throw new InvalidOperationException();
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@id", stroableObject.Id);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    storableObjectIdLastEventIdDictionary.Add(stroableObject, reader.GetInt64(0));
+                }
+
+            }
+            ConnectionPool.ReleaseConnection(connection);
+
+            return storableObjectIdLastEventIdDictionary;
         }
 
         public Dictionary<long, IStorableObject[]> SelectObjectsInEvents(long[] idsOfEvents)

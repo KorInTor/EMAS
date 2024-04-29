@@ -89,7 +89,7 @@ namespace EMAS.Model
         {
             get
             {
-                return _arrivalComment != null && _arrivalDate != DateTime.MinValue;
+                return _arrivalComment != null && _arrivalDate != DateTime.MinValue && _arrivalComment != string.Empty;
             }
         }
 

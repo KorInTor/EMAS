@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.Event;
 using EMAS.Service;
@@ -51,13 +52,19 @@ namespace EMAS.ViewModel
             deliveryConfirmationVM.DeliveryCompleted -= TryCompleteDelivery;
         }
 
-        private void TryCompleteDelivery(Delivery delivery)
+        private void TryCompleteDelivery(Delivery deliveryToComplete)
         {
             try
             {
-                DataBaseClient.GetInstance().Complete(delivery);
+                DataBaseClient.GetInstance().Complete(deliveryToComplete);
                 DialogueService.Close();
                 DialogueService.ShowSuccesfullMessage("Подтверждение успешно");
+            }
+            catch (EventAlreadyCompletedException)
+            {
+                DataBaseClient.GetInstance().SyncData(Locations);
+                DialogueService.Close();
+                DialogueService.ShowFailMessage("Доставка уже подтверждена.");
             }
             catch (Exception exception)
             {
@@ -77,9 +84,16 @@ namespace EMAS.ViewModel
         {
             try
             {
+                if (!DataBaseClient.GetInstance().IsStorableObjectsNotOccupied([.. delivery.PackageList], out _))
+                    throw new StorableObjectIsAlreadyOccupied();
+
                 DataBaseClient.GetInstance().Add(delivery);
                 DialogueService.Close();
                 DialogueService.ShowSuccesfullMessage("Доставка добавлена успешно");
+            }
+            catch (StorableObjectIsAlreadyOccupied)
+            {
+                DialogueService.ShowFailMessage("Выбранные объекты уже заняты");
             }
             catch(Exception exception)
             {
@@ -104,7 +118,7 @@ namespace EMAS.ViewModel
             {
                 DataBaseClient.GetInstance().SyncData(Locations);
 
-                await Task.Delay(10000);
+                await Task.Delay(900000);
             }
             while (true);
         }

@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
+using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.Event;
 using EMAS.Service.Connection.DataAccess.Interface;
@@ -53,16 +54,6 @@ namespace EMAS.Service.Connection.DataAccess
             ConnectionPool.ReleaseConnection(connection);
         }
 
-        public void AddOnLocation(Delivery item, int locationId)
-        {
-            Add(item);
-        }
-
-        public void AddOnLocation(Delivery[] item, int locationId)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Complete(Delivery completedDelivery)
         {
             Complete([completedDelivery]);
@@ -74,6 +65,14 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 if (!delivery.IsCompleted)
                     throw new InvalidOperationException("Доставка не заполнена нужными значениями, невозможно закончить.");
+
+                var connection1 = ConnectionPool.GetConnection();
+                using var command1 = new NpgsqlCommand("SELECT arrival_event_id FROM" + FullTableName + " WHERE dispatch_event_id=@sendedEventId ", connection1);
+                command1.Parameters.AddWithValue("@sendedEventId", delivery.Id);
+                if (command1.ExecuteScalar() != null)
+                    throw new EventAlreadyCompletedException();
+
+                ConnectionPool.ReleaseConnection(connection1);
 
                 StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Arrived, delivery.ArrivalDate, delivery.PackageList);
 

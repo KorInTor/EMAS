@@ -168,6 +168,24 @@ namespace EMAS.Service.Connection
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
+        public bool IsStorableObjectsNotOccupied(IStorableObject[] storableObjects,out List<IStorableObject> occupiedObject)
+        {
+            occupiedObject = [];
+
+            foreach (var objectLastEventPair in eventDataAccess.SelectLastEventsForStorableObject(storableObjects))
+            {
+                if (objectLastEventPair.Value.EventType == EventType.Sent || objectLastEventPair.Value.EventType == EventType.Reserved || objectLastEventPair.Value.EventType == EventType.Decommissioned)
+                {
+                    occupiedObject.Add(objectLastEventPair.Key);
+                }
+            }
+
+            if (occupiedObject.Count == 0)
+                return true;
+            else
+                return false;
+        }
+
         public void Complete(object objecToComplete)
         {
             if(objecToComplete is Delivery completedDelivery)
