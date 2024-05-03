@@ -54,7 +54,7 @@ namespace EMAS.Service.Connection
             command.Parameters.AddWithValue("@passwordHash", passwordHash);
 
 
-            int? count = (int?)(long?)command.ExecuteScalar();
+            long? count = (long?)command.ExecuteScalar();
 
             ConnectionPool.ReleaseConnection(connection);
 
@@ -69,7 +69,7 @@ namespace EMAS.Service.Connection
             using var command = new NpgsqlCommand(sql, connection);
             command.Parameters.AddWithValue("@username", username);
 
-            int? count = (int?)(long?)command.ExecuteScalar();
+            long? count = (long?)command.ExecuteScalar();
 
             ConnectionPool.ReleaseConnection(connection);
             return count == 1;

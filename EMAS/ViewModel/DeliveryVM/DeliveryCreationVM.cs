@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMAS.ViewModel
+namespace EMAS.ViewModel.DeliveryVM
 {
     public partial class DeliveryCreationVM : ObservableObject
     {

@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess.Interface
 {
-    public interface IDataAccessWithoutAdd<T>
+    public interface ISimpleDataAccess<T>
     {
+        void Add(T objectToAdd);
+        void Add(T[] objectToAdd);
         void Delete(T objectToDelete);
         void Update(T objectToUpdate);
         void Delete(T[] objectToDelete);

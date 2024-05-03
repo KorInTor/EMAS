@@ -38,28 +38,9 @@ namespace EMAS.ViewModel
 
         private void FastLogin()
         {
-            try
-            {
-                SessionManager.Login("Пряхин", "ps123123");
-                LoginSucceeded?.Invoke();
-                DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(6);
-                DialogueService.ShowWindow<MainMenu>();
-            }
-            catch (ConnectionFailedException)
-            {
-                LoginFailed?.Invoke("Проблемы с соединением, обратитесь к администратору.");
-                DialogueService.ShowFailMessage("Проблемы с соединением, обратитесь к администратору.");
-            }
-            catch (InvalidUsernameException)
-            {
-                LoginFailed?.Invoke("Такого пользователя не существует.");
-                DialogueService.ShowFailMessage("Такого пользователя не существует.");
-            }
-            catch (InvalidPasswordException)
-            {
-                LoginFailed?.Invoke("Неправильный пароль.");
-                DialogueService.ShowFailMessage("Неправильный пароль.");
-            }
+            Username = "Пряхин";
+            Password = "ps123123";
+            Login();
         }
 
         private void Login()
@@ -68,7 +49,8 @@ namespace EMAS.ViewModel
             {
                 SessionManager.Login(Username, Password);
                 LoginSucceeded?.Invoke();
-                DialogueService.ShowWindow<MainMenu>();
+                DialogueService.ShowSuccesfullMessage("Вход успешен собираем данные.");
+                DialogueService.ShowWindow<MainWindow>();
             }
             catch (ConnectionFailedException)
             {

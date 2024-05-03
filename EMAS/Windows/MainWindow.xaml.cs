@@ -5,9 +5,9 @@ namespace EMAS.Windows
     /// <summary>
     /// Логика взаимодействия для EquipmentWindow.xaml
     /// </summary>
-    public partial class EquipmentWindow : Window
+    public partial class MainWindow : Window
     {
-        public EquipmentWindow()
+        public MainWindow()
         {
             InitializeComponent();
         }

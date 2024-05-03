@@ -73,18 +73,8 @@ namespace EMAS.Service.Connection.DataAccess
 
                 eventAccess.Add(newEvent);
 
-                var equipmentAccess = new EquipmentDataAccess();
-                foreach (IStorableObject storableObject in delivery.PackageList)
-                {
-                    if (storableObject is Equipment equipmentInDelivery)
-                    {
-                        equipmentAccess.UpdateLocation((equipmentInDelivery, delivery.DestinationId));
-                    }
-                    else
-                    {
-                        throw new NotSupportedException();
-                    }
-                }
+                var storableObjectDataAccess = new StorableObjectDataAccess();
+                storableObjectDataAccess.UpdateLocation([..delivery.PackageList],delivery.DestinationId);
 
                 var connection = ConnectionPool.GetConnection();
                 using var command = new NpgsqlCommand("UPDATE " + FullTableName + " SET arrival_event_id=@arrival_event_id, arrival_info=@arrivalComment WHERE dispatch_event_id=@sendedEventId ", connection);
@@ -191,7 +181,10 @@ namespace EMAS.Service.Connection.DataAccess
 
             while (reader.Read())
             {
-                foundDelivery = new(eventAccess.SelectById(reader.GetInt32(0)), reader.GetInt32(1), reader.GetInt32(2), reader.GetString(3));
+                var foundedEvent = eventAccess.SelectById(reader.GetInt32(0));
+                if (foundedEvent == null)
+                    return null;
+                foundDelivery = new(foundedEvent, reader.GetInt32(1), reader.GetInt32(2), reader.GetString(3));
             }
 
             ConnectionPool.ReleaseConnection(connection);

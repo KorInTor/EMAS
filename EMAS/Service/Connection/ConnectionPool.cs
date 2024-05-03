@@ -11,11 +11,11 @@ namespace EMAS.Service.Connection
 {
     public static class ConnectionPool
     {
-        private static List<NpgsqlConnection> _connections = new List<NpgsqlConnection>();
+        private static List<NpgsqlConnection> _connections = [];
 
         private static int _maxConnections = 5;
 
-        private static string _connectionString;
+        private static string _connectionString = ConnectionString;
 
         private static short _openedConnections = 0;
 

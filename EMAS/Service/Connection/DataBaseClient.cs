@@ -14,10 +14,10 @@ namespace EMAS.Service.Connection
     public class DataBaseClient
     {
         private DeliveryDataAccess deliveryDataAccess;
-        private ILocationBoundedDataAccess<Equipment> equipmentDataAccess;
-        private IObjectStateLocationBoundedDataAccess<Reservation> reservationDataAccess;
-        private IDataAccess<Employee> employeeDataAccess;
-        private IDataAccess<Location> locationDataAccess;
+        private IStorableObjectDataAccess<IStorableObject> storableObjectDataAccess;
+        private ReservationDataAccess reservationDataAccess;
+        private ISimpleDataAccess<Employee> employeeDataAccess;
+        private ISimpleDataAccess<Location> locationDataAccess;
         private HistoryEntryDataAccess historyEntryDataAccess;
         private long lastEventId;
         public event Action<List<StorableObjectEvent>> NewEventsOccured;
@@ -38,7 +38,7 @@ namespace EMAS.Service.Connection
         private DataBaseClient()
         {
             deliveryDataAccess = new DeliveryDataAccess();
-            equipmentDataAccess = new EquipmentDataAccess();
+            storableObjectDataAccess = new StorableObjectDataAccess();
             reservationDataAccess = new ReservationDataAccess();
             employeeDataAccess = new EmployeeDataAccess();
             locationDataAccess = new LocationDataAccess();
@@ -77,6 +77,12 @@ namespace EMAS.Service.Connection
                 reservationDataAccess.Add(newReservation);
                 return;
             }
+
+            if (objectToAdd is IStorableObject storableObject)
+            {
+                storableObjectDataAccess.Add(storableObject);
+                return;
+            }
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
@@ -108,36 +114,6 @@ namespace EMAS.Service.Connection
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
-        public void AddOnLocation(ILocationBounded objectToAdd, int locationId)
-        {
-            if (objectToAdd is Equipment newEquipment)
-            {
-                equipmentDataAccess.AddOnLocation(newEquipment, locationId);
-                return;
-            }
-            if (objectToAdd is Reservation newReservation)
-            {
-                reservationDataAccess.AddOnLocation(newReservation, locationId);
-                return;
-            }
-            throw new NotSupportedException("Этот тип не поддерживается");
-        }
-
-        public void AddOnLocation(ILocationBounded[] objectToAdd, int locationId)
-        {
-            if (objectToAdd is Equipment[] newEquipment)
-            {
-                equipmentDataAccess.AddOnLocation(newEquipment, locationId);
-                return;
-            }
-            if (objectToAdd is Reservation[] newReservation)
-            {
-                reservationDataAccess.AddOnLocation(newReservation, locationId);
-                return;
-            }
-            throw new NotSupportedException("Этот тип не поддерживается");
-        }
-
         public void Update(object objectToUpdate)
         {
             if (objectToUpdate is Delivery newDelivery)
@@ -147,12 +123,7 @@ namespace EMAS.Service.Connection
             }
             if (objectToUpdate is Equipment newEquipment)
             {
-                equipmentDataAccess.Update(newEquipment);
-                return;
-            }
-            if (objectToUpdate is Reservation newReservation)
-            {
-                reservationDataAccess.Update(newReservation);
+                storableObjectDataAccess.Update(newEquipment);
                 return;
             }
             if (objectToUpdate is Employee newEmployee)
@@ -193,6 +164,11 @@ namespace EMAS.Service.Connection
                 deliveryDataAccess.Complete(completedDelivery);
                 return;
             }
+            if (objecToComplete is Reservation completedReservation)
+            {
+                reservationDataAccess.Complete(completedReservation);
+                return;
+            }
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
@@ -201,9 +177,9 @@ namespace EMAS.Service.Connection
             return deliveryDataAccess.SelectOnLocation(locationId);
         }
 
-        public List<Equipment> SelectEquipmentOn(int locationId)
+        public List<IStorableObject> SelectStorableObjectOn(int locationId)
         {
-            return equipmentDataAccess.SelectOnLocation(locationId);
+            return new (storableObjectDataAccess.SelectOnLocation(locationId));
         }
 
         public List<Reservation> GetReservationOn(int locationId)
@@ -241,7 +217,7 @@ namespace EMAS.Service.Connection
             if (IsDataUpToDate(out long lastDataBaseEventId))
                 return;
 
-            List<StorableObjectEvent> newStorableObjectEvents = eventDataAccess.SelectEventsAfter(LastEventId);
+            List<StorableObjectEvent> newStorableObjectEvents = eventDataAccess.SelectEventsAfter(LastEventId).ToList();
             LastEventId = lastDataBaseEventId;
 
             var locationIdDictionary = new Dictionary<int, Location>();
@@ -268,14 +244,32 @@ namespace EMAS.Service.Connection
             NewEventsOccured?.Invoke(newStorableObjectEvents);
         }
 
-        private void HandleReserveEndedEvent(Dictionary<int, Location> dictionary, StorableObjectEvent @event)
+        private void HandleReserveEndedEvent(Dictionary<int, Location> locationIdDictionary, StorableObjectEvent newStorableObjectEvent)
         {
-            throw new NotImplementedException();
+            Reservation completedReservation = reservationDataAccess.SelectCompletedByEndId(newStorableObjectEvent.Id);
+            locationIdDictionary[completedReservation.LocationId].Reservations.RemoveAll(reservation => reservation.Id == completedReservation.Id);
+
+            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
+            {
+                if (storableObject is Equipment equipment)
+                {
+                    locationIdDictionary[completedReservation.LocationId].StorableObjectsList.Add(equipment);
+                }
+            }
         }
 
-        private void HandleReservedEvent(Dictionary<int, Location> dictionary, StorableObjectEvent @event)
+        private void HandleReservedEvent(Dictionary<int, Location> locationIdDictionary, StorableObjectEvent newStorableObjectEvent)
         {
-            throw new NotImplementedException();
+            var Reservation = reservationDataAccess.SelectById(newStorableObjectEvent.Id);
+            locationIdDictionary[Reservation.LocationId].Reservations.Add(Reservation);
+
+            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
+            {
+                if (storableObject is Equipment equipmentInEvent)
+                {
+                    locationIdDictionary[Reservation.LocationId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                }
+            }
         }
 
         private void HandleDecomissionedEvent(Dictionary<int, Location> dictionary, StorableObjectEvent @event)
@@ -289,8 +283,8 @@ namespace EMAS.Service.Connection
             {
                 if (storableObject is Equipment equipmentInEvent)
                 {
-                    locationIdDictionary[equipmentInEvent.LocationId].Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
-                    locationIdDictionary[equipmentInEvent.LocationId].Equipments.Add(equipmentInEvent);
+                    locationIdDictionary[equipmentInEvent.LocationId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                    locationIdDictionary[equipmentInEvent.LocationId].StorableObjectsList.Add(equipmentInEvent);
                 }
             }
         }
@@ -301,7 +295,7 @@ namespace EMAS.Service.Connection
             foreach (var storableObject in additionEvent.ObjectsInEvent)
             {
                 if (storableObject is Equipment equipmentInEvent)
-                    locationIdDictionary[additionEvent.LocationId].Equipments.Add(equipmentInEvent);
+                    locationIdDictionary[additionEvent.LocationId].StorableObjectsList.Add(equipmentInEvent);
             }
         }
 
@@ -315,7 +309,7 @@ namespace EMAS.Service.Connection
             {
                 if (storableObject is Equipment equipmentInEvent)
                 {
-                    locationIdDictionary[newDelivery.DepartureId].Equipments.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                    locationIdDictionary[newDelivery.DepartureId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
                 }
             }
         }
@@ -330,7 +324,7 @@ namespace EMAS.Service.Connection
             {
                 if (storableObject is Equipment equipment)
                 {
-                    locationIdDictionary[arrivedDelivery.DestinationId].Equipments.Add(equipment);
+                    locationIdDictionary[arrivedDelivery.DestinationId].StorableObjectsList.Add(equipment);
                 }
             }
         }

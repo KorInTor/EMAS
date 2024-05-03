@@ -5,11 +5,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 
-namespace EMAS.ViewModel
+namespace EMAS.ViewModel.ReservationVM
 {
     public partial class ReservationControlVM : ObservableObject
     {
-        public event Action<long> ReservationCompletionRequested;
+        public event Action<Reservation> ReservationCompletionRequested;
 
         private bool _canUserChangeReservation = false;
 
@@ -27,6 +27,9 @@ namespace EMAS.ViewModel
 
         [ObservableProperty]
         private DateTime? _selectedStartDate;
+
+        [ObservableProperty]
+        private List<IStorableObject> _reservList;
 
         public RelayCommand ClearFilterCommand { get; set; }
 
@@ -69,7 +72,7 @@ namespace EMAS.ViewModel
 
             //TODO: Add Actual Reservation;
 
-            FilteredReservations = new ObservableCollection<Reservation>(filteredList);
+            FilteredReservations = new ObservableCollection<Reservation>(ReservationSourceList);
         }
 
         partial void OnSelectedReservationChanged(Reservation value)
@@ -77,6 +80,7 @@ namespace EMAS.ViewModel
             if (value != null)
             {
                 EndReservationCommand.NotifyCanExecuteChanged();
+                ReservList = value.ReservedObjectsList;
             }
         }
 
@@ -95,7 +99,7 @@ namespace EMAS.ViewModel
         //Need this because DatePicker returns null if date isnt selected;
         private void RequestReservationCompletion()
         {
-            ReservationCompletionRequested?.Invoke(SelectedReservation.Id);
+            ReservationCompletionRequested?.Invoke(SelectedReservation);
         }
 
         partial void OnReservationSourceListChanged(List<Reservation> value)
@@ -103,10 +107,10 @@ namespace EMAS.ViewModel
             FilterReservations(this,new PropertyChangedEventArgs(nameof(ReservationSourceList)));
         }
 
-        public void ChagneSourceList(List<Reservation> source, bool canChangeReservation = false)
+        public void ChangeSourceList(List<Reservation> source, bool canChangeReserv = false)
         {
-            ReservationSourceList = source;
-            _canUserChangeReservation = canChangeReservation;
+            ReservationSourceList = new (source);
+            _canUserChangeReservation = canChangeReserv;
         }
     }
 }

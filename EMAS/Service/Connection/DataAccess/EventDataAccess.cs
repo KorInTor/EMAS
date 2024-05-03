@@ -34,10 +34,10 @@ namespace EMAS.Service.Connection.DataAccess
             Add([newEvent]);
         }
 
-        public void Add(StorableObjectEvent[] newEvents)
+        public void Add(IEnumerable<StorableObjectEvent> newEvents)
         {
             var connection = ConnectionPool.GetConnection();
-            Dictionary<long, IStorableObject[]> preparedEquipmentEventObjectRelation = [];
+            Dictionary<long, IEnumerable<IStorableObject>> preparedEquipmentEventObjectRelation = [];
 
             foreach (var newEvent in newEvents)
             {
@@ -74,17 +74,17 @@ namespace EMAS.Service.Connection.DataAccess
 
         public StorableObjectEvent? SelectById(long id)
         {
-            StorableObjectEvent[]? foundedEvent = SelectByIds([id]);
-            if (foundedEvent == null)
+            IEnumerable<StorableObjectEvent> foundedEvent = SelectByIds([id]);
+            if (!foundedEvent.Any())
                 return null;
             else
-                return foundedEvent[0];
+                return foundedEvent.First();
         }
 
-        public StorableObjectEvent[]? SelectByIds(long[] idsOfEvents)
+        public IEnumerable<StorableObjectEvent> SelectByIds(IEnumerable<long> idsOfEvents)
         {
             List<StorableObjectEvent> storableObjectEvents = [];
-            Dictionary<long, IStorableObject[]> objectsInEventDictionary = objectEventDataAccess.SelectObjectsInEvents(idsOfEvents);
+            Dictionary<long, IEnumerable<IStorableObject>> objectsInEventDictionary = objectEventDataAccess.SelectObjectsInEvents(idsOfEvents);
 
             string query = "SELECT \"date\", employee_id, event_type FROM public.\"event\" WHERE id=@id;";
 
@@ -121,7 +121,7 @@ namespace EMAS.Service.Connection.DataAccess
             }
 
             ConnectionPool.ReleaseConnection(connection);
-            return [..storableObjectEvents];
+            return storableObjectEvents;
         }
 
         public StorableObjectEvent? SelectLast()
@@ -129,10 +129,9 @@ namespace EMAS.Service.Connection.DataAccess
             var Connection = ConnectionPool.GetConnection();
 
             string query = "SELECT id FROM public.\"event\" ORDER BY id DESC LIMIT 1;";
-
-            long? lastId = null;
-
             using var command = new NpgsqlCommand(query, Connection);
+
+            long? lastId;
             {
                 lastId = (long?)command.ExecuteScalar();
                 ConnectionPool.ReleaseConnection(Connection);
@@ -144,12 +143,11 @@ namespace EMAS.Service.Connection.DataAccess
                 return SelectById((long)lastId);
         }
 
-        public List<StorableObjectEvent> SelectEventsAfter(long id)
+        public IEnumerable<StorableObjectEvent> SelectEventsAfter(long id)
         {
             var Connection = ConnectionPool.GetConnection();
 
             List<long> newEventsIds = [];
-            List<StorableObjectEvent> newEventsList = [];
 
             string query = "SELECT id FROM public.\"event\" WHERE id > @id";
 
@@ -164,7 +162,7 @@ namespace EMAS.Service.Connection.DataAccess
             }
             ConnectionPool.ReleaseConnection(Connection);
 
-            return [..SelectByIds([.. newEventsIds])];
+            return SelectByIds(newEventsIds);
         }
 
         public StorableObjectEvent SelectLastForStorableObject(IStorableObject storableObject)
@@ -172,7 +170,7 @@ namespace EMAS.Service.Connection.DataAccess
             return SelectLastEventsForStorableObject([storableObject]).First().Value;
         }
 
-        public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObject(IStorableObject[] storableObjects)
+        public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObject(IEnumerable<IStorableObject> storableObjects)
         {
             var storableObjectLastEventIdDictionary = objectEventDataAccess.SelectLastEventsIdsForStroableObjects(storableObjects);
             var storableObjectLastEvent = new Dictionary<IStorableObject, StorableObjectEvent>();
@@ -185,7 +183,7 @@ namespace EMAS.Service.Connection.DataAccess
             return storableObjectLastEvent;
         }
 
-        private Dictionary<long, int?> GetLocationIdsForAdditionEvents(long[] eventIds, NpgsqlConnection connection)
+        private Dictionary<long, int?> GetLocationIdsForAdditionEvents(IEnumerable<long> eventIds, NpgsqlConnection connection)
         {
             Dictionary<long, int?> additionIdLocationIdDictionary = [];
             string query = "SELECT location_id FROM \"event\".addition WHERE event_id=@id";
@@ -206,7 +204,9 @@ namespace EMAS.Service.Connection.DataAccess
     {
         public string ObjectName { get; set; } = string.Empty;
 
-        public void Add(Dictionary<long, IStorableObject[]> evenIdsObjectRelation)
+        private StorableObjectDataAccess _storableObjectDataAccess = new();
+
+        public void Add(Dictionary<long, IEnumerable<IStorableObject>> evenIdsObjectRelation)
         {
             var connection = ConnectionPool.GetConnection();
             foreach (var eventIdObjectRelation in evenIdsObjectRelation)
@@ -234,7 +234,7 @@ namespace EMAS.Service.Connection.DataAccess
             return new List<IStorableObject>(SelectObjectsInEvents([id])[id]);
         }
 
-        public Dictionary<IStorableObject, long> SelectLastEventsIdsForStroableObjects(IStorableObject[] storableObjects)
+        public Dictionary<IStorableObject, long> SelectLastEventsIdsForStroableObjects(IEnumerable<IStorableObject> storableObjects)
         {
             var connection = ConnectionPool.GetConnection();
             Dictionary<IStorableObject, long> storableObjectIdLastEventIdDictionary = [];
@@ -274,14 +274,11 @@ namespace EMAS.Service.Connection.DataAccess
             return storableObjectIdLastEventIdDictionary;
         }
 
-        public Dictionary<long, IStorableObject[]> SelectObjectsInEvents(long[] idsOfEvents)
+        public Dictionary<long, IEnumerable<IStorableObject>> SelectObjectsInEvents(IEnumerable<long> idsOfEvents)
         {
             var connection = ConnectionPool.GetConnection();
 
-            Dictionary<long, IStorableObject[]> EventIdObjectsDictionary = [];
-
-            EquipmentDataAccess equipmentDataAccess = new();
-            MaterialDataAccess materialDataAccess = new();
+            Dictionary<long, IEnumerable<IStorableObject>> EventIdObjectsDictionary = [];
 
             string query = "SELECT e.id, eq_ev.equipment_id, mat_ev.material_id " +
                 "FROM public.\"event\" AS e " +
@@ -299,10 +296,17 @@ namespace EMAS.Service.Connection.DataAccess
                     using var reader = command.ExecuteReader();
                     while (reader.Read())
                     {
-                        objectsInEvent.Add(equipmentDataAccess.SelectById(reader.GetInt32(1)));
+                        if (!reader.IsDBNull(1))
+                        {
+                            objectsInEvent.Add(_storableObjectDataAccess.SelectById(reader.GetInt32(1)));
+                        }
+                        if (!reader.IsDBNull(2))
+                        {
+                            objectsInEvent.Add(_storableObjectDataAccess.SelectById(reader.GetInt32(2)));
+                        }
                     }
                 }
-                EventIdObjectsDictionary.Add(id, objectsInEvent.ToArray());
+                EventIdObjectsDictionary.Add(id, objectsInEvent);
             }
 
             ConnectionPool.ReleaseConnection(connection);
