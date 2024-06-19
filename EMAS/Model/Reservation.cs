@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using EMAS.Model.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EMAS.Model
 {
-    public class Reservation : ObservableObject , IObjectState, ILocationBounded
+    public class Reservation : ObservableObject
     {
         private long _id;
 
@@ -15,11 +16,11 @@ namespace EMAS.Model
 
         private DateTime _startDate;
 
-        private DateTime _endDate;
+        private DateTime _endDate = DateTime.MinValue;
 
-        private Employee _reservedBy;
+        private string _reserveStartInfo;
 
-        private string _additionalInfo;
+        private string? _reserveEndInfo = null;
 
         private int _locationId;
 
@@ -44,19 +45,17 @@ namespace EMAS.Model
         public DateTime EndDate
         {
             get => _endDate;
-            set => SetProperty(ref _endDate, value);
         }
 
-        public Employee ReservedBy
+        public string ReserveStartInfo
         {
-            get => _reservedBy;
-            set => SetProperty(ref _reservedBy, value);
+            get => _reserveStartInfo;
+            set => SetProperty(ref _reserveStartInfo, value);
         }
 
-        public string AdditionalInfo
+        public string ReserveEndInfo
         {
-            get => _additionalInfo;
-            set => SetProperty(ref _additionalInfo, value);
+            get => _reserveEndInfo;
         }
 
         public int LocationId
@@ -65,13 +64,30 @@ namespace EMAS.Model
             set => SetProperty(ref _locationId, value);
         }
 
-        public Reservation(long id, DateTime startDate, Employee reservedBy, string additionalInfo, List<IStorableObject> objectsToReserv)
+        public bool IsCompleted
+        {
+            get
+            {
+                return _reserveStartInfo != null && _endDate != DateTime.MinValue && _reserveStartInfo != string.Empty;
+            }
+        }
+
+        public Reservation(long id, DateTime startDate, string additionalInfo, List<IStorableObject> objectsToReserv,int locationId)
         {
             Id = id;
             StartDate = startDate;
-            ReservedBy = reservedBy;
-            AdditionalInfo = additionalInfo;
+            ReserveStartInfo = additionalInfo;
             ReservedObjectsList = objectsToReserv;
+            LocationId = locationId;
+        }
+
+        public Reservation(StorableObjectEvent storableObjectEvent, string additionalInfo, int locationId)
+        {
+            Id = storableObjectEvent.Id;
+            ReserveStartInfo = additionalInfo;
+            ReservedObjectsList = storableObjectEvent.ObjectsInEvent;
+            StartDate = storableObjectEvent.DateTime;
+            LocationId = locationId;
         }
 
         public Reservation() 
@@ -79,6 +95,12 @@ namespace EMAS.Model
             StartDate = DateTime.MinValue;
 
             ReservedObjectsList = new();
+        }
+
+        public void Complete(DateTime endDate,string reserveEndComment)
+        {
+            _endDate = endDate;
+            _reserveEndInfo = reserveEndComment;
         }
     }
 }

@@ -8,49 +8,49 @@ using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess
 {
-    public class MaterialDataAccess : ILocationBoundedDataAccess<Equipment>
+    public class MaterialDataAccess : IStorableObjectDataAccess<MaterialPiece>
     {
-        public void AddOnLocation(Equipment item, int locationId)
+        public void Add(IEnumerable<MaterialPiece> objectsToAdd)
         {
             throw new NotImplementedException();
         }
 
-        public void AddOnLocation(Equipment[] item, int locationId)
+        public void Add(MaterialPiece objectToAdd)
         {
             throw new NotImplementedException();
         }
 
-        public void Delete(Equipment objectToDelete)
+        public MaterialPiece? SelectById(int id)
         {
             throw new NotImplementedException();
         }
 
-        public void Delete(Equipment[] objectToDelete)
+        public IEnumerable<MaterialPiece> SelectByIds(IEnumerable<int> ids)
         {
             throw new NotImplementedException();
         }
 
-        public List<Equipment> Select()
+        public IEnumerable<MaterialPiece> SelectOnLocation(int locationId)
         {
             throw new NotImplementedException();
         }
 
-        public Equipment SelectById(int id)
+        public void Update(IEnumerable<MaterialPiece> objectsToUpdate)
         {
             throw new NotImplementedException();
         }
 
-        public List<Equipment> SelectOnLocation(int locationId)
+        public void Update(MaterialPiece objectToUpdate)
         {
             throw new NotImplementedException();
         }
 
-        public void Update(Equipment objectToUpdate)
+        public void UpdateLocation(MaterialPiece objectToUpdate, int newLocationId)
         {
             throw new NotImplementedException();
         }
 
-        public void Update(Equipment[] objectToUpdate)
+        public void UpdateLocation(IEnumerable<MaterialPiece> objectsToUpdate, int newLocationId)
         {
             throw new NotImplementedException();
         }

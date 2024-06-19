@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMAS.ViewModel
+namespace EMAS.ViewModel.DeliveryVM
 {
     public partial class DeliveryControlVM : ObservableObject
     {
@@ -54,18 +54,8 @@ namespace EMAS.ViewModel
             DeliveryConfirmationRequested?.Invoke(SelectedDelivery);
         }
 
-        public DeliveryControlVM(Type type)
+        public DeliveryControlVM()
         {
-            try
-            {
-                _desiredObject = (IStorableObject)Activator.CreateInstance(type);
-            }
-            catch (InvalidCastException)
-            {
-                // Handle the case where 'type' cannot be cast to IStorableObject
-                throw new NotSupportedException("Delivery Control VM supports only IStorableObjects derived classes");
-            }
-
             DesiredDelivery.PropertyChanged += FilterDeliveries;
 
             ConfirmDeliveryCommand = new RelayCommand(ConfirmDelivery, CanConfirmDelivery);

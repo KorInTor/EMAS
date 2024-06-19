@@ -1,4 +1,4 @@
-﻿<Window x:Class="EMAS.Windows.EquipmentWindow"
+﻿<Window x:Class="EMAS.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -17,18 +17,22 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0">
-            <Button Command="{Binding SynchronizeDataCommand}" HorizontalAlignment="Left" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="{Binding Source={x:Static properties:Resources.synchronizeIcon}}" Width="30" Height="30"/>
-                    <TextBlock Text="Синхронизировать" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-        </StackPanel>
+        <Menu Grid.Row="0" Height="25" VerticalAlignment="Top">
+            <MenuItem Header="Синхронизировать" Command="{Binding SynchronizeDataCommand}">
+                <MenuItem.Icon>
+                    <Image Source="{Binding Source={x:Static properties:Resources.synchronizeIcon}}" Width="auto" Height="auto"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Окна" >
+                <MenuItem Header="Окно администрации"/>
+                <Separator />
+            </MenuItem>
+            <MenuItem Header="О программе"/>
+        </Menu>
         <TabControl x:Name="MainTabControl" SelectedItem="{Binding CurrentLocation}" ItemsSource="{Binding Locations}" DisplayMemberPath="Name" Grid.Row="1">
             <TabControl.ContentTemplate>
                 <DataTemplate>
-                    <controlls:MainEquipmentControll DataContext="{Binding DataContext.MainEquipmentVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EquipmentWindow}}}"/>
+                    <controlls:MainEquipmentControll DataContext="{Binding DataContext.MainEquipmentVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}"/>
                 </DataTemplate>
             </TabControl.ContentTemplate>
         </TabControl>

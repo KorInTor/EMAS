@@ -38,7 +38,7 @@ namespace EMAS.ViewModel
         private void RequestEquipmentWindow()
         {
             OpenWindow?.Invoke(0);
-            DialogueService.ShowWindow<EquipmentWindow>();
+            DialogueService.ShowWindow<MainWindow>();
         }
 
         private void RequestAboutWindow()

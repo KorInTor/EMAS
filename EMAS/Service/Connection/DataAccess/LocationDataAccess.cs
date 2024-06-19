@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace EMAS.Service.Connection.DataAccess
 {
-    public class LocationDataAccess : IDataAccess<Location>
+    public class LocationDataAccess : ISimpleDataAccess<Location>
     {
         public void Add(Location objectToAdd)
         {

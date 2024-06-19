@@ -1,4 +1,5 @@
 ﻿using DataBaseManipulator.Factory;
+using DocumentFormat.OpenXml.Spreadsheet;
 using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Service.Connection;
@@ -11,6 +12,30 @@ internal class Program
         MainMenu();
     }
 
+    private static void ReservationTestingMenu()
+    {
+        Console.Clear();
+        try
+        {
+            Console.Write("Trying to connect as PDS");
+            Task task = Task.Run(() => SessionManager.Login("Пряхин", "ps123123"));
+            EmulateBusyness(task);
+        }
+        catch (ConnectionFailedException)
+        {
+            Console.WriteLine("Server connection failed, terminating.");
+            return;
+        }
+        Console.WriteLine("Коменатрий для Резервации:");
+
+        var reservation = new Reservation(0, DateTime.Now, Console.ReadLine(), new(DataBaseClient.GetInstance().SelectStorableObjectOn(1)), 1);
+        DataBaseClient.GetInstance().Add(reservation);
+
+        Console.WriteLine("Коменатрий для Завершения Резервации:");
+        reservation.Complete(DateTime.Now, Console.ReadLine());
+        DataBaseClient.GetInstance().Complete(reservation);
+    }
+
     private static void MainMenu()
     {
         try
@@ -18,7 +43,6 @@ internal class Program
             Console.Write("Trying to connect as PDS");
             Task task = Task.Run(() => SessionManager.Login("Пряхин", "ps123123"));
             EmulateBusyness(task);
-            Console.WriteLine("Logined succesfully. \r\n");
         }
         catch (ConnectionFailedException)
         {
@@ -27,10 +51,12 @@ internal class Program
         }
         do
         {
-            Console.WriteLine("Choose table:");
+            Console.Clear();
+            Console.WriteLine("Choose SubMenu:");
             Console.WriteLine("1 - Location.");
             Console.WriteLine("2 - Employee.");
             Console.WriteLine("3 - Equipment.");
+            Console.WriteLine("4 - ReservationTestingMenu.");
             Console.WriteLine("or:");
             Console.WriteLine("C - Clear all Tables.");
             char command;
@@ -52,6 +78,11 @@ internal class Program
                         EquipmentMenu();
                         break;
                     }
+                case '4':
+                    {
+                        ReservationTestingMenu();
+                        break;
+                    }
                 case 'C':
                     {
                         break;
@@ -70,6 +101,8 @@ internal class Program
         bool exitFlag = false;
         do
         {
+            Console.Clear();
+
             Console.WriteLine("1 - Generate and Insert to DB.");
             Console.WriteLine("2 - Truncate(Clear All Info).");
             Console.WriteLine("3 - Emulate events. (Creates history entrys)");
@@ -112,6 +145,7 @@ internal class Program
                     {
                         ClearTable("public.equipment");
                         ClearTable("public.\"event\"");
+                        RestartSequence("public.storable_object_id_seq");
                         break;
                     }
                 case '3':
@@ -133,6 +167,18 @@ internal class Program
         } while (!exitFlag);
     }
 
+    private static void RestartSequence(string seqName)
+    {
+        var connection = ConnectionPool.GetConnection();
+
+        string query = ("ALTER SEQUENCE "+ seqName +" RESTART WITH 1;");
+
+        using (var command = new NpgsqlCommand(query, connection))
+            command.ExecuteNonQuery();
+
+        ConnectionPool.ReleaseConnection(connection);
+    }
+
     private static void DistributeEquipmentListEvenlyOnLocatinos(List<Equipment> randEquipmentList, Dictionary<int, string> namedLocations)
     {
         foreach (int locationId in namedLocations.Keys)
@@ -140,7 +186,8 @@ internal class Program
             int remaining = randEquipmentList.Count / namedLocations.Keys.Count;
             while (remaining != 0)
             {
-                DataBaseClient.GetInstance().AddOnLocation(randEquipmentList.Last(), locationId);
+                randEquipmentList.Last().LocationId = locationId;
+                DataBaseClient.GetInstance().Add(randEquipmentList.Last());
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
@@ -151,7 +198,8 @@ internal class Program
             int remaining = randEquipmentList.Count;
             while (remaining != 0)
             {
-                DataBaseClient.GetInstance().AddOnLocation(randEquipmentList.Last(), namedLocations.Keys.Last());
+                randEquipmentList.Last().LocationId = namedLocations.Keys.Last();
+                DataBaseClient.GetInstance().Add(randEquipmentList.Last());
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
@@ -165,7 +213,7 @@ internal class Program
             Console.Write(".");
             Thread.Sleep(500);
         }
-        Console.WriteLine();
+        Console.WriteLine("OK");
     }
 
     private static void ClearTable(string tableName)

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EMAS.Model
 {
-    internal class MaterialPiece :ObservableObject, IEquatable<MaterialPiece>, IStorableObject, ILocationBounded
+    public class MaterialPiece :ObservableObject, IEquatable<MaterialPiece>, IStorableObject
     {
         private int id;
 

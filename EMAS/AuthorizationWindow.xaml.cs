@@ -14,11 +14,11 @@ using System.Windows.Shapes;
 namespace EMAS
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for AuthorizationWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class AuthorizationWindow : Window
     {
-        public MainWindow()
+        public AuthorizationWindow()
         {
             InitializeComponent();
             AuthorizationVM dataContext = (AuthorizationVM)this.DataContext;

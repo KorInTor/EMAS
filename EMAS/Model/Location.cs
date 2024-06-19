@@ -19,9 +19,9 @@ namespace EMAS.Model
         private string _name;
 
         /// <summary>
-        /// Equipments that are currently in this site.
+        /// Objects that are currently in this site.
         /// </summary>
-        private List<Equipment> _equipments;
+        private List<IStorableObject> _storableObjectsList;
 
         /// <summary>
         /// List of Outgoing deliviries.
@@ -68,15 +68,15 @@ namespace EMAS.Model
         /// <summary>
         /// Return and sets equipment list that are currently in this site.
         /// </summary>
-        public List<Equipment> Equipments
+        public List<IStorableObject> StorableObjectsList
         {
             get
             {
-                return _equipments;
+                return _storableObjectsList;
             }
             set
             {
-                _equipments = value;
+                _storableObjectsList = value;
             }
         }
 
@@ -131,7 +131,7 @@ namespace EMAS.Model
         {
             this.Id = Id;
             this.Name = Name;
-            Equipments = [];
+            StorableObjectsList = [];
             IncomingDeliveries = [];
             OutgoingDeliveries = [];
             Reservations = [];
@@ -145,7 +145,7 @@ namespace EMAS.Model
         {
             this.Id = newLocation.Id;
             this.Name = newLocation.Name;
-            Equipments = newLocation.Equipments;
+            StorableObjectsList = newLocation.StorableObjectsList;
             IncomingDeliveries = newLocation.IncomingDeliveries;
             OutgoingDeliveries = newLocation.OutgoingDeliveries;
             Reservations = newLocation.Reservations;

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess
 {
-    public class EmployeeDataAccess : IDataAccess<Employee>
+    public class EmployeeDataAccess : ISimpleDataAccess<Employee>
     {
         public void Add(Employee objectToAdd)
         {

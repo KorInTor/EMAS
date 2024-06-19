@@ -18,9 +18,24 @@ namespace EMAS.ViewModel
         public event Action<int> HistoryWindowRequested;
         public event Action<int> AdditionWindowRequested;
         public event Action<int,IStorableObject[]> DeliveryCreationRequested;
+        public event Action<int, IStorableObject[]> ReservationCreationRequested;
 
         [ObservableProperty]
         private List<Equipment> _equipmentSourceList = new();
+
+        public List<IStorableObject> SelectedEquipmentList
+        {
+            get
+            {
+                List<IStorableObject> selectedObjectsList = [];
+                foreach (var selectableEquipment in FilteredEquipmentList)
+                {
+                    if (selectableEquipment.IsSelected)
+                        selectedObjectsList.Add(selectableEquipment.Object);
+                }
+                return selectedObjectsList;
+            }
+        }
 
         private List<SelectableObject<Equipment>> FiltrationSource { get; set; } = new();
 
@@ -45,6 +60,7 @@ namespace EMAS.ViewModel
         public RelayCommand OpenHistoryWindowCommand { get; set; }
         public RelayCommand OpenEditWindow { get; set; }
         public RelayCommand CreateDeliveryCommand { get; set; }
+        public RelayCommand CreateReservationCommand { get; set; }
 
         [ObservableProperty]
         public Dictionary<string, RelayCommand> _namedCommands = [];
@@ -66,11 +82,17 @@ namespace EMAS.ViewModel
             OpenAdditionWindow = new RelayCommand(RequestAdditionWindow, () => CanAdd);
             OpenEditWindow = new RelayCommand(RequestEditWindow, () => CanEdit);
             CreateDeliveryCommand = new RelayCommand(RequestDeliveryCreation, () => CanSend);
+            CreateReservationCommand = new RelayCommand(RequestReservationCreation, () => CanEdit);
 
             InitCommandDictionary();
             DesiredEquipment.PropertyChanged += FilterEquipment;
 
             DialogueService = new WindowsDialogueService();
+        }
+
+        private void RequestReservationCreation()
+        {
+            ReservationCreationRequested?.Invoke(CurrentLocationId, [.. SelectedEquipmentList]);
         }
 
         private void InitCommandDictionary()
@@ -82,15 +104,7 @@ namespace EMAS.ViewModel
 
         private void RequestDeliveryCreation()
         {
-            List<IStorableObject> objectsToSend = new();
-
-            foreach (var selectableEquipment in FilteredEquipmentList)
-            {
-                if (selectableEquipment.IsSelected)
-                    objectsToSend.Add(selectableEquipment.Object);
-            }
-
-            DeliveryCreationRequested?.Invoke(CurrentLocationId,[.. objectsToSend]);
+            DeliveryCreationRequested?.Invoke(CurrentLocationId, [.. SelectedEquipmentList]);
         }
 
         private void RequestEditWindow()
@@ -121,6 +135,7 @@ namespace EMAS.ViewModel
                         {
                             CanEdit = true;
                                 newNamedCommandList.Add("Изменить", OpenEditWindow);
+                                newNamedCommandList.Add("Зарезервировать", CreateReservationCommand);
                             break;
                         }
                         case PermissionType.DeliveryAccess:

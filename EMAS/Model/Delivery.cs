@@ -12,7 +12,7 @@ namespace EMAS.Model
     /// <summary>
     /// Stores info about active delivery,
     /// </summary>
-    public class Delivery : ObservableObject , IObjectState, ILocationBounded
+    public class Delivery : ObservableObject
     {
         /// <summary>
         /// Stores event from Dispatch event from dataBase.

@@ -5,16 +5,10 @@ using EMAS.Model;
 using EMAS.Model.Event;
 using EMAS.Service;
 using EMAS.Service.Connection;
-using EMAS.Service.Connection.DataAccess;
-using EMAS.Windows.Dialogue;
+using EMAS.ViewModel.DeliveryVM;
+using EMAS.ViewModel.ReservationVM;
 using EMAS.Windows.Dialogue.Delivery;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using EMAS.Windows.Dialogue.Reservation;
 
 namespace EMAS.ViewModel
 {
@@ -28,9 +22,23 @@ namespace EMAS.ViewModel
 
         [ObservableProperty]
         private List<Location> _locations = [];
+
         private PermissionInfo _permissions = SessionManager.PermissionInfo;
-        public SingleLocationVM MainEquipmentVM { get; set; } = new();
         public IWindowsDialogueService DialogueService { get; set; }
+        public Dictionary<int, string> LocationIdNameDictionary
+        {
+            get
+            {
+                Dictionary<int, string> loationIdNameDictionary = [];
+                foreach (Location location in Locations)
+                {
+                    loationIdNameDictionary.Add(location.Id, location.Name);
+                }
+                return loationIdNameDictionary;
+            }
+        }
+
+        public SingleLocationVM MainEquipmentVM { get; set; } = new();
         public LocationController()
         {
             Locations = DataBaseClient.GetInstance().SelectLocations();
@@ -39,77 +47,69 @@ namespace EMAS.ViewModel
             DialogueService = new WindowsDialogueService();
 
             MainEquipmentVM.EquipmentVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
+            MainEquipmentVM.EquipmentVM.ReservationCreationRequested += ShowReservationCreationWindow;
             MainEquipmentVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
-
+            MainEquipmentVM.ReservationControlVM.ReservationCompletionRequested += ShowReservationCompleteionWindow;
             Task.Run(SyncWithDataBase);
+        }
+
+        public static List<HistoryEntryBase> GetHistoryOfEquipmentPiece(int Id)
+        {
+            return DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(Id);
+        }
+
+        partial void OnCurrentLocationChanged(Location value)
+        {
+            if (value == null)
+            {
+                return;
+            }
+            MainEquipmentVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
+            MainEquipmentVM.LocationInfo = value;
         }
 
         private void ShowDeliveryConfiramtionWindow(Delivery delivery)
         {
-            DeliveryConfirmationVM deliveryConfirmationVM = new(delivery,DialogueService);
+            DeliveryConfirmationVM deliveryConfirmationVM = new(delivery, DialogueService);
             deliveryConfirmationVM.DeliveryCompleted += TryCompleteDelivery;
             DialogueService.ShowWindow<DeliveryConfirmationWindow>(deliveryConfirmationVM);
             deliveryConfirmationVM.DeliveryCompleted -= TryCompleteDelivery;
         }
 
-        private void TryCompleteDelivery(Delivery deliveryToComplete)
-        {
-            try
-            {
-                DataBaseClient.GetInstance().Complete(deliveryToComplete);
-                DialogueService.Close();
-                DialogueService.ShowSuccesfullMessage("Подтверждение успешно");
-            }
-            catch (EventAlreadyCompletedException)
-            {
-                DataBaseClient.GetInstance().SyncData(Locations);
-                DialogueService.Close();
-                DialogueService.ShowFailMessage("Доставка уже подтверждена.");
-            }
-            catch (Exception exception)
-            {
-                DialogueService.ShowFailMessage(exception.Message);
-            }
-        }
-
         private void ShowDeliveryCreationWindow(int arg1, IStorableObject[] arg2)
         {
-            DeliveryCreationVM deliveryCreationVM = new([..arg2], LocationIdNameDictionary,arg1,DialogueService);
+            DeliveryCreationVM deliveryCreationVM = new([.. arg2], LocationIdNameDictionary, arg1, DialogueService);
             deliveryCreationVM.DeliveryCreated += TryAddDelivery;
             DialogueService.ShowWindow<DeliveryCreationWindow>(deliveryCreationVM);
             deliveryCreationVM.DeliveryCreated -= TryAddDelivery;
         }
 
-        private void TryAddDelivery(Delivery delivery)
-        {
-            try
-            {
-                if (!DataBaseClient.GetInstance().IsStorableObjectsNotOccupied([.. delivery.PackageList], out _))
-                    throw new StorableObjectIsAlreadyOccupied();
-
-                DataBaseClient.GetInstance().Add(delivery);
-                DialogueService.Close();
-                DialogueService.ShowSuccesfullMessage("Доставка добавлена успешно");
-            }
-            catch (StorableObjectIsAlreadyOccupied)
-            {
-                DialogueService.ShowFailMessage("Выбранные объекты уже заняты");
-            }
-            catch(Exception exception)
-            {
-                DialogueService.ShowFailMessage(exception.Message);
-            }
-        }
-
-        private void TestFoo(int obj)
-        {
-            DataBaseClient.GetInstance().SyncData(Locations);
-            MainEquipmentVM.UpdateLocationData(CurrentLocation);
-        }
-
         private void ShowNewEventsInfo(List<StorableObjectEvent> list)
         {
+            //TODO Add windwos that shows what changed;
             MainEquipmentVM.UpdateLocationData(CurrentLocation);
+        }
+
+        private void ShowReservationCompleteionWindow(Reservation reservationtoComplete)
+        {
+            ReservationConfirmationVM reservationConfirmationVM = new(reservationtoComplete, DialogueService);
+            reservationConfirmationVM.ReservationCompleted += TryCompleteReservation;
+            DialogueService.ShowWindow<ReservationConfirmationWindow>(reservationConfirmationVM);
+            reservationConfirmationVM.ReservationCompleted -= TryCompleteReservation;
+        }
+
+        private void ShowReservationCreationWindow(int arg1, IStorableObject[] arg2)
+        {
+            ReservationCreationVM reservationCreationVM = new(arg2, DialogueService, (CurrentLocation.Id, CurrentLocation.Name));
+            reservationCreationVM.ReservationCreated += TryAddReservation;
+            DialogueService.ShowWindow<ReservationCreationWindow>(reservationCreationVM);
+            reservationCreationVM.ReservationCreated -= TryAddReservation;
+        }
+
+        [RelayCommand]
+        private void SynchronizeData()
+        {
+            DataBaseClient.GetInstance().SyncData(Locations);
         }
 
         private async Task SyncWithDataBase()
@@ -123,76 +123,65 @@ namespace EMAS.ViewModel
             while (true);
         }
 
-        partial void OnCurrentLocationChanged(Location value)
+        private void TryAddDelivery(Delivery delivery)
         {
-            if (value == null)
-            {
-                return;
-            }
-            MainEquipmentVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
-            MainEquipmentVM.LocationInfo = value;
+            TryAddEvent(delivery, [.. delivery.PackageList]);
         }
 
-        private void InitLocationsData()
+        private void TryAddEvent(object newEvent, IStorableObject[] storableObjectsInEvent, string succesfullMessage = "Успех")
         {
-            foreach (var location in Locations)
+            try
             {
-                location.Equipments = DataBaseClient.GetInstance().SelectEquipmentOn(location.Id);
+                if (!DataBaseClient.GetInstance().IsStorableObjectsNotOccupied(storableObjectsInEvent, out _))
+                    throw new StorableObjectIsAlreadyOccupied();
 
-                location.OutgoingDeliveries = DataBaseClient.GetInstance().GetDeliverysOutOf(location.Id);
+                DataBaseClient.GetInstance().Add(newEvent);
+                DialogueService.Close();
+                DialogueService.ShowSuccesfullMessage(succesfullMessage);
             }
-
-            InitIncomingDeliveriesFromOutgoing();
-        }
-
-        /// <summary>
-        /// Initializes Locations incoming deliveries when Location outgoing deliveries is initialized, reduces the load on the DBMS.
-        /// </summary>
-        private void InitIncomingDeliveriesFromOutgoing()
-        {
-            Dictionary<int, List<Delivery>> incomingDeliveries = [];
-
-            foreach (var location in Locations)
+            catch (StorableObjectIsAlreadyOccupied)
             {
-                incomingDeliveries.Add(location.Id, []);
+                DialogueService.ShowFailMessage("Выбранные объекты уже заняты");
             }
-
-            foreach (var location in Locations)
+            catch (Exception exception)
             {
-                foreach (var delivery in location.OutgoingDeliveries)
-                {
-                    incomingDeliveries[delivery.DestinationId].Add(delivery);
-                }
-            }
-
-            foreach (var location in Locations)
-            {
-                location.IncomingDeliveries = incomingDeliveries[location.Id];
+                DialogueService.ShowFailMessage(exception.Message);
             }
         }
 
-        public static List<HistoryEntryBase> GetHistoryOfEquipmentPiece(int Id)
+        private void TryAddReservation(Reservation reservation)
         {
-            return DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(Id);
+            TryAddEvent(reservation, [.. reservation.ReservedObjectsList]);
         }
 
-        public Dictionary<int,string> LocationIdNameDictionary
+        private void TryCompleteDelivery(Delivery deliveryToComplete)
         {
-            get
+            TryCompleteEvent(deliveryToComplete);
+        }
+
+        private void TryCompleteEvent(object completedEvent, string succesfullMessage = "Успех")
+        {
+            try
             {
-                Dictionary<int, string> loationIdNameDictionary = [];
-                foreach (Location location in Locations)
-                {
-                    loationIdNameDictionary.Add(location.Id, location.Name);
-                }
-                return loationIdNameDictionary;
+                DataBaseClient.GetInstance().Complete(completedEvent);
+                DialogueService.Close();
+                DialogueService.ShowSuccesfullMessage(succesfullMessage);
+            }
+            catch (EventAlreadyCompletedException)
+            {
+                DataBaseClient.GetInstance().SyncData(Locations);
+                DialogueService.Close();
+                DialogueService.ShowFailMessage("Данное событие уже завершенно.");
+            }
+            catch (Exception exception)
+            {
+                DialogueService.ShowFailMessage(exception.Message);
             }
         }
 
-        [RelayCommand]
-        private void SynchronizeData()
+        private void TryCompleteReservation(Reservation reservation)
         {
-            DataBaseClient.GetInstance().SyncData(Locations);
+            TryCompleteEvent(reservation);
         }
     }
 }
