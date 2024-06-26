@@ -1,5 +1,4 @@
 ﻿using DataBaseManipulator.Factory;
-using DocumentFormat.OpenXml.Spreadsheet;
 using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Service.Connection;
@@ -143,7 +142,7 @@ internal class Program
                     }
                 case '2':
                     {
-                        ClearTable("public.equipment");
+                        ClearTable("public.storable_object");
                         ClearTable("public.\"event\"");
                         RestartSequence("public.storable_object_id_seq");
                         break;
@@ -186,8 +185,7 @@ internal class Program
             int remaining = randEquipmentList.Count / namedLocations.Keys.Count;
             while (remaining != 0)
             {
-                randEquipmentList.Last().LocationId = locationId;
-                DataBaseClient.GetInstance().Add(randEquipmentList.Last());
+                DataBaseClient.GetInstance().Add(randEquipmentList.Last(), locationId);
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
@@ -198,8 +196,7 @@ internal class Program
             int remaining = randEquipmentList.Count;
             while (remaining != 0)
             {
-                randEquipmentList.Last().LocationId = namedLocations.Keys.Last();
-                DataBaseClient.GetInstance().Add(randEquipmentList.Last());
+                DataBaseClient.GetInstance().Add(randEquipmentList.Last(), namedLocations.Keys.Last());
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }

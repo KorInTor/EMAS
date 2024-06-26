@@ -39,8 +39,7 @@ namespace EMAS.ViewModel
             try
             {
                 NewEquipment.Tags = [.. Tags.Split('\n')];
-                NewEquipment.LocationId = _currentLocationId;
-                DataBaseClient.GetInstance().Add(NewEquipment);
+                DataBaseClient.GetInstance().Add(NewEquipment, _currentLocationId);
                 DialogueService.ShowSuccesfullMessage("Добавленно успешно!");
                 AdditionConfirmed?.Invoke();
             }

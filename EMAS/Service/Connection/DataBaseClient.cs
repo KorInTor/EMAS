@@ -14,7 +14,7 @@ namespace EMAS.Service.Connection
     public class DataBaseClient
     {
         private DeliveryDataAccess deliveryDataAccess;
-        private IStorableObjectDataAccess<IStorableObject> storableObjectDataAccess;
+        private StorableObjectDataAccess storableObjectDataAccess;
         private ReservationDataAccess reservationDataAccess;
         private ISimpleDataAccess<Employee> employeeDataAccess;
         private ISimpleDataAccess<Location> locationDataAccess;
@@ -52,6 +52,11 @@ namespace EMAS.Service.Connection
             return instance;
         }
 
+        public void Add(IStorableObject storableObject,int locationId)
+        {
+            storableObjectDataAccess.Add(storableObject, locationId);
+            return;
+        }
         public void Add(object objectToAdd)
         {
             if (objectToAdd is Employee newEmployee)
@@ -78,11 +83,6 @@ namespace EMAS.Service.Connection
                 return;
             }
 
-            if (objectToAdd is IStorableObject storableObject)
-            {
-                storableObjectDataAccess.Add(storableObject);
-                return;
-            }
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
@@ -279,12 +279,33 @@ namespace EMAS.Service.Connection
 
         private static void HandleDataChangedEvent(Dictionary<int, Location> locationIdDictionary, StorableObjectEvent newStorableObjectEvent)
         {
+            int locationChangedId = 0;
+            foreach (var location in locationIdDictionary.Values)
+            {
+                foreach (var storableObjectInEvent in newStorableObjectEvent.ObjectsInEvent)
+                {
+                    foreach (var storableObjectInLocation in location.StorableObjectsList)
+                    {
+                        if (storableObjectInEvent.Id == storableObjectInLocation.Id)
+                        {
+                            locationChangedId = location.Id; 
+                            break;
+                        }
+                    }
+                    if (locationChangedId != 0)
+                        break;
+                }
+                if (locationChangedId != 0)
+                    break;
+            }
+
+
             foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
             {
                 if (storableObject is Equipment equipmentInEvent)
                 {
-                    locationIdDictionary[equipmentInEvent.LocationId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
-                    locationIdDictionary[equipmentInEvent.LocationId].StorableObjectsList.Add(equipmentInEvent);
+                    locationIdDictionary[locationChangedId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
+                    locationIdDictionary[locationChangedId].StorableObjectsList.Add(equipmentInEvent);
                 }
             }
         }

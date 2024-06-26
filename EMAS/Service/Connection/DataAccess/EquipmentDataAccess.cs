@@ -9,36 +9,6 @@ namespace EMAS.Service.Connection.DataAccess
     public class EquipmentDataAccess : IStorableObjectDataAccess<Equipment>
     {
 
-        public IEnumerable<Equipment> SelectOnLocation(int locationId)
-        {
-            var connection = ConnectionPool.GetConnection();
-
-            string sql = "SELECT id, \"name\", manufacturer, \"type\", measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, tags, location_id, status, description FROM public.equipment WHERE location_id = @locationId;";
-
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@locationId", locationId);
-
-            var list = new List<Equipment>();
-
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    // Tags rework in progress
-                    var equipment = new Equipment(reader.GetString(11), reader.GetString(8), reader.GetString(12), reader.GetString(5), reader.GetString(4), reader.GetString(6), reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetString(7), []);
-                    equipment.LocationId = reader.GetInt32(10);
-                    list.Add(equipment);
-                }
-
-                foreach (var data in list)
-                {
-                    Debug.WriteLine($"Получено оборудование: {data.Id} - {data.Name}");
-                }
-            }
-            ConnectionPool.ReleaseConnection(connection);
-            return list;
-        }
-
         public Equipment? SelectById(int id)
         {
             IEnumerable<Equipment> founded = SelectByIds([id]);
@@ -52,35 +22,6 @@ namespace EMAS.Service.Connection.DataAccess
         public void Update(Equipment objectToUpdate)
         {
             throw new NotImplementedException();
-        }
-
-        public void UpdateLocation(Equipment equipment, int newLocationId)
-        {
-            var connection = ConnectionPool.GetConnection();
-
-            using var command = new NpgsqlCommand("UPDATE \"public\".equipment SET location_id=@newLocationId WHERE id=@equipmentId ", connection);
-            command.Parameters.AddWithValue("@newLocationId", newLocationId);
-            command.Parameters.AddWithValue("@equipmentId", equipment.Id);
-
-            command.ExecuteNonQuery();
-
-            ConnectionPool.ReleaseConnection(connection);
-        }
-
-        public void UpdateLocation(IEnumerable<Equipment> equipmentsToUpdate, int newLocationId)
-        {
-            var connection = ConnectionPool.GetConnection();
-
-            foreach (var equipment in equipmentsToUpdate)
-            {
-                using var command = new NpgsqlCommand("UPDATE \"public\".equipment SET location_id=@newLocationId WHERE id=@equipmentId ", connection);
-                command.Parameters.AddWithValue("@newLocationId", newLocationId);
-                command.Parameters.AddWithValue("@equipmentId", equipment.Id);
-
-                command.ExecuteNonQuery();
-            }
-
-            ConnectionPool.ReleaseConnection(connection);
         }
 
         public void Delete(IEnumerable<Equipment> objectToDelete)
@@ -98,16 +39,15 @@ namespace EMAS.Service.Connection.DataAccess
             var connection = ConnectionPool.GetConnection();
             foreach (var equipment in objectsToAdd)
             {
-                if (equipment.LocationId == 0)
-                    throw new InvalidOperationException("Невозможно добавить оборудование если не задан id локации.");
-
+                
                 string query = @"
                 INSERT INTO public.equipment
-                (name, manufacturer, type, measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, location_id, status, description)
-                VALUES(@Name, @Manufacturer, @Type, @Units, @AccuracyClass, @Limit, @FactoryNumber, @RegistrationNumber, @LocationId, @Status, @Description) RETURNING id; ";
+                (id, name, manufacturer, type, measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, status, description)
+                VALUES(@id, @Name, @Manufacturer, @Type, @Units, @AccuracyClass, @Limit, @FactoryNumber, @RegistrationNumber, @Status, @Description) ";
 
                 using (var command = new NpgsqlCommand(query, connection))
                 {
+                    command.Parameters.AddWithValue("@Id", equipment.Id);
                     command.Parameters.AddWithValue("@Name", equipment.Name);
                     command.Parameters.AddWithValue("@Manufacturer", equipment.Manufacturer);
                     command.Parameters.AddWithValue("@Type", equipment.Type);
@@ -117,11 +57,10 @@ namespace EMAS.Service.Connection.DataAccess
                     command.Parameters.AddWithValue("@FactoryNumber", equipment.FactoryNumber);
                     command.Parameters.AddWithValue("@RegistrationNumber", equipment.RegistrationNumber);
                     //command.Parameters.AddWithValue("@Tags", string.Join(",", item.Tags)); Tags Will be Reworked
-                    command.Parameters.AddWithValue("@LocationId", equipment.LocationId);
                     command.Parameters.AddWithValue("@Status", equipment.Status);
                     command.Parameters.AddWithValue("@Description", equipment.Description);
 
-                    equipment.Id = (int)command.ExecuteScalar();
+                    _ = command.ExecuteNonQuery();
                 }
 
             }
@@ -140,7 +79,7 @@ namespace EMAS.Service.Connection.DataAccess
             foreach (int id in ids)
             {
                 string query = @"
-                    SELECT status, inventory_number, description, accuracy_class, measurment_units, measurment_limit, id, name, manufacturer, type, serial_number, location_id 
+                    SELECT status, inventory_number, description, accuracy_class, measurment_units, measurment_limit, id, name, manufacturer, type, serial_number
                     FROM public.equipment
                     WHERE id = @Id;";
 
@@ -163,10 +102,7 @@ namespace EMAS.Service.Connection.DataAccess
                     string factoryNumber = reader.GetString(10);
                     //List<string> tags = new List<string>((string[])reader[11]); Tags Will be Reworked
 
-                    var equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, [])
-                    {
-                        LocationId = reader.GetInt32(11)
-                    };
+                    var equipment = new Equipment(status, registrationNumber, description, accuracyClass, units, limit, equipmentId, name, manufacturer, type, factoryNumber, []);
 
                     foundedEquipmentList.Add(equipment);
                 }
