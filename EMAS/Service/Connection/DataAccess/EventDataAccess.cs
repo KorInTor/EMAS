@@ -202,8 +202,6 @@ namespace EMAS.Service.Connection.DataAccess
 
     public class StorableObjectInEventDataAccess
     {
-        public string ObjectName { get; set; } = string.Empty;
-
         private StorableObjectDataAccess _storableObjectDataAccess = new();
 
         public void Add(Dictionary<long, IEnumerable<IStorableObject>> evenIdsObjectRelation)
@@ -213,11 +211,7 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 foreach (var storableObject in eventIdObjectRelation.Value)
                 {
-                    if (storableObject is Equipment)
-                        ObjectName = "equipment";
-                    else
-                        throw new NotImplementedException();
-                    string query = "INSERT INTO public." + ObjectName + "_event (" + ObjectName + "_id, event_id) VALUES (@object_id ,@event_id) ";
+                    string query = "INSERT INTO public.storable_object_event (storable_object_id, event_id) VALUES (@object_id ,@event_id) ";
                     using var command = new NpgsqlCommand(query, connection);
 
                     command.Parameters.AddWithValue("@event_id", eventIdObjectRelation.Key);
@@ -238,28 +232,13 @@ namespace EMAS.Service.Connection.DataAccess
         {
             var connection = ConnectionPool.GetConnection();
             Dictionary<IStorableObject, long> storableObjectIdLastEventIdDictionary = [];
-            string equipmentQuery = "SELECT e.id " +
+            string query = "SELECT e.id " +
                 "FROM public.\"event\" AS e " +
-                "JOIN public.equipment_event AS eq_ev ON eq_ev.event_id = e.id " +
-            "WHERE eq_ev.equipment_id = @id ORDER BY id DESC LIMIT 1";
-            string materialQuery = "SELECT e.id " +
-                "FROM public.\"event\" AS e " +
-                "JOIN public.material_event AS mat_ev ON mat_ev.event_id = e.id " +
-            "WHERE mat_ev.material_id=@id ORDER BY id DESC LIMIT 1";
+                "JOIN public.storable_object_event AS object_event ON object_event.event_id = e.id " +
+            "WHERE object_event.storable_object_id = @id ORDER BY id DESC LIMIT 1";
 
             foreach (var stroableObject in storableObjects)
             {
-                string query;
-                if (stroableObject is Equipment)
-                {
-                    query = equipmentQuery;
-                }
-                else if (stroableObject is Material)
-                {
-                    query = materialQuery;
-                }
-                else
-                    throw new InvalidOperationException();
                 using var command = new NpgsqlCommand(query, connection);
                 command.Parameters.AddWithValue("@id", stroableObject.Id);
                 using var reader = command.ExecuteReader();
@@ -280,10 +259,9 @@ namespace EMAS.Service.Connection.DataAccess
 
             Dictionary<long, IEnumerable<IStorableObject>> EventIdObjectsDictionary = [];
 
-            string query = "SELECT e.id, eq_ev.equipment_id, mat_ev.material_id " +
+            string query = "SELECT e.id, object_event.storable_object_id " +
                 "FROM public.\"event\" AS e " +
-                "LEFT JOIN public.equipment_event AS eq_ev ON eq_ev.event_id = e.id " +
-                "LEFT JOIN public.material_event AS mat_ev ON mat_ev.event_id = e.id " +
+                "JOIN public.storable_object_event AS object_event ON object_event.event_id = e.id " +
             "WHERE e.id = @id;";
 
             foreach(long id in idsOfEvents)
@@ -299,10 +277,6 @@ namespace EMAS.Service.Connection.DataAccess
                         if (!reader.IsDBNull(1))
                         {
                             objectsInEvent.Add(_storableObjectDataAccess.SelectById(reader.GetInt32(1)));
-                        }
-                        if (!reader.IsDBNull(2))
-                        {
-                            objectsInEvent.Add(_storableObjectDataAccess.SelectById(reader.GetInt32(2)));
                         }
                     }
                 }

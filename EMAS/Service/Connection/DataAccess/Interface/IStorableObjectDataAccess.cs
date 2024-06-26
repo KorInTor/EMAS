@@ -10,8 +10,5 @@ namespace EMAS.Service.Connection.DataAccess.Interface
         public void Update(T objectToUpdate);
         public IEnumerable<T> SelectByIds(IEnumerable<int> ids);
         public T? SelectById(int id);
-        public void UpdateLocation(T objectToUpdate, int newLocationId);
-        public void UpdateLocation(IEnumerable<T> objectsToUpdate, int newLocationId);
-        public IEnumerable<T> SelectOnLocation(int locationId);
     }
 }
