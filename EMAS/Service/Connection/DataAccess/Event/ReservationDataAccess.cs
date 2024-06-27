@@ -6,7 +6,7 @@ using EMAS.Service.Connection.DataAccess.Interface;
 using Npgsql;
 using System.Diagnostics;
 
-namespace EMAS.Service.Connection.DataAccess
+namespace EMAS.Service.Connection.DataAccess.Event
 {
     public class ReservationDataAccess
     {
@@ -53,7 +53,7 @@ namespace EMAS.Service.Connection.DataAccess
                 }
             }
             ConnectionPool.ReleaseConnection(connection);
-            return [..foundedReservations];
+            return [.. foundedReservations];
         }
 
         public List<Reservation> SelectOnLocation(int locationId)
@@ -86,12 +86,12 @@ namespace EMAS.Service.Connection.DataAccess
             }
             ConnectionPool.ReleaseConnection(connection);
 
-            return [..foundedReservationIds];
+            return [.. foundedReservationIds];
         }
 
         public void Complete(Reservation[] reservations)
         {
-            if (!CanComplete(reservations))
+            if (!IsCompleted(reservations))
                 throw new EventAlreadyCompletedException();
 
             foreach (var completedReservation in reservations)
@@ -117,7 +117,7 @@ namespace EMAS.Service.Connection.DataAccess
             }
         }
 
-        private bool CanComplete(Reservation[] objectToComplete)
+        public bool IsCompleted(IEnumerable<ReserveEndedEvent> objectToComplete)
         {
             var connection = ConnectionPool.GetConnection();
             foreach (var reservation in objectToComplete)
@@ -129,14 +129,14 @@ namespace EMAS.Service.Connection.DataAccess
                 {
                     if (!reader.IsDBNull(0))
                     {
-                        return false;
+                        return true;
                     }
                 }
 
             }
 
             ConnectionPool.ReleaseConnection(connection);
-            return true;
+            return false;
         }
 
         public void Add(Reservation[] reservations)
@@ -144,7 +144,7 @@ namespace EMAS.Service.Connection.DataAccess
             var connection = ConnectionPool.GetConnection();
             foreach (var objectToAdd in reservations)
             {
-                StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Reserved, objectToAdd.StartDate ,objectToAdd.ReservedObjectsList);
+                StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Reserved, objectToAdd.StartDate, objectToAdd.ReservedObjectsList);
                 eventAccess.Add(newEvent);
                 objectToAdd.Id = newEvent.Id;
 
@@ -184,7 +184,7 @@ namespace EMAS.Service.Connection.DataAccess
             {
                 var foundedStartEvent = eventAccess.SelectById(reader.GetInt64(3));
                 var reservation = new Reservation(foundedStartEvent, reader.GetString(1), reader.GetInt32(0));
-                reservation.Complete(foundedEndEvent.DateTime,reader.GetString(2));
+                reservation.Complete(foundedEndEvent.DateTime, reader.GetString(2));
                 foundedReservations.Add(reservation);
             }
             ConnectionPool.ReleaseConnection(connection);

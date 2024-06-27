@@ -12,75 +12,55 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EMAS.Service.Connection.DataAccess
+namespace EMAS.Service.Connection.DataAccess.Event
 {
     public class DeliveryDataAccess
     {
-        private readonly EventDataAccess eventAccess = new();
         private readonly string schemaName = "\"event\".";
-        private readonly StorableObjectInEventDataAccess storableObjectInEventDataAccess = new();
         private readonly string tableName = "delivery";
         public string FullTableName => schemaName + tableName;
 
-        public void Add(Delivery newDelivery)
+        public void Add(SentEvent newDelivery)
         {
             Add([newDelivery]);
         }
 
-        public void Add(Delivery[] objectToAdd)
+        public void Add(SentEvent[] objectToAdd)
         {
             string query = "INSERT INTO " + FullTableName + " (dispatch_event_id, destination_id, departure_id ,dispatch_info) VALUES (@dispatch_event_id, @destination_id, @departure_id ,@dispatch_info); ";
             var connection = ConnectionPool.GetConnection();
 
-            foreach (var delivery in objectToAdd)
+            foreach (var sentEvent in objectToAdd)
             {
-                StorableObjectEvent deliveryEvent = new(SessionManager.UserId, 0, EventType.Sent, delivery.DispatchDate, delivery.PackageList);
-
-                eventAccess.Add(deliveryEvent);
-
-                delivery.Id = deliveryEvent.Id;
                 using var command = new NpgsqlCommand(query, connection);
 
-                command.Parameters.AddWithValue("@dispatch_event_id", delivery.Id);
-                command.Parameters.AddWithValue("@destination_id", delivery.DestinationId);
-                command.Parameters.AddWithValue("@departure_id", delivery.DepartureId);
-                command.Parameters.AddWithValue("@dispatch_info", delivery.DispatchComment);
+                command.Parameters.AddWithValue("@dispatch_event_id", sentEvent.Id);
+                command.Parameters.AddWithValue("@destination_id", sentEvent.DestinationId);
+                command.Parameters.AddWithValue("@departure_id", sentEvent.DepartureId);
+                command.Parameters.AddWithValue("@dispatch_info", sentEvent.Comment);
 
                 command.ExecuteNonQuery();
             }
 
-            Debug.WriteLine("Успешно добавлена доставка");
+            Debug.WriteLine("Успешно добавлено отправление");
 
             ConnectionPool.ReleaseConnection(connection);
         }
 
-        public void Complete(Delivery completedDelivery)
+        public void Complete(ArrivedEvent completedDelivery)
         {
             Complete([completedDelivery]);
         }
 
-        public void Complete(Delivery[] objectToComplete)
+        public void Complete(ArrivedEvent[] objectToComplete)
         {
-            if (!CanComplete(objectToComplete))
-                throw new EventAlreadyCompletedException();
-
-            foreach (var delivery in objectToComplete)
+            foreach (var arriveEvent in objectToComplete)
             {
-                if (!delivery.IsCompleted)
-                    throw new InvalidOperationException("Доставка не заполнена нужными значениями, невозможно закончить.");
-                
-                StorableObjectEvent newEvent = new(SessionManager.UserId, 0, EventType.Arrived, delivery.ArrivalDate, delivery.PackageList);
-
-                eventAccess.Add(newEvent);
-
-                var storableObjectDataAccess = new StorableObjectDataAccess();
-                storableObjectDataAccess.UpdateLocation([..delivery.PackageList],delivery.DestinationId);
-
                 var connection = ConnectionPool.GetConnection();
                 using var command = new NpgsqlCommand("UPDATE " + FullTableName + " SET arrival_event_id=@arrival_event_id, arrival_info=@arrivalComment WHERE dispatch_event_id=@sendedEventId ", connection);
-                command.Parameters.AddWithValue("@arrival_event_id", newEvent.Id);
-                command.Parameters.AddWithValue("@sendedEventId", delivery.Id);
-                command.Parameters.AddWithValue("@arrivalComment", delivery.ArrivalComment);
+                command.Parameters.AddWithValue("@arrival_event_id", arriveEvent.Id);
+                command.Parameters.AddWithValue("@sendedEventId", arriveEvent.SentEventId);
+                command.Parameters.AddWithValue("@arrivalComment", arriveEvent.Comment);
 
                 command.ExecuteNonQuery();
 
@@ -88,41 +68,26 @@ namespace EMAS.Service.Connection.DataAccess
             }
         }
 
-        private bool CanComplete(Delivery[] objectToComplete)
+        public bool IsCompleted(IEnumerable<ArrivedEvent> objectToComplete)
         {
             var connection = ConnectionPool.GetConnection();
-            foreach (var delivery in objectToComplete)
+            foreach (var arriveEvent in objectToComplete)
             {
-                using var command = new NpgsqlCommand("SELECT arrival_event_id FROM" + FullTableName + " WHERE dispatch_event_id=@sendedEventId ", connection);
-                command.Parameters.AddWithValue("@sendedEventId", delivery.Id);
+                using var command = new NpgsqlCommand("SELECT arrival_event_id FROM" + FullTableName + " WHERE dispatch_event_id=@SentEventId ", connection);
+                command.Parameters.AddWithValue("@SentEventId", arriveEvent.SentEventId);
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     if (!reader.IsDBNull(0))
                     {
-                        return false;
+                        return true;
                     }
                 }
-                
+
             }
-            
+
             ConnectionPool.ReleaseConnection(connection);
-            return true;
-        }
-
-        public void Delete(Delivery objectToDelete)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Delete(Delivery[] objectToDelete)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<Delivery> Select()
-        {
-            throw new NotImplementedException();
+            return false;
         }
 
         /// <summary>
@@ -130,31 +95,26 @@ namespace EMAS.Service.Connection.DataAccess
         /// </summary>
         /// <param name="id">Id поиска.</param>
         /// <returns>Возвращает инициализированные объект Delivery. Если не найдена доставка с заданным Id вовзращает null.</returns>
-        public Delivery? SelectById(long id)
+        public SentEvent? SelectById(StorableObjectEvent storableObjectEvent)
         {
-            StorableObjectEvent? disptach_event_info = eventAccess.SelectById(id);
-            if (disptach_event_info == null)
-            {
-                return null;
-            }
-
-            Delivery? foundDelivery = null;
+            SentEvent? foundDelivery = null;
 
             string query = "SELECT D.departure_id, D.destination_id, D.dispatch_info " +
-                                "FROM "+FullTableName+" AS D " +
+                                "FROM " + FullTableName + " AS D " +
                                 "WHERE D.dispatch_event_id = @Id ";
 
             var connection = ConnectionPool.GetConnection();
 
             using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Id",id);
+            command.Parameters.AddWithValue("@Id", storableObjectEvent.Id);
 
             using var reader = command.ExecuteReader();
 
             while (reader.Read())
             {
-                foundDelivery = new(disptach_event_info,reader.GetInt32(0),reader.GetInt32(1),reader.GetString(2));
+                foundDelivery = new(storableObjectEvent, reader.GetString(2), reader.GetInt32(0), reader.GetInt32(1));
             }
+
             ConnectionPool.ReleaseConnection(connection);
             return foundDelivery;
         }
@@ -191,13 +151,13 @@ namespace EMAS.Service.Connection.DataAccess
             return foundDelivery;
         }
 
-        public List<Delivery> SelectOnLocation(int locationId)
+        public List<SentEvent> SelectDeliveryOutOf(int locationId)
         {
             //TODO: Переработать чтобы инициализация был из StorableObjectEvent.
-            var deliveries = new List<Delivery>();
+            var deliveries = new List<SentEvent>();
 
             string query = "SELECT E.date, D.destination_id, D.dispatch_event_id, D.dispatch_info " +
-                                "FROM "+FullTableName+" AS D " +
+                                "FROM " + FullTableName + " AS D " +
                                 "JOIN public.\"event\" AS E ON E.id = D.dispatch_event_id " +
                                 "WHERE D.arrival_event_id IS NULL AND D.departure_id = @locationId ";
 

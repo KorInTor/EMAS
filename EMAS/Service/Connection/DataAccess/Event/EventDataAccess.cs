@@ -1,25 +1,16 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
+﻿using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Model.Event;
-using EMAS.Service.Connection.DataAccess.Interface;
+using EMAS.Service.Connection.DataAccess.Event;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media.Media3D;
 
 namespace EMAS.Service.Connection.DataAccess
 {
     public class EventDataAccess
     {
         private readonly StorableObjectInEventDataAccess objectEventDataAccess = new();
+        private readonly DeliveryDataAccess deliveryDataAccess = new();
+        private readonly ReservationDataAccess reservationDataAccess = new();
 
         public EventDataAccess()
         {
@@ -41,6 +32,9 @@ namespace EMAS.Service.Connection.DataAccess
 
             foreach (var newEvent in newEvents)
             {
+                if (!CanInsert(newEvent))
+                    throw new EventAlreadyCompletedException();
+
                 using var command = new NpgsqlCommand("INSERT INTO public.event (employee_id, event_type, date) VALUES (@emp_id,@eventTypeId,@date) RETURNING id ", connection);
                 command.Parameters.AddWithValue("@emp_id", newEvent.EmployeeId);
                 command.Parameters.AddWithValue("@eventTypeId", (int)newEvent.EventType);
@@ -49,14 +43,49 @@ namespace EMAS.Service.Connection.DataAccess
                 newEvent.Id = (long)command.ExecuteScalar();
 
                 if (newEvent is AdditionEvent additionEvent)
+                {
                     InsertAdditionEvent(connection, additionEvent);
+                }
+                if (newEvent is SentEvent sentEvent)
+                {
+                    deliveryDataAccess.Add(sentEvent);
+                }
+                if (newEvent is ReservedEvent reservedEvent)
+                {
+                    reservationDataAccess.Add(reservedEvent);
+                }
+                if (newEvent is ArrivedEvent arrivedEvent)
+                {
+                    deliveryDataAccess.Complete(arrivedEvent);
+                }
+                if (newEvent is ReserveEndedEvent reserveEndedEvent)
+                {
+                    reservationDataAccess.Complete(reserveEndedEvent);
+                }
 
                 preparedEquipmentEventObjectRelation.Add(newEvent.Id, newEvent.ObjectsInEvent.ToArray());
             }
             ConnectionPool.ReleaseConnection(connection);
 
             objectEventDataAccess.Add(preparedEquipmentEventObjectRelation);
+
         }
+
+        public bool CanInsert(StorableObjectEvent storableObjectEvent)
+        {
+            if (storableObjectEvent is ArrivedEvent arrivedEvent)
+            {
+                return !deliveryDataAccess.IsCompleted([arrivedEvent]);
+            }
+            if (storableObjectEvent is ReserveEndedEvent reserveEndedEvent)
+            {
+                return !reservationDataAccess.IsCompleted([reserveEndedEvent]);
+            }
+
+            return true;
+        }
+
+        public List<SentEvent> SelectSentEventOutOf()
 
         private void InsertAdditionEvent(NpgsqlConnection connection, AdditionEvent additionEvent)
         {
@@ -112,9 +141,9 @@ namespace EMAS.Service.Connection.DataAccess
                     AdditionEventsIds.Add(@event.Id);
                 }
             }
-            var eventIdsLocationIdsDictionary = GetLocationIdsForAdditionEvents([..AdditionEventsIds], connection);
+            var eventIdsLocationIdsDictionary = GetLocationIdsForAdditionEvents([.. AdditionEventsIds], connection);
 
-            for (int i=0;i< storableObjectEvents.Count; i++)
+            for (int i = 0; i < storableObjectEvents.Count; i++)
             {
                 if (storableObjectEvents[i].EventType == EventType.Addition)
                     storableObjectEvents[i] = new AdditionEvent(storableObjectEvents[i].EmployeeId, storableObjectEvents[i].Id, EventType.Addition, storableObjectEvents[i].DateTime, storableObjectEvents[i].ObjectsInEvent, (int)eventIdsLocationIdsDictionary[storableObjectEvents[i].Id]);
@@ -177,7 +206,7 @@ namespace EMAS.Service.Connection.DataAccess
 
             foreach (var storableObjectLastEventId in storableObjectLastEventIdDictionary)
             {
-                storableObjectLastEvent.Add(storableObjectLastEventId.Key,SelectById(storableObjectLastEventId.Value));
+                storableObjectLastEvent.Add(storableObjectLastEventId.Key, SelectById(storableObjectLastEventId.Value));
             }
 
             return storableObjectLastEvent;
@@ -197,6 +226,50 @@ namespace EMAS.Service.Connection.DataAccess
             }
 
             return additionIdLocationIdDictionary;
+        }
+
+        public List<StorableObjectEvent> SelectEventsForStorableObject(IStorableObject storableObject)
+        {
+            List<StorableObjectEvent> storableObjectEvents = [];
+
+            string query = "SELECT \"date\", employee_id, event_type FROM public.\"event\" WHERE id=@id;";
+
+            var connection = ConnectionPool.GetConnection();
+
+            foreach (long id in objectEventDataAccess.SelectEventsIdsForStorableObject(storableObject.Id))
+            {
+                using var command = new NpgsqlCommand(query, connection);
+                {
+                    command.Parameters.AddWithValue("@id", id);
+                    var reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        storableObjectEvents.Add(new StorableObjectEvent(reader.GetInt32(1), id, (EventType)reader.GetInt16(2), reader.GetDateTime(0), [storableObject]));
+                    }
+                    reader.Close();
+                }
+            }
+
+            List<long> AdditionEventsIds = [];
+
+            foreach (var @event in storableObjectEvents)
+            {
+                if (@event.EventType == EventType.Addition)
+                {
+                    AdditionEventsIds.Add(@event.Id);
+                }
+            }
+
+            var eventIdsLocationIdsDictionary = GetLocationIdsForAdditionEvents([.. AdditionEventsIds], connection);
+
+            for (int i = 0; i < storableObjectEvents.Count; i++)
+            {
+                if (storableObjectEvents[i].EventType == EventType.Addition)
+                    storableObjectEvents[i] = new AdditionEvent(storableObjectEvents[i].EmployeeId, storableObjectEvents[i].Id, EventType.Addition, storableObjectEvents[i].DateTime, storableObjectEvents[i].ObjectsInEvent, (int)eventIdsLocationIdsDictionary[storableObjectEvents[i].Id]);
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+            return storableObjectEvents;
         }
     }
 
@@ -264,7 +337,7 @@ namespace EMAS.Service.Connection.DataAccess
                 "JOIN public.storable_object_event AS object_event ON object_event.event_id = e.id " +
             "WHERE e.id = @id;";
 
-            foreach(long id in idsOfEvents)
+            foreach (long id in idsOfEvents)
             {
                 List<IStorableObject> objectsInEvent = [];
                 using var command = new NpgsqlCommand(query, connection);
@@ -285,6 +358,28 @@ namespace EMAS.Service.Connection.DataAccess
 
             ConnectionPool.ReleaseConnection(connection);
             return EventIdObjectsDictionary;
+        }
+
+        public List<long> SelectEventsIdsForStorableObject(int objectId)
+        {
+            var connection = ConnectionPool.GetConnection();
+
+            List<long> eventsIds = [];
+
+            string query = "SELECT event_id FROM public.storable_object_event WHERE storable_object_id = @id";
+
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@id", objectId);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                reader.GetInt64(0);
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+
+            return eventsIds;
         }
     }
 }

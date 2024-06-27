@@ -1,13 +1,9 @@
-﻿using EMAS.Exceptions;
-using EMAS.Model;
+﻿using EMAS.Model;
 using EMAS.Model.Event;
-using EMAS.Model.HistoryEntry;
 using EMAS.Service.Connection.DataAccess;
+using EMAS.Service.Connection.DataAccess.Event;
 using EMAS.Service.Connection.DataAccess.Interface;
-using Npgsql;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace EMAS.Service.Connection
 {
@@ -42,7 +38,6 @@ namespace EMAS.Service.Connection
             reservationDataAccess = new ReservationDataAccess();
             employeeDataAccess = new EmployeeDataAccess();
             locationDataAccess = new LocationDataAccess();
-            historyEntryDataAccess = new HistoryEntryDataAccess();
             eventDataAccess = new();
         }
 
@@ -52,7 +47,7 @@ namespace EMAS.Service.Connection
             return instance;
         }
 
-        public void Add(IStorableObject storableObject,int locationId)
+        public void Add(IStorableObject storableObject, int locationId)
         {
             storableObjectDataAccess.Add(storableObject, locationId);
             return;
@@ -139,7 +134,7 @@ namespace EMAS.Service.Connection
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
-        public bool IsStorableObjectsNotOccupied(IStorableObject[] storableObjects,out List<IStorableObject> occupiedObject)
+        public bool IsStorableObjectsNotOccupied(IStorableObject[] storableObjects, out List<IStorableObject> occupiedObject)
         {
             occupiedObject = [];
 
@@ -159,7 +154,7 @@ namespace EMAS.Service.Connection
 
         public void Complete(object objecToComplete)
         {
-            if(objecToComplete is Delivery completedDelivery)
+            if (objecToComplete is Delivery completedDelivery)
             {
                 deliveryDataAccess.Complete(completedDelivery);
                 return;
@@ -174,12 +169,12 @@ namespace EMAS.Service.Connection
 
         public List<Delivery> GetDeliverysOutOf(int locationId)
         {
-            return deliveryDataAccess.SelectOnLocation(locationId);
+            return deliveryDataAccess.SelectDeliveryOutOf(locationId);
         }
 
         public List<IStorableObject> SelectStorableObjectOn(int locationId)
         {
-            return new (storableObjectDataAccess.SelectOnLocation(locationId));
+            return new(storableObjectDataAccess.SelectOnLocation(locationId));
         }
 
         public List<Reservation> GetReservationOn(int locationId)
@@ -197,7 +192,7 @@ namespace EMAS.Service.Connection
             return locationDataAccess.Select();
         }
 
-        public Dictionary<int,string> SelectNamedLocations()
+        public Dictionary<int, string> SelectNamedLocations()
         {
             Dictionary<int, string> namedLocations = [];
             foreach (Location location in SelectLocations())
@@ -207,7 +202,7 @@ namespace EMAS.Service.Connection
             return namedLocations;
         }
 
-        public List<HistoryEntryBase> SelectHistoryEntryByEquipmentId(int id)
+        public List<HistoryEntry> SelectHistoryForObject(IStorableObject storableObject)
         {
             return historyEntryDataAccess.SelectByEquipmentId(id);
         }
@@ -288,7 +283,7 @@ namespace EMAS.Service.Connection
                     {
                         if (storableObjectInEvent.Id == storableObjectInLocation.Id)
                         {
-                            locationChangedId = location.Id; 
+                            locationChangedId = location.Id;
                             break;
                         }
                     }
