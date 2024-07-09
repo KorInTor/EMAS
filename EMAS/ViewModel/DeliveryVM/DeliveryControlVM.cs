@@ -1,40 +1,34 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Service;
-using EMAS.Windows.Dialogue.Delivery;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EMAS.ViewModel.DeliveryVM
 {
     public partial class DeliveryControlVM : ObservableObject
     {
-        public event Action<Delivery> DeliveryConfirmationRequested;
+        public event Action<SentEvent> DeliveryConfirmationRequested;
 
         [ObservableProperty]
-        private ObservableCollection<Delivery> _filteredDeliveries;
+        private ObservableCollection<SentEvent> _filteredDeliveries;
 
         [ObservableProperty]
-        private Delivery _selectedDelivery;
+        private SentEvent _selectedDelivery;
 
         [ObservableProperty]
-        private List<Delivery> _incomingDeliveries;
+        private List<SentEvent> _incomingDeliveries;
 
         [ObservableProperty]
-        private List<Delivery> _outgoingDeliveries;
+        private List<SentEvent> _outgoingDeliveries;
 
         [ObservableProperty]
         private bool _isIncomingSelected = true;
 
         [ObservableProperty]
-        private Delivery _desiredDelivery = new(); //Treat DateTime.MinValue as not setted for Filtration.
+        private SentEvent _desiredDelivery = new(); //Treat DateTime.MinValue as not setted for Filtration.
 
         [ObservableProperty]
         private List<IStorableObject> _packageList = [];
@@ -56,7 +50,7 @@ namespace EMAS.ViewModel.DeliveryVM
 
         public DeliveryControlVM()
         {
-            DesiredDelivery.PropertyChanged += FilterDeliveries;
+            //DesiredDelivery.PropertyChanged += FilterDeliveries;
 
             ConfirmDeliveryCommand = new RelayCommand(ConfirmDelivery, CanConfirmDelivery);
             ClearFiltersCommand = new RelayCommand(ClearFilters);
@@ -64,12 +58,11 @@ namespace EMAS.ViewModel.DeliveryVM
 
         private void ClearFilters()
         {
-            //No memory leaks on my duty @Danil.
-            DesiredDelivery.PropertyChanged -= FilterDeliveries;
+            //DesiredDelivery.PropertyChanged -= FilterDeliveries;
 
             DesiredDelivery = new();
 
-            DesiredDelivery.PropertyChanged += FilterDeliveries;
+            //DesiredDelivery.PropertyChanged += FilterDeliveries;
         }
 
         private bool CanConfirmDelivery()
@@ -79,26 +72,26 @@ namespace EMAS.ViewModel.DeliveryVM
 
         private void FilterDeliveries(object? sender, PropertyChangedEventArgs e) //Too bloated. Read SOLID and Refactor.
         {
-            List<Delivery> source = IsIncomingSelected ? IncomingDeliveries : OutgoingDeliveries;
+            List<SentEvent> source = IsIncomingSelected ? IncomingDeliveries : OutgoingDeliveries;
 
-            List<Delivery> filteredList = [];
+            List<SentEvent> filteredList = [];
 
             if (source.Count == 0)
             {
-                FilteredDeliveries = new ObservableCollection<Delivery> (filteredList);
+                FilteredDeliveries = new ObservableCollection<SentEvent>(filteredList);
                 return;
             }
-            
+
             //TODO: Add Actual Filter Logic;
 
-            FilteredDeliveries = new ObservableCollection<Delivery>(source);
+            FilteredDeliveries = new ObservableCollection<SentEvent>(source);
         }
 
-        partial void OnSelectedDeliveryChanged(Delivery value)
+        partial void OnSelectedDeliveryChanged(SentEvent value)
         {
             ConfirmDeliveryCommand.NotifyCanExecuteChanged();
             if (SelectedDelivery != null)
-                PackageList = SelectedDelivery.PackageList;
+                PackageList = SelectedDelivery.ObjectsInEvent;
         }
 
         partial void OnIsIncomingSelectedChanged(bool value)
@@ -107,7 +100,7 @@ namespace EMAS.ViewModel.DeliveryVM
             ConfirmDeliveryCommand.NotifyCanExecuteChanged();
         }
 
-        public void ChagneSourceList(List<Delivery> incomingDeliviries, List<Delivery> outgoingDeliviries, bool canChangeDelivery = false)
+        public void ChagneSourceList(List<SentEvent> incomingDeliviries, List<SentEvent> outgoingDeliviries, bool canChangeDelivery = false)
         {
             IncomingDeliveries = incomingDeliviries;
             OutgoingDeliveries = outgoingDeliviries;

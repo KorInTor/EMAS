@@ -1,20 +1,16 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Service;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EMAS.Service.Connection;
 
 namespace EMAS.ViewModel.DeliveryVM
 {
     public partial class DeliveryConfirmationVM : ObservableObject
     {
-        public event Action<Delivery> DeliveryCompleted;
+        public event Action<ArrivedEvent> DeliveryCompleted;
 
-        private Delivery _deliveryToComplete;
+        private SentEvent _deliveryToComplete;
 
         [ObservableProperty]
         private DateTime _arriveDate;
@@ -28,7 +24,7 @@ namespace EMAS.ViewModel.DeliveryVM
 
         IWindowsDialogueService DialogueService { get; set; }
 
-        public DeliveryConfirmationVM(Delivery deliveryToComplete,IWindowsDialogueService dialogueService)
+        public DeliveryConfirmationVM(SentEvent deliveryToComplete, IWindowsDialogueService dialogueService)
         {
             _deliveryToComplete = deliveryToComplete;
             DialogueService = dialogueService;
@@ -49,7 +45,7 @@ namespace EMAS.ViewModel.DeliveryVM
         {
             if (ArriveDate == null || ArriveComment == null)
                 return false;
-            if (ArriveComment.Trim([' ', '.', ',', '\r', '\n']) == string.Empty || ArriveDate < _deliveryToComplete.DispatchDate)
+            if (ArriveComment.Trim([' ', '.', ',', '\r', '\n']) == string.Empty || ArriveDate > _deliveryToComplete.DateTime)
                 return false;
             return true;
         }
@@ -57,8 +53,9 @@ namespace EMAS.ViewModel.DeliveryVM
         [RelayCommand(CanExecute = nameof(CanCompleteDelivery))]
         private void MakeDeliveryCompleted()
         {
-            _deliveryToComplete.Complete(ArriveDate,ArriveComment);
-            DeliveryCompleted?.Invoke(_deliveryToComplete);
+            ArrivedEvent arrivedEvent = new(new(SessionManager.UserId, 0, EventType.Arrived, _arriveDate, _deliveryToComplete.ObjectsInEvent), ArriveComment, _deliveryToComplete.Id);
+
+            DeliveryCompleted?.Invoke(arrivedEvent);
         }
     }
 }

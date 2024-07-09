@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EMAS.Model.Event;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,14 +27,14 @@ namespace EMAS.Model
         /// <summary>
         /// List of Outgoing deliviries.
         /// </summary>
-        private List<Delivery> _outgoingDeliviries;
+        private List<SentEvent> _outgoingDeliviries;
 
         /// <summary>
         /// List of Incoming deliviries.
         /// </summary>
-        private List<Delivery> _incomingDeliviries;
+        private List<SentEvent> _incomingDeliviries;
 
-        private List<Reservation> _reservations;
+        private List<ReservedEvent> _reservations;
         
         /// <summary>
         /// Return unique id of this site.
@@ -83,7 +84,7 @@ namespace EMAS.Model
         /// <summary>
         /// Return and set list of Delivery going from this site.
         /// </summary>
-        public List<Delivery> OutgoingDeliveries
+        public List<SentEvent> OutgoingDeliveries
         {
             get
             {
@@ -98,7 +99,7 @@ namespace EMAS.Model
         /// <summary>
         /// Return and set list of Incoming Delivery to this site.
         /// </summary>
-        public List<Delivery> IncomingDeliveries
+        public List<SentEvent> IncomingDeliveries
         {
             get
             {
@@ -110,7 +111,7 @@ namespace EMAS.Model
             }
         }
 
-        public List<Reservation> Reservations
+        public List<ReservedEvent> Reservations
         {
             get
             {

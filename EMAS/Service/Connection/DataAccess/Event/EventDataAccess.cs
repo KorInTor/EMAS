@@ -2,7 +2,9 @@
 using EMAS.Model;
 using EMAS.Model.Event;
 using EMAS.Service.Connection.DataAccess.Event;
+using EMAS.Service.Connection.DataAccess.QueryBuilder;
 using Npgsql;
+using System.Windows;
 
 namespace EMAS.Service.Connection.DataAccess
 {
@@ -11,7 +13,9 @@ namespace EMAS.Service.Connection.DataAccess
         private readonly StorableObjectInEventDataAccess objectEventDataAccess = new();
         private readonly DeliveryDataAccess deliveryDataAccess = new();
         private readonly ReservationDataAccess reservationDataAccess = new();
+        private readonly AdditionDataAccess additionDataAccess = new();
 
+        private Dictionary<EventType, Type> TypeEnumToType = new Dictionary<EventType, Type>();
         public EventDataAccess()
         {
         }
@@ -44,7 +48,7 @@ namespace EMAS.Service.Connection.DataAccess
 
                 if (newEvent is AdditionEvent additionEvent)
                 {
-                    InsertAdditionEvent(connection, additionEvent);
+                    additionDataAccess.InsertAdditionEvent(connection, additionEvent);
                 }
                 if (newEvent is SentEvent sentEvent)
                 {
@@ -56,10 +60,16 @@ namespace EMAS.Service.Connection.DataAccess
                 }
                 if (newEvent is ArrivedEvent arrivedEvent)
                 {
+                    if (deliveryDataAccess.IsCompleted([arrivedEvent]))
+                        throw new EventAlreadyCompletedException();
+
                     deliveryDataAccess.Complete(arrivedEvent);
                 }
                 if (newEvent is ReserveEndedEvent reserveEndedEvent)
                 {
+                    if (reservationDataAccess.IsCompleted([reserveEndedEvent]))
+                        throw new EventAlreadyCompletedException();
+
                     reservationDataAccess.Complete(reserveEndedEvent);
                 }
 
@@ -85,301 +95,324 @@ namespace EMAS.Service.Connection.DataAccess
             return true;
         }
 
-        public List<SentEvent> SelectSentEventOutOf()
-
-        private void InsertAdditionEvent(NpgsqlConnection connection, AdditionEvent additionEvent)
+        public List<SentEvent> SelectActiveDeliveriesOutOfLocation(int locationId)
         {
-            using var command = new NpgsqlCommand("INSERT INTO \"event\".addition (event_id, location_id) VALUES(@id, @locatioId); ", connection);
-            command.Parameters.AddWithValue("@id", additionEvent.Id);
-            command.Parameters.AddWithValue("@locatioId", additionEvent.LocationId);
-            command.ExecuteScalar();
-            command.Dispose();
+            var conditions = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id),true);
+
+            IEnumerable<StorableObjectEvent> activeDeliveries = Task.Run(() => SelectAsync([conditions])).Result;
+
+            List<SentEvent> sentEvents = deliveryDataAccess.SelectSentEvent(activeDeliveries);
+
+            return sentEvents;
         }
 
-        public void Delete(StorableObjectEvent objectToDelete)
+        public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
         {
-            throw new NotImplementedException();
-        }
-
-        public StorableObjectEvent? SelectById(long id)
-        {
-            IEnumerable<StorableObjectEvent> foundedEvent = SelectByIds([id]);
-            if (!foundedEvent.Any())
-                return null;
-            else
-                return foundedEvent.First();
-        }
-
-        public IEnumerable<StorableObjectEvent> SelectByIds(IEnumerable<long> idsOfEvents)
-        {
-            List<StorableObjectEvent> storableObjectEvents = [];
-            Dictionary<long, IEnumerable<IStorableObject>> objectsInEventDictionary = objectEventDataAccess.SelectObjectsInEvents(idsOfEvents);
-
-            string query = "SELECT \"date\", employee_id, event_type FROM public.\"event\" WHERE id=@id;";
-
-            var connection = ConnectionPool.GetConnection();
-
-            foreach (long id in idsOfEvents)
-            {
-                using var command = new NpgsqlCommand(query, connection);
-                {
-                    command.Parameters.AddWithValue("@id", id);
-                    var reader = command.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        storableObjectEvents.Add(new StorableObjectEvent(reader.GetInt32(1), id, (EventType)reader.GetInt16(2), reader.GetDateTime(0), [.. objectsInEventDictionary[id]]));
-                    }
-                    reader.Close();
-                }
-            }
-
-            List<long> AdditionEventsIds = [];
-            foreach (var @event in storableObjectEvents)
-            {
-                if (@event.EventType == EventType.Addition)
-                {
-                    AdditionEventsIds.Add(@event.Id);
-                }
-            }
-            var eventIdsLocationIdsDictionary = GetLocationIdsForAdditionEvents([.. AdditionEventsIds], connection);
-
-            for (int i = 0; i < storableObjectEvents.Count; i++)
-            {
-                if (storableObjectEvents[i].EventType == EventType.Addition)
-                    storableObjectEvents[i] = new AdditionEvent(storableObjectEvents[i].EmployeeId, storableObjectEvents[i].Id, EventType.Addition, storableObjectEvents[i].DateTime, storableObjectEvents[i].ObjectsInEvent, (int)eventIdsLocationIdsDictionary[storableObjectEvents[i].Id]);
-            }
-
-            ConnectionPool.ReleaseConnection(connection);
-            return storableObjectEvents;
-        }
-
-        public StorableObjectEvent? SelectLast()
-        {
-            var Connection = ConnectionPool.GetConnection();
-
-            string query = "SELECT id FROM public.\"event\" ORDER BY id DESC LIMIT 1;";
-            using var command = new NpgsqlCommand(query, Connection);
-
-            long? lastId;
-            {
-                lastId = (long?)command.ExecuteScalar();
-                ConnectionPool.ReleaseConnection(Connection);
-            }
-
-            if (lastId == null)
-                return null;
-            else
-                return SelectById((long)lastId);
-        }
-
-        public IEnumerable<StorableObjectEvent> SelectEventsAfter(long id)
-        {
-            var Connection = ConnectionPool.GetConnection();
-
-            List<long> newEventsIds = [];
-
-            string query = "SELECT id FROM public.\"event\" WHERE id > @id";
-
-            using var command = new NpgsqlCommand(query, Connection);
-            {
-                command.Parameters.AddWithValue("@id", id);
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    newEventsIds.Add(reader.GetInt64(0));
-                }
-            }
-            ConnectionPool.ReleaseConnection(Connection);
-
-            return SelectByIds(newEventsIds);
-        }
-
-        public StorableObjectEvent SelectLastForStorableObject(IStorableObject storableObject)
-        {
-            return SelectLastEventsForStorableObject([storableObject]).First().Value;
-        }
-
-        public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObject(IEnumerable<IStorableObject> storableObjects)
-        {
-            var storableObjectLastEventIdDictionary = objectEventDataAccess.SelectLastEventsIdsForStroableObjects(storableObjects);
+            var storableObjectLastEventIdDictionary = objectEventDataAccess.SelectLastEventsIdsForStorableObjects(storableObjects);
             var storableObjectLastEvent = new Dictionary<IStorableObject, StorableObjectEvent>();
 
-            foreach (var storableObjectLastEventId in storableObjectLastEventIdDictionary)
+            foreach (var storableObjectLastEventIdPair in storableObjectLastEventIdDictionary)
             {
-                storableObjectLastEvent.Add(storableObjectLastEventId.Key, SelectById(storableObjectLastEventId.Value));
+                var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.Equal, storableObjectLastEventIdPair.Value);
+                storableObjectLastEvent.Add(storableObjectLastEventIdPair.Key, Select([condition]).FirstOrDefault());
             }
 
             return storableObjectLastEvent;
         }
 
-        private Dictionary<long, int?> GetLocationIdsForAdditionEvents(IEnumerable<long> eventIds, NpgsqlConnection connection)
+        public IEnumerable<StorableObjectEvent> SelectEventsForStorableObject(int storableObjectId)
         {
-            Dictionary<long, int?> additionIdLocationIdDictionary = [];
-            string query = "SELECT location_id FROM \"event\".addition WHERE event_id=@id";
-            foreach (long id in eventIds)
-            {
-                using var command = new NpgsqlCommand(query, connection);
-                {
-                    command.Parameters.AddWithValue("@id", id);
-                    additionIdLocationIdDictionary.Add(id, (int?)command.ExecuteScalar());
-                }
-            }
-
-            return additionIdLocationIdDictionary;
+            var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.Equal, objectEventDataAccess.SelectEventsIdsForStorableObject(storableObjectId));
+            return Select([condition]);
         }
 
-        public List<StorableObjectEvent> SelectEventsForStorableObject(IStorableObject storableObject)
+        public IEnumerable<StorableObjectEvent> Select(IEnumerable<BaseCondition> conditions, Type? typeOfEvent = null)
         {
-            List<StorableObjectEvent> storableObjectEvents = [];
+            var storableObjectEvents = new List<StorableObjectEvent>();
 
-            string query = "SELECT \"date\", employee_id, event_type FROM public.\"event\" WHERE id=@id;";
+            typeOfEvent ??= typeof(StorableObjectEvent);
 
-            var connection = ConnectionPool.GetConnection();
+            using var connection = ConnectionPool.GetConnection();
 
-            foreach (long id in objectEventDataAccess.SelectEventsIdsForStorableObject(storableObject.Id))
+            var queryBuilder = new SelectQueryBuilder(typeOfEvent, conditions);
+
+            using var command = queryBuilder.Build(connection);
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
             {
-                using var command = new NpgsqlCommand(query, connection);
+                var storableObjectEvent = new StorableObjectEvent(
+                    reader.GetInt32(0),
+                    reader.GetInt64(1),
+                    (EventType)reader.GetInt16(2),
+                    reader.GetDateTime(3),
+                    objectEventDataAccess.SelectObjectsInEvent(reader.GetInt64(1))
+                );
+
+                if (typeOfEvent != typeof(StorableObjectEvent))
                 {
-                    command.Parameters.AddWithValue("@id", id);
-                    var reader = command.ExecuteReader();
-                    while (reader.Read())
+                    switch (storableObjectEvent.EventType)
                     {
-                        storableObjectEvents.Add(new StorableObjectEvent(reader.GetInt32(1), id, (EventType)reader.GetInt16(2), reader.GetDateTime(0), [storableObject]));
+                        case EventType.Addition:
+                            storableObjectEvent = new AdditionEvent(storableObjectEvent, reader.GetInt32(4));
+                            break;
+                        case EventType.Arrived:
+                            storableObjectEvent = new ArrivedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt64(5));
+                            break;
+                        case EventType.Sent:
+                            storableObjectEvent = new SentEvent(storableObjectEvent, reader.GetString(4), reader.GetInt32(5), reader.GetInt32(6));
+                            break;
+                        case EventType.Reserved:
+                            storableObjectEvent = new ReservedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt32(5));
+                            break;
+                        case EventType.ReserveEnded:
+                            storableObjectEvent = new ReserveEndedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt64(5));
+                            break;
+                        case EventType.Decommissioned:
+                            throw new NotImplementedException();
+                        case EventType.DataChanged:
+                            throw new NotImplementedException();
                     }
-                    reader.Close();
                 }
-            }
-
-            List<long> AdditionEventsIds = [];
-
-            foreach (var @event in storableObjectEvents)
-            {
-                if (@event.EventType == EventType.Addition)
+                else
                 {
-                    AdditionEventsIds.Add(@event.Id);
+                    List<BaseCondition> conditions1 = [new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.Equal, storableObjectEvent.Id)];
+
+                    switch (storableObjectEvent.EventType)
+                    {
+                        case EventType.Addition:
+                            storableObjectEvent = Select(conditions1, typeof(AdditionEvent)).First();
+                            break;
+                        case EventType.Arrived:
+                            storableObjectEvent = Select(conditions1, typeof(ArrivedEvent)).First();
+                            break;
+                        case EventType.Sent:
+                            storableObjectEvent = Select(conditions1, typeof(SentEvent)).First();
+                            break;
+                        case EventType.Reserved:
+                            storableObjectEvent = Select(conditions1, typeof(ReservedEvent)).First();
+                            break;
+                        case EventType.ReserveEnded:
+                            storableObjectEvent = Select(conditions1, typeof(ReserveEndedEvent)).First();
+                            break;
+                        case EventType.Decommissioned:
+                            throw new NotImplementedException();
+                        case EventType.DataChanged:
+                            throw new NotImplementedException();
+                    }
                 }
-            }
-
-            var eventIdsLocationIdsDictionary = GetLocationIdsForAdditionEvents([.. AdditionEventsIds], connection);
-
-            for (int i = 0; i < storableObjectEvents.Count; i++)
-            {
-                if (storableObjectEvents[i].EventType == EventType.Addition)
-                    storableObjectEvents[i] = new AdditionEvent(storableObjectEvents[i].EmployeeId, storableObjectEvents[i].Id, EventType.Addition, storableObjectEvents[i].DateTime, storableObjectEvents[i].ObjectsInEvent, (int)eventIdsLocationIdsDictionary[storableObjectEvents[i].Id]);
+                storableObjectEvents.Add(storableObjectEvent);
             }
 
             ConnectionPool.ReleaseConnection(connection);
+
             return storableObjectEvents;
         }
-    }
 
-    public class StorableObjectInEventDataAccess
-    {
-        private StorableObjectDataAccess _storableObjectDataAccess = new();
-
-        public void Add(Dictionary<long, IEnumerable<IStorableObject>> evenIdsObjectRelation)
+        public async Task<IEnumerable<StorableObjectEvent>> SelectAsync(IEnumerable<BaseCondition> conditions, Type? typeOfEvent = null)
         {
-            var connection = ConnectionPool.GetConnection();
-            foreach (var eventIdObjectRelation in evenIdsObjectRelation)
+            var storableObjectEvents = new List<StorableObjectEvent>();
+
+            typeOfEvent ??= typeof(StorableObjectEvent);
+
+            using var connection = ConnectionPool.GetConnection();
+
+            var queryBuilder = new SelectQueryBuilder(typeOfEvent, conditions);
+
+            using var command = queryBuilder.Build(connection);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
             {
-                foreach (var storableObject in eventIdObjectRelation.Value)
+                var storableObjectEvent = new StorableObjectEvent(
+                    reader.GetInt32(0),
+                    reader.GetInt64(1),
+                    (EventType)reader.GetInt16(2),
+                    reader.GetDateTime(3),
+                    objectEventDataAccess.SelectObjectsInEvent(reader.GetInt64(1))
+                );
+
+                if (typeOfEvent != typeof(StorableObjectEvent))
                 {
-                    string query = "INSERT INTO public.storable_object_event (storable_object_id, event_id) VALUES (@object_id ,@event_id) ";
-                    using var command = new NpgsqlCommand(query, connection);
-
-                    command.Parameters.AddWithValue("@event_id", eventIdObjectRelation.Key);
-                    command.Parameters.AddWithValue("@object_id", storableObject.Id);
-
-                    command.ExecuteNonQuery();
+                    switch (storableObjectEvent.EventType)
+                    {
+                        case EventType.Addition:
+                            storableObjectEvent = new AdditionEvent(storableObjectEvent, reader.GetInt32(4));
+                            break;
+                        case EventType.Arrived:
+                            storableObjectEvent = new ArrivedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt64(5));
+                            break;
+                        case EventType.Sent:
+                            storableObjectEvent = new SentEvent(storableObjectEvent, reader.GetString(4), reader.GetInt32(5), reader.GetInt32(6));
+                            break;
+                        case EventType.Reserved:
+                            storableObjectEvent = new ReservedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt32(5));
+                            break;
+                        case EventType.ReserveEnded:
+                            storableObjectEvent = new ReserveEndedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt64(5));
+                            break;
+                        case EventType.Decommissioned:
+                            throw new NotImplementedException();
+                        case EventType.DataChanged:
+                            throw new NotImplementedException();
+                    }
                 }
-            }
-            ConnectionPool.ReleaseConnection(connection);
-        }
-
-        public List<IStorableObject> SelectObjectsInEvent(long id)
-        {
-            return new List<IStorableObject>(SelectObjectsInEvents([id])[id]);
-        }
-
-        public Dictionary<IStorableObject, long> SelectLastEventsIdsForStroableObjects(IEnumerable<IStorableObject> storableObjects)
-        {
-            var connection = ConnectionPool.GetConnection();
-            Dictionary<IStorableObject, long> storableObjectIdLastEventIdDictionary = [];
-            string query = "SELECT e.id " +
-                "FROM public.\"event\" AS e " +
-                "JOIN public.storable_object_event AS object_event ON object_event.event_id = e.id " +
-            "WHERE object_event.storable_object_id = @id ORDER BY id DESC LIMIT 1";
-
-            foreach (var stroableObject in storableObjects)
-            {
-                using var command = new NpgsqlCommand(query, connection);
-                command.Parameters.AddWithValue("@id", stroableObject.Id);
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
+                else
                 {
-                    storableObjectIdLastEventIdDictionary.Add(stroableObject, reader.GetInt64(0));
+                    List<BaseCondition> conditions1 = [new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.Equal, storableObjectEvent.Id)];
+
+                    switch (storableObjectEvent.EventType)
+                    {
+                        case EventType.Addition:
+                            storableObjectEvent = SelectAsync(conditions1, typeof(AdditionEvent)).Result.First();
+                            break;
+                        case EventType.Arrived:
+                            storableObjectEvent = SelectAsync(conditions1, typeof(ArrivedEvent)).Result.First();
+                            break;
+                        case EventType.Sent:
+                            storableObjectEvent = SelectAsync(conditions1, typeof(SentEvent)).Result.First();
+                            break;
+                        case EventType.Reserved:
+                            storableObjectEvent = SelectAsync(conditions1, typeof(ReservedEvent)).Result.First();
+                            break;
+                        case EventType.ReserveEnded:
+                            storableObjectEvent = SelectAsync(conditions1, typeof(ReserveEndedEvent)).Result.First();
+                            break;
+                        case EventType.Decommissioned:
+                            throw new NotImplementedException();
+                        case EventType.DataChanged:
+                            throw new NotImplementedException();
+                    }
+                }
+                storableObjectEvents.Add(storableObjectEvent);
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+            
+            return storableObjectEvents;
+        }
+
+        public void Complete(StorableObjectEvent completedEvent)
+        {
+            if (completedEvent is ArrivedEvent arrivedEvent)
+            {
+                deliveryDataAccess.Complete(arrivedEvent);
+            }
+            if (completedEvent is ReserveEndedEvent reserveEndedEvent)
+            {
+                reservationDataAccess.Complete(reserveEndedEvent);
+            }
+        }
+
+        public class StorableObjectInEventDataAccess
+        {
+            private StorableObjectDataAccess _storableObjectDataAccess = new();
+
+            public void Add(Dictionary<long, IEnumerable<IStorableObject>> evenIdsObjectRelation)
+            {
+                var connection = ConnectionPool.GetConnection();
+                foreach (var eventIdObjectRelation in evenIdsObjectRelation)
+                {
+                    foreach (var storableObject in eventIdObjectRelation.Value)
+                    {
+                        string query = "INSERT INTO public.storable_object_event (storable_object_id, event_id) VALUES (@object_id ,@event_id) ";
+                        using var command = new NpgsqlCommand(query, connection);
+
+                        command.Parameters.AddWithValue("@event_id", eventIdObjectRelation.Key);
+                        command.Parameters.AddWithValue("@object_id", storableObject.Id);
+
+                        command.ExecuteNonQuery();
+                    }
+                }
+                ConnectionPool.ReleaseConnection(connection);
+            }
+
+            public List<IStorableObject> SelectObjectsInEvent(long id)
+            {
+                return new List<IStorableObject>(SelectObjectsInEvents([id])[id]);
+            }
+
+            public Dictionary<IStorableObject, long> SelectLastEventsIdsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
+            {
+                return Task.Run(() => SelectLastEventsIdsForStorableObjectsAsync(storableObjects)).Result;
+            }
+
+            public async Task<Dictionary<IStorableObject, long>> SelectLastEventsIdsForStorableObjectsAsync(IEnumerable<IStorableObject> storableObjects)
+            {
+                var storableObjectIdLastEventIdDictionary = new Dictionary<IStorableObject, long>();
+                var ids = storableObjects.Select(o => o.Id).ToArray();
+
+                string query = "SELECT object_event.storable_object_id, MAX(event_id) " +
+                    "FROM public.storable_object_event AS object_event " +
+                    "WHERE object_event.storable_object_id = ANY(@ids) " +
+                    "GROUP BY object_event.storable_object_id ";
+
+                using var connection = ConnectionPool.GetConnection();
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@ids", ids);
+
+                using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var id = reader.GetInt64(0);
+                    var storableObject = storableObjects.First(o => o.Id == id);
+                    storableObjectIdLastEventIdDictionary[storableObject] = reader.GetInt64(1);
                 }
 
+                return storableObjectIdLastEventIdDictionary;
             }
-            ConnectionPool.ReleaseConnection(connection);
 
-            return storableObjectIdLastEventIdDictionary;
-        }
 
-        public Dictionary<long, IEnumerable<IStorableObject>> SelectObjectsInEvents(IEnumerable<long> idsOfEvents)
-        {
-            var connection = ConnectionPool.GetConnection();
-
-            Dictionary<long, IEnumerable<IStorableObject>> EventIdObjectsDictionary = [];
-
-            string query = "SELECT e.id, object_event.storable_object_id " +
-                "FROM public.\"event\" AS e " +
-                "JOIN public.storable_object_event AS object_event ON object_event.event_id = e.id " +
-            "WHERE e.id = @id;";
-
-            foreach (long id in idsOfEvents)
+            public Dictionary<long, List<IStorableObject>> SelectObjectsInEvents(IEnumerable<long> idsOfEvents)
             {
-                List<IStorableObject> objectsInEvent = [];
+                var connection = ConnectionPool.GetConnection();
+
+                var EventIdObjectsDictionary = idsOfEvents.ToDictionary(id => id, id => new List<IStorableObject>());
+
+                string query = "SELECT object_event.event_id, object_event.storable_object_id " +
+                    "FROM public.storable_object_event AS object_event " +
+                    "WHERE object_event.event_id = ANY(@ids) ";
+
+
                 using var command = new NpgsqlCommand(query, connection);
                 {
-                    command.Parameters.AddWithValue("@id", id);
+                    command.Parameters.AddWithValue("@ids", idsOfEvents.ToArray());
 
                     using var reader = command.ExecuteReader();
                     while (reader.Read())
                     {
-                        if (!reader.IsDBNull(1))
-                        {
-                            objectsInEvent.Add(_storableObjectDataAccess.SelectById(reader.GetInt32(1)));
-                        }
+                        EventIdObjectsDictionary[reader.GetInt64(0)].Add(_storableObjectDataAccess.SelectById(reader.GetInt32(1)));
                     }
                 }
-                EventIdObjectsDictionary.Add(id, objectsInEvent);
+
+                ConnectionPool.ReleaseConnection(connection);
+                return EventIdObjectsDictionary;
             }
 
-            ConnectionPool.ReleaseConnection(connection);
-            return EventIdObjectsDictionary;
-        }
-
-        public List<long> SelectEventsIdsForStorableObject(int objectId)
-        {
-            var connection = ConnectionPool.GetConnection();
-
-            List<long> eventsIds = [];
-
-            string query = "SELECT event_id FROM public.storable_object_event WHERE storable_object_id = @id";
-
-            using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@id", objectId);
-
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
+            public List<long> SelectEventsIdsForStorableObject(int objectId)
             {
-                reader.GetInt64(0);
+                var connection = ConnectionPool.GetConnection();
+
+                List<long> eventsIds = [];
+
+                string query = "SELECT event_id FROM public.storable_object_event WHERE storable_object_id = @id";
+
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@id", objectId);
+
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    eventsIds.Add(reader.GetInt64(0));
+                }
+
+                ConnectionPool.ReleaseConnection(connection);
+
+                return eventsIds;
             }
-
-            ConnectionPool.ReleaseConnection(connection);
-
-            return eventsIds;
         }
     }
 }

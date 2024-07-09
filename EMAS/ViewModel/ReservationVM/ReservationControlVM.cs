@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Model.Event;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,21 +10,21 @@ namespace EMAS.ViewModel.ReservationVM
 {
     public partial class ReservationControlVM : ObservableObject
     {
-        public event Action<Reservation> ReservationCompletionRequested;
+        public event Action<ReservedEvent> ReservationCompletionRequested;
 
         private bool _canUserChangeReservation = false;
 
         [ObservableProperty]
-        private Reservation _desiredReservation = new();
+        private ReservedEvent _desiredReservation = new();
 
         [ObservableProperty]
-        private ObservableCollection<Reservation> _filteredReservations;
+        private ObservableCollection<ReservedEvent> _filteredReservations;
 
         [ObservableProperty]
-        private List<Reservation> _reservationSourceList;
+        private List<ReservedEvent> _reservationSourceList;
 
         [ObservableProperty]
-        private Reservation _selectedReservation;
+        private ReservedEvent _selectedReservation;
 
         [ObservableProperty]
         private DateTime? _selectedStartDate;
@@ -38,7 +39,7 @@ namespace EMAS.ViewModel.ReservationVM
         //Treat DateTime.MinValue as not setted for Filtration.
         public ReservationControlVM()
         {
-            DesiredReservation.PropertyChanged += FilterReservations;
+            //DesiredReservation.PropertyChanged += FilterReservations;
 
             ClearFilterCommand = new RelayCommand(ClearFilters);
             EndReservationCommand = new RelayCommand(RequestReservationCompletion, CanEndReservation);
@@ -51,36 +52,36 @@ namespace EMAS.ViewModel.ReservationVM
 
         private void ClearFilters()
         {
-            DesiredReservation.PropertyChanged -= FilterReservations;
+            //DesiredReservation.PropertyChanged -= FilterReservations;
 
             DesiredReservation = new();
 
-            DesiredReservation.PropertyChanged += FilterReservations;
+            //DesiredReservation.PropertyChanged += FilterReservations;
         }
 
         private void FilterReservations(object? sender, PropertyChangedEventArgs e)
         {
             Debug.WriteLine($"Поменялось свойство фильтрации:{e.PropertyName}");
 
-            List<Reservation> filteredList = [];
+            List<ReservedEvent> filteredList = [];
 
             if (ReservationSourceList.Count == 0)
             {
-                FilteredReservations = new ObservableCollection<Reservation>(filteredList);
+                FilteredReservations = new ObservableCollection<ReservedEvent>(filteredList);
                 return;
             }
 
             //TODO: Add Actual Reservation;
 
-            FilteredReservations = new ObservableCollection<Reservation>(ReservationSourceList);
+            FilteredReservations = new ObservableCollection<ReservedEvent>(ReservationSourceList);
         }
 
-        partial void OnSelectedReservationChanged(Reservation value)
+        partial void OnSelectedReservationChanged(ReservedEvent value)
         {
             if (value != null)
             {
                 EndReservationCommand.NotifyCanExecuteChanged();
-                ReservList = value.ReservedObjectsList;
+                ReservList = value.ObjectsInEvent;
             }
         }
 
@@ -88,11 +89,11 @@ namespace EMAS.ViewModel.ReservationVM
         {
             if (value != null)
             {
-                DesiredReservation.StartDate = (DateTime)value;
+                DesiredReservation.DateTime = (DateTime)value;
             }
             else
             {
-                DesiredReservation.StartDate = DateTime.MinValue;
+                DesiredReservation.DateTime = DateTime.MinValue;
             }
         }
 
@@ -102,14 +103,14 @@ namespace EMAS.ViewModel.ReservationVM
             ReservationCompletionRequested?.Invoke(SelectedReservation);
         }
 
-        partial void OnReservationSourceListChanged(List<Reservation> value)
+        partial void OnReservationSourceListChanged(List<ReservedEvent> value)
         {
-            FilterReservations(this,new PropertyChangedEventArgs(nameof(ReservationSourceList)));
+            FilterReservations(this, new PropertyChangedEventArgs(nameof(ReservationSourceList)));
         }
 
-        public void ChangeSourceList(List<Reservation> source, bool canChangeReserv = false)
+        public void ChangeSourceList(List<ReservedEvent> source, bool canChangeReserv = false)
         {
-            ReservationSourceList = new (source);
+            ReservationSourceList = new(source);
             _canUserChangeReservation = canChangeReserv;
         }
     }

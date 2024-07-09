@@ -53,9 +53,9 @@ namespace EMAS.ViewModel
             Task.Run(SyncWithDataBase);
         }
 
-        public static List<HistoryEntryBase> GetHistoryOfEquipmentPiece(int Id)
+        public static List<StorableObjectEvent> GetHistoryOfEquipmentPiece(int Id)
         {
-            return DataBaseClient.GetInstance().SelectHistoryEntryByEquipmentId(Id);
+            return DataBaseClient.GetInstance().SelectForStorableObjectId(Id);
         }
 
         partial void OnCurrentLocationChanged(Location value)
@@ -68,7 +68,7 @@ namespace EMAS.ViewModel
             MainEquipmentVM.LocationInfo = value;
         }
 
-        private void ShowDeliveryConfiramtionWindow(Delivery delivery)
+        private void ShowDeliveryConfiramtionWindow(SentEvent delivery)
         {
             DeliveryConfirmationVM deliveryConfirmationVM = new(delivery, DialogueService);
             deliveryConfirmationVM.DeliveryCompleted += TryCompleteDelivery;
@@ -90,7 +90,7 @@ namespace EMAS.ViewModel
             MainEquipmentVM.UpdateLocationData(CurrentLocation);
         }
 
-        private void ShowReservationCompleteionWindow(Reservation reservationtoComplete)
+        private void ShowReservationCompleteionWindow(ReservedEvent reservationtoComplete)
         {
             ReservationConfirmationVM reservationConfirmationVM = new(reservationtoComplete, DialogueService);
             reservationConfirmationVM.ReservationCompleted += TryCompleteReservation;
@@ -123,9 +123,9 @@ namespace EMAS.ViewModel
             while (true);
         }
 
-        private void TryAddDelivery(Delivery delivery)
+        private void TryAddDelivery(SentEvent delivery)
         {
-            TryAddEvent(delivery, [.. delivery.PackageList]);
+            TryAddEvent(delivery, [.. delivery.ObjectsInEvent]);
         }
 
         private void TryAddEvent(object newEvent, IStorableObject[] storableObjectsInEvent, string succesfullMessage = "Успех")
@@ -149,12 +149,12 @@ namespace EMAS.ViewModel
             }
         }
 
-        private void TryAddReservation(Reservation reservation)
+        private void TryAddReservation(ReservedEvent reservation)
         {
-            TryAddEvent(reservation, [.. reservation.ReservedObjectsList]);
+            TryAddEvent(reservation, [.. reservation.ObjectsInEvent]);
         }
 
-        private void TryCompleteDelivery(Delivery deliveryToComplete)
+        private void TryCompleteDelivery(ArrivedEvent deliveryToComplete)
         {
             TryCompleteEvent(deliveryToComplete);
         }
@@ -163,7 +163,7 @@ namespace EMAS.ViewModel
         {
             try
             {
-                DataBaseClient.GetInstance().Complete(completedEvent);
+                DataBaseClient.GetInstance().Add(completedEvent);
                 DialogueService.Close();
                 DialogueService.ShowSuccesfullMessage(succesfullMessage);
             }
@@ -179,7 +179,7 @@ namespace EMAS.ViewModel
             }
         }
 
-        private void TryCompleteReservation(Reservation reservation)
+        private void TryCompleteReservation(ReserveEndedEvent reservation)
         {
             TryCompleteEvent(reservation);
         }

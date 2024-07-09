@@ -4,12 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:EMAS.Controls.Delivery"
-             xmlns:viewmodel="clr-namespace:EMAS.ViewModel"
+             xmlns:viewmodel="clr-namespace:EMAS.ViewModel.DeliveryVM"
              mc:Ignorable="d" 
              d:DesignHeight="1000" d:DesignWidth="800">
-    <!--<d:Control.DataContext>
+    <d:Control.DataContext>
         <viewmodel:DeliveryControlVM/>
-    </d:Control.DataContext>-->
+    </d:Control.DataContext>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -49,9 +49,9 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>-->
-                    <DataGridTextColumn Header="ID" Binding="{Binding EventDispatchId, Mode=OneWay}" />
-                    <DataGridTextColumn Header="Дата отправления" Binding="{Binding DispatchDate.Date, Mode=OneWay}" />
-                    <DataGridTextColumn Header="Коментарий" Binding="{Binding DispatchComment, Mode=OneWay}" />
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Дата отправления" Binding="{Binding DateTime, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Коментарий" Binding="{Binding Comment, Mode=OneWay}" />
                     <DataGridTextColumn CanUserResize="False" Width="3" IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>
@@ -59,7 +59,7 @@
             <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" Grid.Row="1"/>
 
             <Label Content="Предметы в доставке" Grid.Row="0" Grid.Column="2"/>
-            <ListBox ItemsSource="{Binding SelectedDelivery.PackageList}" DisplayMemberPath="ShortInfo" Grid.Column="2" Grid.Row="1"/>
+            <ListBox ItemsSource="{Binding PackageList}" DisplayMemberPath="ShortInfo" Grid.Column="2" Grid.Row="1"/>
         </Grid>
         </Border>
     

@@ -44,8 +44,8 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>-->
                         <DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
-                        <DataGridTextColumn Header="Дата начала резерва" Binding="{Binding StartDate.Date, Mode=OneWay}" />
-                        <DataGridTextColumn Header="Коментарий" Binding="{Binding ReserveStartInfo, Mode=OneWay}" />
+                        <DataGridTextColumn Header="Дата начала резерва" Binding="{Binding DateTime, Mode=OneWay}" />
+                        <DataGridTextColumn Header="Коментарий" Binding="{Binding Comment, Mode=OneWay}" />
                         <DataGridTextColumn CanUserResize="False" Width="3" IsReadOnly="True"/>
                     </DataGrid.Columns>
                 </DataGrid>
@@ -53,7 +53,7 @@
                 <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" Grid.Row="1"/>
 
                 <Label Content="Предметы в резерве" Grid.Row="0" Grid.Column="2"/>
-                <ListBox ItemsSource="{Binding SelectedReservation.ReservedObjectsList}" DisplayMemberPath="ShortInfo" Grid.Column="2" Grid.Row="1"/>
+                <ListBox ItemsSource="{Binding ReservList}" DisplayMemberPath="ShortInfo" Grid.Column="2" Grid.Row="1"/>
             </Grid>
         </Border>
 

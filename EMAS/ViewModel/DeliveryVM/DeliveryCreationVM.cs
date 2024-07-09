@@ -1,14 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Service;
-using System;
-using System.Collections.Generic;
+using EMAS.Service.Connection;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EMAS.ViewModel.DeliveryVM
 {
@@ -63,7 +60,7 @@ namespace EMAS.ViewModel.DeliveryVM
         [RelayCommand(CanExecute = nameof(CanCreate))]
         private void ConfrimDeliveryCreation()
         {
-            DeliveryCreated?.Invoke(new Delivery(0, departureLocationId, SelectedDestination.Key, DepartureComment, DateTime.Now, new(StorableObjectsInDelivery)));
+            DeliveryCreated?.Invoke(new SentEvent(SessionManager.UserId, 0, EventType.Sent, DateTime.Now, StorableObjectsInDelivery.ToList(), DepartureComment, departureLocationId, SelectedDestination.Key));
         }
 
         [RelayCommand]
@@ -86,10 +83,10 @@ namespace EMAS.ViewModel.DeliveryVM
         {
             if (value.Trim(new char[] { ' ', '.', ',', '\r', '\n' }) != string.Empty)
                 CanCreate = true;
-            else 
+            else
                 CanCreate = false;
         }
 
-        public event Action<Delivery> DeliveryCreated;
+        public event Action<SentEvent> DeliveryCreated;
     }
 }

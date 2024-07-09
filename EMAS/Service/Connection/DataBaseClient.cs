@@ -3,20 +3,20 @@ using EMAS.Model.Event;
 using EMAS.Service.Connection.DataAccess;
 using EMAS.Service.Connection.DataAccess.Event;
 using EMAS.Service.Connection.DataAccess.Interface;
+using EMAS.Service.Connection.DataAccess.QueryBuilder;
 using System.Diagnostics;
 
 namespace EMAS.Service.Connection
 {
     public class DataBaseClient
     {
-        private DeliveryDataAccess deliveryDataAccess;
         private StorableObjectDataAccess storableObjectDataAccess;
-        private ReservationDataAccess reservationDataAccess;
         private ISimpleDataAccess<Employee> employeeDataAccess;
         private ISimpleDataAccess<Location> locationDataAccess;
-        private HistoryEntryDataAccess historyEntryDataAccess;
         private long lastEventId;
         public event Action<List<StorableObjectEvent>> NewEventsOccured;
+        private EventDataAccess eventDataAccess;
+
         public long LastEventId
         {
             get
@@ -28,17 +28,14 @@ namespace EMAS.Service.Connection
                 lastEventId = value;
             }
         }
-        private EventDataAccess eventDataAccess;
         private static DataBaseClient instance;
 
         private DataBaseClient()
         {
-            deliveryDataAccess = new DeliveryDataAccess();
             storableObjectDataAccess = new StorableObjectDataAccess();
-            reservationDataAccess = new ReservationDataAccess();
             employeeDataAccess = new EmployeeDataAccess();
             locationDataAccess = new LocationDataAccess();
-            eventDataAccess = new();
+            eventDataAccess = new EventDataAccess();
         }
 
         public static DataBaseClient GetInstance()
@@ -66,56 +63,40 @@ namespace EMAS.Service.Connection
                 return;
             }
 
-            if (objectToAdd is Delivery newDelivery)
+            if (objectToAdd is StorableObjectEvent objectEvent)
             {
-                deliveryDataAccess.Add(newDelivery);
-                return;
-            }
-
-            if (objectToAdd is Reservation newReservation)
-            {
-                reservationDataAccess.Add(newReservation);
+                eventDataAccess.Add(objectEvent);
                 return;
             }
 
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
-        public void Add(object[] objectToAdd)
+        public void Add(IEnumerable<object> objectToAdd)
         {
-            if (objectToAdd is Employee[] newEmployee)
+            if (objectToAdd is IEnumerable<Employee> newEmployee)
             {
-                employeeDataAccess.Add(newEmployee);
+                employeeDataAccess.Add(newEmployee.ToArray());
                 return;
             }
 
-            if (objectToAdd is Location[] newLocation)
+            if (objectToAdd is IEnumerable<Location> newLocation)
             {
-                locationDataAccess.Add(newLocation);
+                locationDataAccess.Add(newLocation.ToArray());
                 return;
             }
 
-            if (objectToAdd is Delivery[] newDelivery)
+            if (objectToAdd is IEnumerable<StorableObjectEvent> newEvents)
             {
-                deliveryDataAccess.Add(newDelivery);
+                eventDataAccess.Add(newEvents);
                 return;
             }
 
-            if (objectToAdd is Reservation[] newReservation)
-            {
-                reservationDataAccess.Add(newReservation);
-                return;
-            }
             throw new NotSupportedException("Этот тип не поддерживается");
         }
 
         public void Update(object objectToUpdate)
         {
-            if (objectToUpdate is Delivery newDelivery)
-            {
-                deliveryDataAccess.Update(newDelivery);
-                return;
-            }
             if (objectToUpdate is Equipment newEquipment)
             {
                 storableObjectDataAccess.Update(newEquipment);
@@ -138,7 +119,7 @@ namespace EMAS.Service.Connection
         {
             occupiedObject = [];
 
-            foreach (var objectLastEventPair in eventDataAccess.SelectLastEventsForStorableObject(storableObjects))
+            foreach (var objectLastEventPair in eventDataAccess.SelectLastEventsForStorableObjects(storableObjects))
             {
                 if (objectLastEventPair.Value.EventType == EventType.Sent || objectLastEventPair.Value.EventType == EventType.Reserved || objectLastEventPair.Value.EventType == EventType.Decommissioned)
                 {
@@ -152,34 +133,20 @@ namespace EMAS.Service.Connection
                 return false;
         }
 
-        public void Complete(object objecToComplete)
+        public List<SentEvent> GetDeliverysOutOf(int locationId)
         {
-            if (objecToComplete is Delivery completedDelivery)
-            {
-                deliveryDataAccess.Complete(completedDelivery);
-                return;
-            }
-            if (objecToComplete is Reservation completedReservation)
-            {
-                reservationDataAccess.Complete(completedReservation);
-                return;
-            }
-            throw new NotSupportedException("Этот тип не поддерживается");
-        }
-
-        public List<Delivery> GetDeliverysOutOf(int locationId)
-        {
-            return deliveryDataAccess.SelectDeliveryOutOf(locationId);
+            return eventDataAccess.SelectActiveDeliveriesOutOfLocation(locationId);
         }
 
         public List<IStorableObject> SelectStorableObjectOn(int locationId)
         {
-            return new(storableObjectDataAccess.SelectOnLocation(locationId));
+            return storableObjectDataAccess.SelectOnLocation(locationId).ToList();
         }
 
-        public List<Reservation> GetReservationOn(int locationId)
+        public List<ReservedEvent> GetReservationOn(int locationId)
         {
-            return reservationDataAccess.SelectOnLocation(locationId);
+            var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal,locationId);
+            return (List<ReservedEvent>)Task.Run(() => eventDataAccess.SelectAsync([condition],typeof(ReservedEvent))).Result;
         }
 
         public List<Employee> SelectEmployee()
@@ -202,9 +169,9 @@ namespace EMAS.Service.Connection
             return namedLocations;
         }
 
-        public List<HistoryEntry> SelectHistoryForObject(IStorableObject storableObject)
+        public List<StorableObjectEvent> SelectForStorableObjectId(int storableObjectId)
         {
-            return historyEntryDataAccess.SelectByEquipmentId(id);
+            return eventDataAccess.SelectEventsForStorableObject(storableObjectId).ToList();
         }
 
         public void SyncData(List<Location> locationsToSync)
@@ -212,7 +179,11 @@ namespace EMAS.Service.Connection
             if (IsDataUpToDate(out long lastDataBaseEventId))
                 return;
 
-            List<StorableObjectEvent> newStorableObjectEvents = eventDataAccess.SelectEventsAfter(LastEventId).ToList();
+
+            var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.GreaterThan, LastEventId);
+
+            List<StorableObjectEvent> newStorableObjectEvents = eventDataAccess.Select([condition]).ToList();
+
             LastEventId = lastDataBaseEventId;
 
             var locationIdDictionary = new Dictionary<int, Location>();
@@ -236,34 +207,38 @@ namespace EMAS.Service.Connection
             {
                 eventHandlers[newStorableObjectEvent.EventType].Invoke(locationIdDictionary, newStorableObjectEvent);
             }
+
             NewEventsOccured?.Invoke(newStorableObjectEvents);
         }
 
         private void HandleReserveEndedEvent(Dictionary<int, Location> locationIdDictionary, StorableObjectEvent newStorableObjectEvent)
         {
-            Reservation completedReservation = reservationDataAccess.SelectCompletedByEndId(newStorableObjectEvent.Id);
-            locationIdDictionary[completedReservation.LocationId].Reservations.RemoveAll(reservation => reservation.Id == completedReservation.Id);
+            ReserveEndedEvent completedReservation = (ReserveEndedEvent)newStorableObjectEvent;
 
-            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
+            ReservedEvent? reservedEvent = null;
+
+            foreach (var location in locationIdDictionary.Values)
             {
-                if (storableObject is Equipment equipment)
-                {
-                    locationIdDictionary[completedReservation.LocationId].StorableObjectsList.Add(equipment);
-                }
+                reservedEvent = location.Reservations.Where(reservation => reservation.Id == completedReservation.ReserveEventId).FirstOrDefault();
+
+                location.Reservations.RemoveAll(reservation => reservation.Id == completedReservation.ReserveEventId);
+
+                if (reservedEvent != null)
+                    break;
             }
+
+            locationIdDictionary[reservedEvent.LocationId].StorableObjectsList.AddRange(newStorableObjectEvent.ObjectsInEvent);
         }
 
         private void HandleReservedEvent(Dictionary<int, Location> locationIdDictionary, StorableObjectEvent newStorableObjectEvent)
         {
-            var Reservation = reservationDataAccess.SelectById(newStorableObjectEvent.Id);
+            ReservedEvent Reservation = (ReservedEvent)newStorableObjectEvent;
+
             locationIdDictionary[Reservation.LocationId].Reservations.Add(Reservation);
 
-            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
+            foreach (var storableObjectInEvent in newStorableObjectEvent.ObjectsInEvent)
             {
-                if (storableObject is Equipment equipmentInEvent)
-                {
-                    locationIdDictionary[Reservation.LocationId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
-                }
+                locationIdDictionary[Reservation.LocationId].StorableObjectsList.RemoveAll(StorableObjectOnLocation => StorableObjectOnLocation.Id == storableObjectInEvent.Id);
             }
         }
 
@@ -317,37 +292,42 @@ namespace EMAS.Service.Connection
 
         private void HandleSentEvent(Dictionary<int, Location> locationIdDictionary, StorableObjectEvent newStorableObjectEvent)
         {
-            var newDelivery = deliveryDataAccess.SelectById(newStorableObjectEvent.Id);
+            SentEvent newDelivery = (SentEvent)newStorableObjectEvent;
+
             locationIdDictionary[newDelivery.DepartureId].OutgoingDeliveries.Add(newDelivery);
             locationIdDictionary[newDelivery.DestinationId].IncomingDeliveries.Add(newDelivery);
 
             foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
             {
-                if (storableObject is Equipment equipmentInEvent)
-                {
-                    locationIdDictionary[newDelivery.DepartureId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == equipmentInEvent.Id);
-                }
+                locationIdDictionary[newDelivery.DepartureId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == storableObject.Id);
             }
         }
 
         private void HandleArrivalEvent(Dictionary<int, Location> locationIdDictionary, StorableObjectEvent newStorableObjectEvent)
         {
-            Delivery arrivedDelivery = deliveryDataAccess.SelectCompletedByArrivalId(newStorableObjectEvent.Id);
-            locationIdDictionary[arrivedDelivery.DepartureId].OutgoingDeliveries.RemoveAll(delivery => delivery.Id == arrivedDelivery.Id);
-            locationIdDictionary[arrivedDelivery.DestinationId].IncomingDeliveries.RemoveAll(delivery => delivery.Id == arrivedDelivery.Id);
+            ArrivedEvent arrivedDelivery = (ArrivedEvent)newStorableObjectEvent;
 
-            foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
+            SentEvent completedDelivery = null;
+
+            foreach (var location in locationIdDictionary.Values)
             {
-                if (storableObject is Equipment equipment)
-                {
-                    locationIdDictionary[arrivedDelivery.DestinationId].StorableObjectsList.Add(equipment);
-                }
+                completedDelivery = location.OutgoingDeliveries.Where(delivery => delivery.Id == arrivedDelivery.SentEventId).FirstOrDefault();
+                if (completedDelivery != null)
+                    break;
             }
+            
+
+            locationIdDictionary[completedDelivery.DepartureId].OutgoingDeliveries.RemoveAll(delivery => delivery.Id == completedDelivery.Id);
+            locationIdDictionary[completedDelivery.DestinationId].IncomingDeliveries.RemoveAll(delivery => delivery.Id == completedDelivery.Id);
+
+            locationIdDictionary[completedDelivery.DestinationId].StorableObjectsList.AddRange(newStorableObjectEvent.ObjectsInEvent);
         }
 
         private bool IsDataUpToDate(out long lastDataBaseEventId)
         {
-            StorableObjectEvent? lastEvent = eventDataAccess.SelectLast();
+            var condition = new MaxCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id));
+
+            StorableObjectEvent? lastEvent = eventDataAccess.Select([condition]).First();
 
             if (lastEvent is null)
             {

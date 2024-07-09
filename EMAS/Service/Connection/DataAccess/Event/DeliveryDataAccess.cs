@@ -1,16 +1,6 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using EMAS.Exceptions;
-using EMAS.Model;
-using EMAS.Model.Event;
-using EMAS.Service.Connection.DataAccess.Interface;
+﻿using EMAS.Model.Event;
 using Npgsql;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.DirectoryServices;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EMAS.Service.Connection.DataAccess.Event
 {
@@ -25,7 +15,7 @@ namespace EMAS.Service.Connection.DataAccess.Event
             Add([newDelivery]);
         }
 
-        public void Add(SentEvent[] objectToAdd)
+        public void Add(IEnumerable<SentEvent> objectToAdd)
         {
             string query = "INSERT INTO " + FullTableName + " (dispatch_event_id, destination_id, departure_id ,dispatch_info) VALUES (@dispatch_event_id, @destination_id, @departure_id ,@dispatch_info); ";
             var connection = ConnectionPool.GetConnection();
@@ -52,7 +42,7 @@ namespace EMAS.Service.Connection.DataAccess.Event
             Complete([completedDelivery]);
         }
 
-        public void Complete(ArrivedEvent[] objectToComplete)
+        public void Complete(IEnumerable<ArrivedEvent> objectToComplete)
         {
             foreach (var arriveEvent in objectToComplete)
             {
@@ -71,94 +61,81 @@ namespace EMAS.Service.Connection.DataAccess.Event
         public bool IsCompleted(IEnumerable<ArrivedEvent> objectToComplete)
         {
             var connection = ConnectionPool.GetConnection();
-            foreach (var arriveEvent in objectToComplete)
+            using var command = new NpgsqlCommand("SELECT arrival_event_id FROM" + FullTableName + " WHERE dispatch_event_id= ANY(@SentEventIds) ", connection);
+            command.Parameters.AddWithValue("@SentEventIds", objectToComplete.Select(x => x.Id).ToArray());
+            var reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                using var command = new NpgsqlCommand("SELECT arrival_event_id FROM" + FullTableName + " WHERE dispatch_event_id=@SentEventId ", connection);
-                command.Parameters.AddWithValue("@SentEventId", arriveEvent.SentEventId);
-                var reader = command.ExecuteReader();
-                while (reader.Read())
+                if (!reader.IsDBNull(0))
                 {
-                    if (!reader.IsDBNull(0))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
-
             }
 
             ConnectionPool.ReleaseConnection(connection);
             return false;
         }
 
-        /// <summary>
-        /// Получает соединения из пула соединений, делает запрос к базе, инициализирует Delivery найденными значениями.
-        /// </summary>
-        /// <param name="id">Id поиска.</param>
-        /// <returns>Возвращает инициализированные объект Delivery. Если не найдена доставка с заданным Id вовзращает null.</returns>
-        public SentEvent? SelectById(StorableObjectEvent storableObjectEvent)
+        public SentEvent? SelectSentEvent(StorableObjectEvent storableObjectEvent)
         {
-            SentEvent? foundDelivery = null;
+            return SelectSentEvent([storableObjectEvent]).FirstOrDefault();
+        }
 
-            string query = "SELECT D.departure_id, D.destination_id, D.dispatch_info " +
+        public List<SentEvent> SelectSentEvent(IEnumerable<StorableObjectEvent> storableObjectEvents)
+        {
+            List<SentEvent> sentEvents = [];
+
+            string query = "SELECT D.departure_id, D.destination_id, D.dispatch_info, D.dispatch_event_id" +
                                 "FROM " + FullTableName + " AS D " +
-                                "WHERE D.dispatch_event_id = @Id ";
+                                "WHERE D.dispatch_event_id = Any(@ids) ";
 
             var connection = ConnectionPool.GetConnection();
 
             using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Id", storableObjectEvent.Id);
+
+            List<long> ids = storableObjectEvents.Select(x => x.Id).ToList();
+
+            command.Parameters.AddWithValue("@ids", ids.ToArray());
 
             using var reader = command.ExecuteReader();
 
             while (reader.Read())
             {
-                foundDelivery = new(storableObjectEvent, reader.GetString(2), reader.GetInt32(0), reader.GetInt32(1));
+                sentEvents.Add(new(storableObjectEvents.First(x => x.Id == reader.GetInt64(3)), reader.GetString(2), reader.GetInt32(0), reader.GetInt32(1)));
             }
 
-            ConnectionPool.ReleaseConnection(connection);
-            return foundDelivery;
+            return sentEvents;
         }
 
-        /// <summary>
-        /// Получает соединения из пула соединений, делает запрос к базе, инициализирует Delivery найденными значениями.
-        /// </summary>
-        /// <param name="id">Id события завершения доставки.</param>
-        /// <returns>Возвращает инициализированные объект Delivery который уже завершён. Если не найдена доставка с заданным Id вовзращает null.</returns>
-        public Delivery? SelectCompletedByArrivalId(long id)
+        public List<ArrivedEvent> SelectArrivedEvents(IEnumerable<StorableObjectEvent> storableObjectsEvents)
         {
-            Delivery? foundDelivery = null;
+            List<ArrivedEvent> arrivedEvents = [];
 
-            string query = "SELECT D.dispatch_event_id, D.departure_id, D.destination_id, D.dispatch_info " +
+            string query = "SELECT D.dispatch_event_id, D.arrival_info, D.arrival_event_id" +
                                 "FROM " + FullTableName + " AS D " +
-                                "WHERE D.arrival_event_id = @Id ";
+                                "WHERE D.arrival_event_id = Any(@Ids) ";
 
             var connection = ConnectionPool.GetConnection();
 
             using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Id", id);
+            command.Parameters.AddWithValue("@Ids", storableObjectsEvents.Select(x => x.Id).ToArray());
 
             using var reader = command.ExecuteReader();
 
             while (reader.Read())
             {
-                var foundedEvent = eventAccess.SelectById(reader.GetInt32(0));
-                if (foundedEvent == null)
-                    return null;
-                foundDelivery = new(foundedEvent, reader.GetInt32(1), reader.GetInt32(2), reader.GetString(3));
+                arrivedEvents.Add(new(storableObjectsEvents.First(x => x.Id == reader.GetInt64(2)), reader.GetString(1), reader.GetInt64(0)));
             }
 
-            ConnectionPool.ReleaseConnection(connection);
-            return foundDelivery;
+            return arrivedEvents;
         }
 
-        public List<SentEvent> SelectDeliveryOutOf(int locationId)
+        public List<long> SelectActiveDeliveryIdsFromLocation(int locationId)
         {
-            //TODO: Переработать чтобы инициализация был из StorableObjectEvent.
-            var deliveries = new List<SentEvent>();
+            var deliveries = new List<long>();
 
-            string query = "SELECT E.date, D.destination_id, D.dispatch_event_id, D.dispatch_info " +
+            string query = "SELECT D.dispatch_event_id" +
                                 "FROM " + FullTableName + " AS D " +
-                                "JOIN public.\"event\" AS E ON E.id = D.dispatch_event_id " +
                                 "WHERE D.arrival_event_id IS NULL AND D.departure_id = @locationId ";
 
             var connection = ConnectionPool.GetConnection();
@@ -167,10 +144,11 @@ namespace EMAS.Service.Connection.DataAccess.Event
             command.Parameters.AddWithValue("@locationId", locationId);
 
             using var reader = command.ExecuteReader();
+
             while (reader.Read())
             {
-                deliveries.Add(new Delivery(reader.GetInt64(2), locationId, reader.GetInt32(1), reader.GetString(3), reader.GetDateTime(0), storableObjectInEventDataAccess.SelectObjectsInEvent(reader.GetInt64(2))));
-                Debug.WriteLine($"Получили delivery идущее ИЗ Объекта с id - {locationId}");
+                deliveries.Add(reader.GetInt64(0));
+                Debug.WriteLine($"Получили {reader.GetInt64(0)}-delivery идущее ИЗ Объекта с id - {locationId}");
             }
 
             ConnectionPool.ReleaseConnection(connection);
@@ -178,14 +156,36 @@ namespace EMAS.Service.Connection.DataAccess.Event
             return deliveries;
         }
 
-        public void Update(Delivery objectToUpdate)
+        public List<ValueTuple<long, long>> SelectCompletedDeliveryIdsFromLocation(int locationId)
         {
-            throw new NotImplementedException();
+            List<ValueTuple<long, long>> SentIdArrivedIdList = [];
+
+            string query = "SELECT D.dispatch_event_id, D.arrival_event_id" +
+                                "FROM " + FullTableName + " AS D " +
+                                "WHERE D.arrival_event_id IS NOT NULL AND D.departure_id = @locationId ";
+
+            var connection = ConnectionPool.GetConnection();
+
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@locationId", locationId);
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                SentIdArrivedIdList.Add((reader.GetInt64(0), reader.GetInt64(1)));
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+
+            return SentIdArrivedIdList;
         }
 
-        public void Update(Delivery[] objectToUpdate)
+        public string SelectSentEventQuery()
         {
-            throw new NotImplementedException();
+            return "SELECT D.dispatch_event_id FROM " + FullTableName + " AS D WHERE D.arrival_event_id IS NULL AND D.departure_id = " + LocationParameterName;
         }
+
+        public const string LocationParameterName = "@locationId";
     }
 }

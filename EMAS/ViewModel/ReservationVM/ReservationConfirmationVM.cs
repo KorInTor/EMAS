@@ -1,15 +1,16 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Service;
+using EMAS.Service.Connection;
 
 namespace EMAS.ViewModel.ReservationVM
 {
     public partial class ReservationConfirmationVM : ObservableObject
     {
-        public event Action<Reservation> ReservationCompleted;
+        public event Action<ReserveEndedEvent> ReservationCompleted;
 
-        private Reservation _ReservationToComplete;
+        private ReservedEvent _ReservationToComplete;
 
         [ObservableProperty]
         private DateTime _endDate;
@@ -23,7 +24,7 @@ namespace EMAS.ViewModel.ReservationVM
 
         IWindowsDialogueService DialogueService { get; set; }
 
-        public ReservationConfirmationVM(Reservation ReservationToComplete, IWindowsDialogueService dialogueService)
+        public ReservationConfirmationVM(ReservedEvent ReservationToComplete, IWindowsDialogueService dialogueService)
         {
             _ReservationToComplete = ReservationToComplete;
             DialogueService = dialogueService;
@@ -46,7 +47,7 @@ namespace EMAS.ViewModel.ReservationVM
         {
             if (EndDate == null || EndComment == null)
                 return false;
-            if (EndComment.Trim([' ', '.', ',', '\r', '\n']) == string.Empty || EndDate < _ReservationToComplete.StartDate)
+            if (EndComment.Trim([' ', '.', ',', '\r', '\n']) == string.Empty || EndDate > _ReservationToComplete.DateTime)
                 return false;
             return true;
         }
@@ -54,8 +55,9 @@ namespace EMAS.ViewModel.ReservationVM
         [RelayCommand(CanExecute = nameof(CanCompleteReservation))]
         private void MakeReservationCompleted()
         {
-            _ReservationToComplete.Complete(EndDate, EndComment);
-            ReservationCompleted?.Invoke(_ReservationToComplete);
+            ReserveEndedEvent reserveEndedEvent = new(SessionManager.UserId, 0, EventType.ReserveEnded, EndDate, _ReservationToComplete.ObjectsInEvent, EndComment, _ReservationToComplete.Id);
+
+            ReservationCompleted?.Invoke(reserveEndedEvent);
         }
     }
 }

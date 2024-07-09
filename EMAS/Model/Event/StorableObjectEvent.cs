@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EMAS.Model.Event
+﻿namespace EMAS.Model.Event
 {
     public class StorableObjectEvent
     {
@@ -26,10 +20,15 @@ namespace EMAS.Model.Event
             DateTime = storableObjectEvent.DateTime;
         }
 
-        public int EmployeeId { get; set; } = employeeId;
-        public long Id { get; set; } = id;
-        public EventType EventType { get; set; } = eventType;
-        public List<IStorableObject> ObjectsInEvent{get;set;} = storableObjects;
-        public DateTime DateTime { get; set; } = dateTime;
+        public StorableObjectEvent()
+        {
+        }
+
+        public int EmployeeId { get; set; }
+        public long Id { get; set; }
+        public EventType EventType { get; set; }
+        public DateTime DateTime { get; set; }
+        public List<IStorableObject> ObjectsInEvent { get; set; }
+
     }
 }

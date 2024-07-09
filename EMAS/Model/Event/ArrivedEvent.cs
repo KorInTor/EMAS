@@ -12,7 +12,13 @@ namespace EMAS.Model.Event
 
         public string Comment;
 
-        public ArrivedEvent(int employeeId, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, long sentEventId, string comment) : base(employeeId, id, eventType, dateTime, storableObjects)
+        public ArrivedEvent(StorableObjectEvent storableObjectEvent, string comment, long sentEventId) : base(storableObjectEvent)
+        {
+            Comment = comment;
+            SentEventId = sentEventId;
+        }
+
+        public ArrivedEvent(int employeeId, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, string comment, long sentEventId) : base(employeeId, id, eventType, dateTime, storableObjects)
         {
             SentEventId = sentEventId;
             Comment = comment;

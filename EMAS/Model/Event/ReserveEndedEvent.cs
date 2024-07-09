@@ -8,10 +8,18 @@ namespace EMAS.Model.Event
 {
     public class ReserveEndedEvent : StorableObjectEvent
     {
-        public long ReserveEventId;
-        public string Comment;
 
-        public ReserveEndedEvent(int employeeId, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, long reserveEventId, string comment) : base(employeeId, id, eventType, dateTime, storableObjects)
+        public string Comment { get; set; }
+
+        public long ReserveEventId;
+
+        public ReserveEndedEvent(StorableObjectEvent storableObjectEvent, string comment, long reserveEventId) : base(storableObjectEvent)
+        {
+            Comment = comment;
+            ReserveEventId = reserveEventId;
+        }
+
+        public ReserveEndedEvent(int employee, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, string comment, long reserveEventId) : base(employee, id, eventType, dateTime, storableObjects)
         {
             Comment = comment;
             ReserveEventId = reserveEventId;
