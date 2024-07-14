@@ -1,18 +1,24 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using EMAS.Model;
-using EMAS.Service;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EMAS.Model.Event;
 
 namespace EMAS.ViewModel
 {
     public partial class HistoryVM : ObservableObject
     {
         [ObservableProperty]
-        private List<HistoryEntryBase> history;
+        private List<StorableObjectEvent> storableObjectEvents;
+
+        partial void OnStorableObjectEventsChanged(List<StorableObjectEvent> value)
+        {
+            History.Clear();
+            List<StorableObjectEvent> sortedEvents = value.OrderByDescending(x => x.DateTime).ToList();
+            foreach (var @event in sortedEvents)
+            {
+                History.Add(EventStringBuilder.EventToString(@event));
+            }
+        }
+
+        [ObservableProperty]
+        private List<string> history = [];
     }
 }

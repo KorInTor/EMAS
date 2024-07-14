@@ -11,30 +11,6 @@ internal class Program
         MainMenu();
     }
 
-    private static void ReservationTestingMenu()
-    {
-        Console.Clear();
-        try
-        {
-            Console.Write("Trying to connect as PDS");
-            Task task = Task.Run(() => SessionManager.Login("Пряхин", "ps123123"));
-            EmulateBusyness(task);
-        }
-        catch (ConnectionFailedException)
-        {
-            Console.WriteLine("Server connection failed, terminating.");
-            return;
-        }
-        Console.WriteLine("Коменатрий для Резервации:");
-
-        var reservation = new Reservation(0, DateTime.Now, Console.ReadLine(), new(DataBaseClient.GetInstance().SelectStorableObjectOn(1)), 1);
-        DataBaseClient.GetInstance().Add(reservation);
-
-        Console.WriteLine("Коменатрий для Завершения Резервации:");
-        reservation.Complete(DateTime.Now, Console.ReadLine());
-        DataBaseClient.GetInstance().Complete(reservation);
-    }
-
     private static void MainMenu()
     {
         try
@@ -52,10 +28,7 @@ internal class Program
         {
             Console.Clear();
             Console.WriteLine("Choose SubMenu:");
-            Console.WriteLine("1 - Location.");
-            Console.WriteLine("2 - Employee.");
             Console.WriteLine("3 - Equipment.");
-            Console.WriteLine("4 - ReservationTestingMenu.");
             Console.WriteLine("or:");
             Console.WriteLine("C - Clear all Tables.");
             char command;
@@ -75,11 +48,6 @@ internal class Program
                 case '3':
                     {
                         EquipmentMenu();
-                        break;
-                    }
-                case '4':
-                    {
-                        ReservationTestingMenu();
                         break;
                     }
                 case 'C':

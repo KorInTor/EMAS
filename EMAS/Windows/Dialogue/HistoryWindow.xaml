@@ -14,7 +14,7 @@
     <Grid>
 
         <ListBox Name="HistoryListBox" ItemsSource="{Binding History, Mode=OneWay}">
-            <ListBox.ItemContainerStyle>
+            <!--<ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 </Style>
@@ -24,7 +24,7 @@
                 <DataTemplate>
                     <Controls:HistoryEntryControl/>
                 </DataTemplate>
-            </ListBox.ItemTemplate>
+            </ListBox.ItemTemplate>-->
         </ListBox>
     </Grid>
 </Window>

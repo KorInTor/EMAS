@@ -16,5 +16,12 @@ namespace EMAS.Model.Event
                 throw new InvalidOperationException("Событие добавление не может иметь тип отличный от Addition");
             LocationId = locationId;
         }
+
+        public AdditionEvent(StorableObjectEvent storableObjectEvent, int locationId) : base(storableObjectEvent)
+        {
+            if (EventType != EventType.Addition)
+                throw new InvalidOperationException("Событие добавление не может иметь тип отличный от Addition");
+            LocationId = locationId;
+        }
     }
 }
