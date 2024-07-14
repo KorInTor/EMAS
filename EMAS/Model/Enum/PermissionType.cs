@@ -10,6 +10,8 @@ namespace EMAS.Model.Enum
     {
         DeliveryAccess = 1,
         EquipmentAdd = 2,
-        EquipmentEdit = 3
+        EquipmentEdit = 3,
+        MaterialsAdd = 4,
+        MaterialsEdit = 5
     }
 }

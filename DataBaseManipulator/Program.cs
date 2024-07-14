@@ -102,6 +102,7 @@ internal class Program
         {
             Console.Clear();
 
+            Console.WriteLine("0 - Generate list of Materials and add to DB");
             Console.WriteLine("1 - Generate and Insert to DB.");
             Console.WriteLine("2 - Truncate(Clear All Info).");
             Console.WriteLine("3 - Emulate events. (Creates history entrys)");
@@ -112,6 +113,34 @@ internal class Program
 
             switch (command)
             {
+                case '0':
+                    {
+                        Console.WriteLine("Quantity (default = 100): ");
+                        if (!int.TryParse(Console.ReadLine(), out int quantity))
+                            quantity = 100;
+
+                        List<MaterialPiece> randMaterialsList = [];
+                        Console.WriteLine("Generating List");
+                        Task task = Task.Run(() => randMaterialsList = MaterialsFactory.GenerateMaterials(quantity));
+                        EmulateBusyness(task);
+
+                        Console.Write("Getting locationId Ids");
+
+                        Dictionary<int, string> namedLocations = [];
+                        task = Task.Run(() => namedLocations = DataBaseClient.GetInstance().SelectNamedLocations());
+                        EmulateBusyness(task);
+
+                        Console.WriteLine("Sending Materials");
+                        task = Task.Run(() => DistributeMaterialsEvenlyOnLocations(randMaterialsList, namedLocations));
+                        while (!task.IsCompleted)
+                        {
+                            Console.WriteLine($"{randMaterialsList.Count} Left.");
+                            Thread.Sleep(500);
+                        }
+
+                        Console.Write("");
+                        break;
+                    }
                 case '1':
                     {
                         Console.Write("Quantity (default = 100): ");
@@ -123,7 +152,7 @@ internal class Program
                         Task task = Task.Run(() => randEquipmentList = EquipmentFactory.GenereateEquipment(quantity));
                         EmulateBusyness(task);
 
-                        Console.Write("Getting location Ids");
+                        Console.Write("Getting locationId Ids");
 
                         Dictionary<int, string> namedLocations = [];
                         task = Task.Run(() => namedLocations = DataBaseClient.GetInstance().SelectNamedLocations());
@@ -200,6 +229,23 @@ internal class Program
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
+        }
+    }
+
+
+    private static void DistributeMaterialsEvenlyOnLocations(List<MaterialPiece> randMaterialsList, Dictionary<int, string> locations)
+    {
+        int materialPiecesToLocationsRatio = randMaterialsList.Count / locations.Count;
+
+        foreach(int locationId in locations.Keys)
+        {
+            for (int i = 0; i < materialPiecesToLocationsRatio; i++)
+            {
+                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), locationId);
+                randMaterialsList.Remove(randMaterialsList.Last());
+            }
+            if (randMaterialsList.Count > materialPiecesToLocationsRatio + 1)
+                materialPiecesToLocationsRatio++;
         }
     }
 

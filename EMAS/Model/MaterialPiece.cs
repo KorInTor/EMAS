@@ -13,9 +13,9 @@ namespace EMAS.Model
     {
         private int id;
 
-        private int locationId;
-
         private string type;
+
+        private string name;
 
         private string units;
 
@@ -23,9 +23,13 @@ namespace EMAS.Model
 
         private string? extras;
 
+        private string inventoryNumber;
+
         private string storageType;
 
-        private string comment;
+        private string description;
+
+        private string? comment;
 
 
 
@@ -34,16 +38,17 @@ namespace EMAS.Model
             get => id;
             set => SetProperty(ref id, value);
         }
-        public int LocationId
-        {
-            get => locationId;
-            set => SetProperty(ref locationId, value);
-        }
 
         public string Type
         {
             get => type;
             set => SetProperty(ref type, value);
+        }
+
+        public string Name
+        {
+            get => name;
+            set => SetProperty(ref name, value);
         }
         public string Units 
         {
@@ -61,12 +66,22 @@ namespace EMAS.Model
             get => extras;
             set => SetProperty(ref extras, value);
         }
+
+        public string InventoryNumber
+        {
+            get => inventoryNumber;
+            set => SetProperty(ref inventoryNumber, value);
+        }
         public string StorageType 
         {
             get => storageType;
             set => SetProperty(ref storageType, value);
         }
-
+        public string Description
+        {
+            get => description;
+            set => SetProperty(ref description, value);
+        }
         public string Comment 
         {
             get => comment;
