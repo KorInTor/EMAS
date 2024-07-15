@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
+using EMAS.Model.Event;
 using EMAS.Service;
+using EMAS.Service.Connection;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -39,7 +41,7 @@ namespace EMAS.ViewModel.ReservationVM
         [RelayCommand(CanExecute = nameof(CanCreate))]
         private void ConfrimReservationCreation()
         {
-            ReservationCreated?.Invoke(new Reservation(0,ReservStartDate,ReservStartComment,new(StorableObjectsInReservation),LocationIdlocationName.Item1));
+            ReservationCreated?.Invoke(new ReservedEvent(SessionManager.UserId,0,EventType.Reserved,DateTime.Now, [.. StorableObjectsInReservation], ReservStartComment,LocationIdlocationName.Item1));
         }
 
         [RelayCommand]
@@ -74,6 +76,6 @@ namespace EMAS.ViewModel.ReservationVM
                 CanCreate = false;
         }
 
-        public event Action<Reservation> ReservationCreated;
+        public event Action<ReservedEvent> ReservationCreated;
     }
 }
