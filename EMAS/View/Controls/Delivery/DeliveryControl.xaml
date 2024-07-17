@@ -1,0 +1,145 @@
+﻿<UserControl x:Class="EMAS.View.Controls.Delivery.DeliveryControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:EMAS.View.Controls.Delivery"
+             xmlns:viewmodel="clr-namespace:EMAS.ViewModel.DeliveryVM"
+             mc:Ignorable="d" 
+             d:DesignHeight="1000" d:DesignWidth="800">
+    <d:Control.DataContext>
+        <viewmodel:DeliveryControlVM/>
+    </d:Control.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal">
+            <RadioButton Content="Исходящие"/>
+            <RadioButton Content="Входящие" IsChecked="{Binding IsIncomingSelected, UpdateSourceTrigger=PropertyChanged}"/>
+        </StackPanel>
+        <Border BorderBrush="White" BorderThickness="3,3,3,3" Grid.Row="1">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Label Content="Список доставок" Grid.Row="0" Grid.Column="0"/>
+            <DataGrid ItemsSource="{Binding FilteredDeliveries, Mode=OneWay}" AutoGenerateColumns="False" SelectedItem="{Binding SelectedDelivery}" Grid.Column="0" Grid.Row="1">
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                            <MenuItem Header="Принять" Command="{Binding ConfirmDeliveryCommand}"/>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+                <DataGrid.Columns>
+                    <!--<DataGridTemplateColumn Header="">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>-->
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Дата отправления" Binding="{Binding DateTime, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Коментарий" Binding="{Binding Comment, Mode=OneWay}" />
+                    <DataGridTextColumn CanUserResize="False" Width="3" IsReadOnly="True"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <GridSplitter Grid.Column="1" ShowsPreview="False" Width="3" HorizontalAlignment="Center" VerticalAlignment="Stretch" Grid.Row="1"/>
+
+            <Label Content="Предметы в доставке" Grid.Row="0" Grid.Column="2"/>
+            <ListBox ItemsSource="{Binding PackageList}" DisplayMemberPath="ShortInfo" Grid.Column="2" Grid.Row="1"/>
+        </Grid>
+        </Border>
+    
+        <Border BorderBrush="White" Grid.Row="2" BorderThickness="3,3,3,3" >
+            <Grid Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Label Content="Фильтрация по свойствам доставки" Grid.Row="0" Grid.ColumnSpan="10" FontWeight="Bold"/>
+
+                <Label Content="Поиск по Id Доставки:" Grid.Row="1" Grid.Column="0"/>
+                <TextBox Text="{Binding DesiredDelivery.EventDispatchId, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1"/>
+                <Label Content="Дата отправления:" Grid.Row="1" Grid.Column="2"/>
+                <DatePicker SelectedDate="{Binding SelectedDispatchDate, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="3"/>
+
+                <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="2" Command="{Binding ClearFiltersCommand}"/>
+            </Grid>
+        </Border>
+        
+        <Border BorderBrush="White" Grid.Row="3" BorderThickness="3,3,3,3" >
+            <Grid Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.Resources>
+                    <Style TargetType="TextBox">
+                        <Setter Property="Margin" Value="3"/>
+                    </Style>
+                    <Style TargetType="ComboBox">
+                        <Setter Property="Margin" Value="3"/>
+                    </Style>
+                </Grid.Resources>
+
+                <Label Content="Фильтрация по свойствам оборудования в доставке" Grid.Row="0" Grid.ColumnSpan="10" FontWeight="Bold"/>
+
+                <Label Content="Поиск по Id оборудования:" Grid.Row="1" Grid.Column="0"/>
+                <TextBox Text="{Binding DesiredDelivery.Equipment.Id, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1"/>
+                <Label Content="Марка:" Grid.Row="2" Grid.Column="0"/>
+                <TextBox Text="{Binding DesiredDelivery.Equipment.Name, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1"/>
+                <Label Content="Тип:" Grid.Row="3" Grid.Column="0"/>
+                <ComboBox ItemsSource="{Binding GetAllTypes}" Text="{Binding DesiredDelivery.Equipment.Type, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1" IsEditable="True"/>
+                <Label Content="Заводской номер:" Grid.Row="4" Grid.Column="0"/>
+                <TextBox Text="{Binding DesiredDelivery.Equipment.FactoryNumber, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1"/>
+                <Label Content="Инвентарный номер:" Grid.Row="5" Grid.Column="0"/>
+                <TextBox Text="{Binding DesiredDelivery.Equipment.RegistrationNumber, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1"/>
+                <Label Content="Статус:" Grid.Row="6" Grid.Column="0"/>
+                <ComboBox ItemsSource="{Binding GetAllStatuses}" Text="{Binding DesiredDelivery.Equipment.Status, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEditable="True"/>
+
+                <Label Content="Единицы измерений:" Grid.Row="1" Grid.Column="2"/>
+                <ComboBox ItemsSource="{Binding GetAllUnits}" Text="{Binding DesiredDelivery.Equipment.Units, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="3" IsEditable="True"/>
+                <Label Content="Пределы измерения:" Grid.Row="2" Grid.Column="2"/>
+                <ComboBox ItemsSource="{Binding GetAllLimits}" Text="{Binding DesiredDelivery.Equipment.Limit, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="3" IsEditable="True"/>
+                <Label Content="Класс точности:" Grid.Row="3" Grid.Column="2"/>
+                <ComboBox ItemsSource="{Binding GetAllAccuracyClasses}" Text="{Binding DesiredDelivery.Equipment.AccuracyClass, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="3" IsEditable="True"/>
+
+                <!--Доавбить фильтр по тэгам-->
+                <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="10" Command="{Binding ClearFiltersCommand}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

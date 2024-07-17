@@ -7,8 +7,8 @@ using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.ViewModel.DeliveryVM;
 using EMAS.ViewModel.ReservationVM;
-using EMAS.Windows.Dialogue.Delivery;
-using EMAS.Windows.Dialogue.Reservation;
+using Emas.View.Windows.Dialogue.Delivery;
+using Emas.View.Windows.Dialogue.Reservation;
 
 namespace EMAS.ViewModel
 {

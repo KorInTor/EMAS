@@ -1,0 +1,28 @@
+﻿<UserControl x:Class="EMAS.View.Controls.SingleLocationControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:EMAS.View.Controls"
+             xmlns:viewmodel="clr-namespace:EMAS.ViewModel" xmlns:delivery="clr-namespace:EMAS.View.Controls.Delivery"
+             xmlns:reservation="clr-namespace:EMAS.View.Controls.Reservation"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <d:UserControl.DataContext>
+        <viewmodel:SingleLocationVM/>
+    </d:UserControl.DataContext>
+    <Grid>
+        <TabControl x:Name="MainTabControl">
+            <TabItem Header="Оборудование">
+                <local:EquipmentControl DataContext="{Binding DataContext.EquipmentVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            </TabItem>
+            <TabItem Header="Доставки">
+                <delivery:DeliveryControl DataContext="{Binding DataContext.DeliveryControlVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            </TabItem>
+            <TabItem Header="Резерв">
+                <reservation:ReservationControl DataContext="{Binding DataContext.ReservationControlVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            </TabItem>
+            <!--Новые контролы Сюда-->
+        </TabControl>
+    </Grid>
+</UserControl>

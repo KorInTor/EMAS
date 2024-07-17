@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using EMAS.Exceptions;
 using EMAS.Service;
 using EMAS.Service.Connection;
-using EMAS.Windows;
+using Emas.View.Windows;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
