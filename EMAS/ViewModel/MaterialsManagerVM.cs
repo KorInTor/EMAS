@@ -95,7 +95,7 @@ namespace EMAS.ViewModel
             DesiredMaterialPiece.PropertyChanged += FilterMaterials;
 
             DialogueService = new WindowsDialogueService();
-
+            //Debug.WriteLine($"HERE ARE ALL ANSWERS ----->>> {FilteredMaterialsList.Count}");
         }
 
         private void RequestReservationCreation()

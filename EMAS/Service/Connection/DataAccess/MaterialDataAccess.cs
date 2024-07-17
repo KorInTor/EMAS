@@ -5,6 +5,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -66,7 +67,7 @@ namespace EMAS.Service.Connection.DataAccess
                 
                 string query = @"
                     SELECT ""type"", ""name"", unit, quantity, additional_info, inventory_number, storage_place, description
-                    FROM public.equipment
+                    FROM public.material
                     WHERE id = @Id;";
 
                 using var command = new NpgsqlCommand(query, connection);
@@ -84,7 +85,7 @@ namespace EMAS.Service.Connection.DataAccess
                     string storageType = reader.GetString(6);
                     string description = reader.GetString(7);
 
-                    var materials = new MaterialPiece() 
+                    MaterialPiece material = new MaterialPiece() 
                     {
                         Type = type,
                         Name = name,
@@ -95,8 +96,9 @@ namespace EMAS.Service.Connection.DataAccess
                         StorageType = storageType,
                         Description = description
                     };
-
-                    foundedMaterialsList.Add(materials);
+                    var mat = material;
+                    foundedMaterialsList.Add(material);
+                    Debug.WriteLine($"{material.Name} <-- HERE IS A NAME");
                 }
             }
 

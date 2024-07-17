@@ -7,9 +7,9 @@
              xmlns:ViewModel="clr-namespace:EMAS.ViewModel"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Control.DataContext>
+    <d:Control.DataContext>
         <ViewModel:MaterialsManagerVM/>
-    </Control.DataContext>
+    </d:Control.DataContext>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -17,7 +17,7 @@
             <RowDefinition Height="200"/>
         </Grid.RowDefinitions>
 
-        <DataGrid ItemsSource="{Binding FilteredEquipmentList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedEquipment}">
+        <DataGrid ItemsSource="{Binding FilteredMaterialsList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedMaterials}">
             <DataGrid.ContextMenu>
                 <ContextMenu ItemsSource="{Binding NamedCommands}">
                     <ContextMenu.ItemContainerStyle>
@@ -42,7 +42,7 @@
                 <DataGridTextColumn Header="Тип" Binding="{Binding Object.Type, Mode=OneWay}" />
                 <DataGridTextColumn Header="Измеряется в" Binding="{Binding Object.Units, Mode=OneWay}" />
                 <DataGridTextColumn Header="Количество" Binding="{Binding Object.Amount, Mode=OneWay}" />
-                <DataGridTextColumn Header="Дополнительно" Binding="{Binding Object.Exrtas, Mode=OneWay}" />
+                <DataGridTextColumn Header="Дополнительно" Binding="{Binding Object.Extras, Mode=OneWay}" />
                 <DataGridTextColumn Header="Инвентарный номер" Binding="{Binding Object.InventoryNumber, Mode=OneWay}"/>
                 <DataGridTextColumn Header="Тип хранения" Binding="{Binding Object.StorageType, Mode=OneWay}"/>
                 <DataGridTextColumn Header="Описание" Binding="{Binding Object.Description, Mode=OneWay}"/>

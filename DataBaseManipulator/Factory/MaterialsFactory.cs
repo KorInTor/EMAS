@@ -1,6 +1,7 @@
 ﻿using EMAS.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -85,13 +86,17 @@ namespace DataBaseManipulator.Factory
             {
                 MaterialPiece randMaterialPiece = new MaterialPiece();
                 randMaterialPiece.Amount = GenerateAmount(amountToGenerate);
-                randMaterialPiece.Comment = "";
+                randMaterialPiece.Comment = string.Empty;
                 randMaterialPiece.StorageType = GenerateStorageTypes();
                 randMaterialPiece.Extras = string.Empty;
                 randMaterialPiece.Name = GenerateName();
                 randMaterialPiece.InventoryNumber = GenerateInventoryNumber();
-                randMaterialPiece.Type = GenerateStorageTypes();
+                randMaterialPiece.Type = GenerateTypes();
                 randMaterialPiece.Description = GenerateDescription();
+                randMaterialPiece.Units = GenerateUnits();
+
+                materials.Add(randMaterialPiece);
+                Debug.WriteLine(randMaterialPiece.Name);
             }
 
             return materials;

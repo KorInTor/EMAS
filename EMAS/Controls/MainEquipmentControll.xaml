@@ -15,7 +15,7 @@
                 <local:EquipmentControl DataContext="{Binding DataContext.EquipmentVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             </TabItem>
             <TabItem Header="Материалы">
-                <local:MaterialsControl DataContext="{Binding DataContext.MaterialsVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                <local:AlternativeMaterialsControl DataContext="{Binding DataContext.MaterialsVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
             </TabItem>
             <TabItem Header="Доставки">
                 <delivery:DeliveryControl DataContext="{Binding DataContext.DeliveryControlVM, RelativeSource={RelativeSource AncestorType=UserControl}}"/>

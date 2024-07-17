@@ -49,7 +49,7 @@ namespace EMAS.ViewModel
         private ValueTuple<List<Equipment>, List<MaterialPiece>> SplitByTypes(IEnumerable<IStorableObject> storableObjects)
         {
             List<Equipment> equipmentList = [];
-            List<MaterialPiece> materialList = [];
+            List<MaterialPiece> materialList = []; //<<<---- this mfer is empty for some reason
 
             foreach (var storableObject in storableObjects)
             {

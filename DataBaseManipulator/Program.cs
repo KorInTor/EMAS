@@ -3,6 +3,7 @@ using EMAS.Exceptions;
 using EMAS.Model;
 using EMAS.Service.Connection;
 using Npgsql;
+using System.Diagnostics;
 
 internal class Program
 {
@@ -89,7 +90,7 @@ internal class Program
 
                         List<MaterialPiece> randMaterialsList = [];
                         Console.WriteLine("Generating List");
-                        Task task = Task.Run(() => randMaterialsList = MaterialsFactory.GenerateMaterials(quantity));
+                        Task task = Task.Run(() => { randMaterialsList = MaterialsFactory.GenerateMaterials(quantity);});
                         EmulateBusyness(task);
 
                         Console.Write("Getting locationId Ids");
@@ -99,7 +100,7 @@ internal class Program
                         EmulateBusyness(task);
 
                         Console.WriteLine("Sending Materials");
-                        task = Task.Run(() => DistributeMaterialsEvenlyOnLocations(randMaterialsList, namedLocations));
+                        task = Task.Run(() => DistributeMaterialsListEvenlyOnLocatinos(randMaterialsList, namedLocations));
                         while (!task.IsCompleted)
                         {
                             Console.WriteLine($"{randMaterialsList.Count} Left.");
@@ -200,7 +201,36 @@ internal class Program
         }
     }
 
+    private static void DistributeMaterialsListEvenlyOnLocatinos(List<MaterialPiece> randMaterialsList, Dictionary<int, string> namedLocations)
+    {
+        foreach (int locationId in namedLocations.Keys)
+        {
+            int remaining = randMaterialsList.Count / namedLocations.Keys.Count;
+            while (remaining != 0)
+            {
+                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), locationId);
+                randMaterialsList.RemoveAt(randMaterialsList.Count - 1);
+                remaining -= 1;
+            }
+        }
 
+        if (randMaterialsList.Count > 0)
+        {
+            int remaining = randMaterialsList.Count;
+            while (remaining != 0)
+            {
+                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), namedLocations.Keys.Last());
+                randMaterialsList.RemoveAt(randMaterialsList.Count - 1);
+                remaining -= 1;
+            }
+        }
+    }
+
+    /// <summary>
+    /// For some unrevield reasons this throws exception saying some sequence is empty, bc fuck you and everything around you
+    /// </summary>
+    /// <param name="randMaterialsList"></param>
+    /// <param name="locations"></param>
     private static void DistributeMaterialsEvenlyOnLocations(List<MaterialPiece> randMaterialsList, Dictionary<int, string> locations)
     {
         int materialPiecesToLocationsRatio = randMaterialsList.Count / locations.Count;
@@ -209,7 +239,7 @@ internal class Program
         {
             for (int i = 0; i < materialPiecesToLocationsRatio; i++)
             {
-                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), locationId);
+                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), locationId);// <-- Here
                 randMaterialsList.Remove(randMaterialsList.Last());
             }
             if (randMaterialsList.Count > materialPiecesToLocationsRatio + 1)
