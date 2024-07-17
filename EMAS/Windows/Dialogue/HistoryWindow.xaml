@@ -12,19 +12,6 @@
         <ViewModel:HistoryVM/>
     </Window.DataContext>
     <Grid>
-
-        <ListBox Name="HistoryListBox" ItemsSource="{Binding History, Mode=OneWay}">
-            <!--<ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                </Style>
-            </ListBox.ItemContainerStyle>
-            
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Controls:HistoryEntryControl/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>-->
-        </ListBox>
+        <ListBox Name="HistoryListBox" ItemsSource="{Binding History, Mode=OneWay}"/>
     </Grid>
 </Window>
