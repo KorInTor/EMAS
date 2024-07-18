@@ -17,21 +17,31 @@ namespace EMAS.Model.Event
             switch (storableObjectEvent)
             {
                 case SentEvent sentEvent:
-                    return SentEventStringBuilder(sentEvent, info);
+                    info = SentEventStringBuilder(sentEvent, info);
+                    break;
                 case ReservedEvent reservedEvent:
-                    return ReservedEventStringBuilder(reservedEvent, info);
+                    info = ReservedEventStringBuilder(reservedEvent, info);
+                    break;
                 case ArrivedEvent arrivedEvent:
-                    return ArrivedEventStringBuilder(arrivedEvent, info);
+                    info = ArrivedEventStringBuilder(arrivedEvent, info);
+                    break;
                 case ReserveEndedEvent reserveEndedEvent:
-                    return ReserveEndedEventStringBuilder(reserveEndedEvent, info);
+                    info = ReserveEndedEventStringBuilder(reserveEndedEvent, info);
+                    break;
                 case AdditionEvent additionEvent:
-                    return AdditionEventStringBuilder(additionEvent, info);
-                    //case EventType.Decommissioned:
-                    //    return DecommissionedEventStringBuilder(storableObjectEvent, info);
-                    //case EventType.DataChanged:
-                    //    return DataChangedEventStringBuilder(storableObjectEvent, info);
+                    info = AdditionEventStringBuilder(additionEvent, info);
+                    break;
+                //case EventType.Decommissioned:
+                //    return DecommissionedEventStringBuilder(storableObjectEvent, info);
+                //case EventType.DataChanged:
+                //    return DataChangedEventStringBuilder(storableObjectEvent, info);
+
+                default:
+                    throw new NotImplementedException("Данный тип события ещё не поддерживается.");
             }
-            throw new NotImplementedException("Данный тип события ещё не поддерживается.");
+
+            info = info.Replace(". ", ".\r\n");
+            return info;
         }
 
         private static string AdditionEventStringBuilder(AdditionEvent additionEvent, string info)
