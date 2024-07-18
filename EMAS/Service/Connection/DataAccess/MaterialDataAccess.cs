@@ -1,15 +1,7 @@
 ﻿using EMAS.Model;
 using EMAS.Service.Connection.DataAccess.Interface;
-using Irony.Parsing;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace EMAS.Service.Connection.DataAccess
 {
@@ -23,11 +15,12 @@ namespace EMAS.Service.Connection.DataAccess
 
                 string query = @"
                INSERT INTO public.material
-               (""type"", ""name"", unit, quantity, additional_info, inventory_number, storage_place, description)
-               VALUES( @Type, @Name, @Units, @Amount, @Extras, @Inventory_Number, @Storage_Type, @Description); ";
+               (id, ""type"", ""name"", unit, quantity, additional_info, inventory_number, storage_place, description)
+               VALUES(@id , @Type, @Name, @Units, @Amount, @Extras, @Inventory_Number, @Storage_Type, @Description); ";
 
                 using (var command = new NpgsqlCommand(query, connection))
                 {
+                    command.Parameters.AddWithValue("@id", materialPiece.Id);
                     command.Parameters.AddWithValue("@Type", materialPiece.Type);
                     command.Parameters.AddWithValue("@Name", materialPiece.Name);
                     command.Parameters.AddWithValue("@Units", materialPiece.Units);
@@ -62,44 +55,42 @@ namespace EMAS.Service.Connection.DataAccess
         {
             List<MaterialPiece> foundedMaterialsList = [];
             var connection = ConnectionPool.GetConnection();
-            foreach (int id in ids)
-            {
-                
-                string query = @"
-                    SELECT ""type"", ""name"", unit, quantity, additional_info, inventory_number, storage_place, description
+            string query = @"
+                    SELECT ""type"", ""name"", unit, quantity, additional_info, inventory_number, storage_place, description, id 
                     FROM public.material
-                    WHERE id = @Id;";
+                    WHERE id = ANY(@Id);";
 
-                using var command = new NpgsqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Id", id);
+            using var command = new NpgsqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Id", ids.ToArray());
 
-                using var reader = command.ExecuteReader();
-                if (reader.Read())
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                int id = reader.GetInt32(8);
+                string type = reader.GetString(0);
+                string name = reader.GetString(1);
+                string unit = reader.GetString(2);
+                int amount = reader.GetInt32(3);
+                string extras = reader.GetString(4);
+                string inventoryNumber = reader.GetString(5);
+                string storageType = reader.GetString(6);
+                string description = reader.GetString(7);
+
+                MaterialPiece material = new MaterialPiece()
                 {
-                    string type = reader.GetString(0);
-                    string name = reader.GetString(1);
-                    string unit = reader.GetString(2);
-                    int amount = reader.GetInt32(3);
-                    string extras = reader.GetString(4);
-                    string inventoryNumber = reader.GetString(5);
-                    string storageType = reader.GetString(6);
-                    string description = reader.GetString(7);
-
-                    MaterialPiece material = new MaterialPiece() 
-                    {
-                        Type = type,
-                        Name = name,
-                        Units = unit,
-                        Amount = amount,
-                        Extras = extras,
-                        InventoryNumber = inventoryNumber,
-                        StorageType = storageType,
-                        Description = description
-                    };
-                    var mat = material;
-                    foundedMaterialsList.Add(material);
-                    Debug.WriteLine($"{material.Name} <-- HERE IS A NAME");
-                }
+                    Id = id,
+                    Type = type,
+                    Name = name,
+                    Units = unit,
+                    Amount = amount,
+                    Extras = extras,
+                    InventoryNumber = inventoryNumber,
+                    StorageType = storageType,
+                    Description = description
+                };
+                var mat = material;
+                foundedMaterialsList.Add(material);
+                Debug.WriteLine($"{material.Name} <-- HERE IS A NAME");
             }
 
             ConnectionPool.ReleaseConnection(connection);

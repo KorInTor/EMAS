@@ -53,6 +53,8 @@ internal class Program
                     }
                 case 'C':
                     {
+                        ClearTable("public.\"event\"");
+                        ClearTable("public.\"storable_object\"");
                         break;
                     }
                 default:
