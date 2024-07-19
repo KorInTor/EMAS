@@ -25,7 +25,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <DataGrid ItemsSource="{Binding FilteredEquipmentList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedEquipment}" AlternationCount="2" RowStyle="{Binding Mode=OneWay, Source={StaticResource AlternatingRowStyle}}">
+        <DataGrid ItemsSource="{Binding FilteredEquipmentList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedEquipment}" AlternationCount="2" RowStyle="{Binding Mode=OneWay, Source={StaticResource AlternatingRowStyle}}" CanUserAddRows="False" CanUserDeleteRows="False">
             <DataGrid.ContextMenu>
                 <ContextMenu ItemsSource="{Binding NamedCommands}">
                     <ContextMenu.ItemContainerStyle>

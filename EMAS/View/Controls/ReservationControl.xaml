@@ -67,51 +67,12 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Border BorderBrush="White" Grid.Row="2" BorderThickness="3,3,3,3" >
-            <Grid Background="White">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-
-                <Label Content="Фильтрация по свойствам резрвации" Grid.Row="0" Grid.ColumnSpan="10" FontWeight="Bold"/>
-
-                <Label Content="Поиск по Id Резервации:" Grid.Row="1" Grid.Column="0"/>
-                <TextBox Text="{Binding DesiredReservation.Id, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1"/>
-                <Label Content="Дата начала резервации:" Grid.Row="1" Grid.Column="2"/>
-                <DatePicker SelectedDate="{Binding SelectedDispatchDate, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="3"/>
-
-                <Label Content="Выбрать сотрудника:" Grid.Row="2" Grid.Column="0"/>
-                <TextBox Text="{Binding DesiredReservation.Id, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1"/>
-
-                <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="3" Command="{Binding ClearFiltersCommand}"/>
-            </Grid>
-        </Border>
-
         <Border BorderBrush="White" Grid.Row="3" BorderThickness="3,3,3,3" >
             <Grid Background="White">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="auto"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="130"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Grid.Resources>
@@ -123,30 +84,6 @@
                     </Style>
                 </Grid.Resources>
 
-                <Label Content="Фильтрация по свойствам оборудования в доставке" Grid.Row="0" Grid.ColumnSpan="10" FontWeight="Bold"/>
-
-                <Label Content="Поиск по Id оборудования:" Grid.Row="1" Grid.Column="0"/>
-                <TextBox Text="{Binding DesiredReservation.Equipment.Id, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1"/>
-                <Label Content="Марка:" Grid.Row="2" Grid.Column="0"/>
-                <TextBox Text="{Binding DesiredReservation.Equipment.Name, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1"/>
-                <Label Content="Тип:" Grid.Row="3" Grid.Column="0"/>
-                <ComboBox ItemsSource="{Binding GetAllTypes}" Text="{Binding DesiredReservation.Equipment.Type, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1" IsEditable="True"/>
-                <Label Content="Заводской номер:" Grid.Row="4" Grid.Column="0"/>
-                <TextBox Text="{Binding DesiredReservation.Equipment.FactoryNumber, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1"/>
-                <Label Content="Инвентарный номер:" Grid.Row="5" Grid.Column="0"/>
-                <TextBox Text="{Binding DesiredReservation.Equipment.RegistrationNumber, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1"/>
-                <Label Content="Статус:" Grid.Row="6" Grid.Column="0"/>
-                <ComboBox ItemsSource="{Binding GetAllStatuses}" Text="{Binding DesiredReservation.Equipment.Status, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" IsEditable="True"/>
-
-                <Label Content="Единицы измерений:" Grid.Row="1" Grid.Column="2"/>
-                <ComboBox ItemsSource="{Binding GetAllUnits}" Text="{Binding DesiredReservation.Equipment.Units, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="3" IsEditable="True"/>
-                <Label Content="Пределы измерения:" Grid.Row="2" Grid.Column="2"/>
-                <ComboBox ItemsSource="{Binding GetAllLimits}" Text="{Binding DesiredReservation.Equipment.Limit, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="3" IsEditable="True"/>
-                <Label Content="Класс точности:" Grid.Row="3" Grid.Column="2"/>
-                <ComboBox ItemsSource="{Binding GetAllAccuracyClasses}" Text="{Binding DesiredReservation.Equipment.AccuracyClass, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="3" IsEditable="True"/>
-
-                <!--Доавбить фильтр по тэгам-->
-                <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="10" Command="{Binding ClearFiltersCommand}"/>
             </Grid>
         </Border>
     </Grid>

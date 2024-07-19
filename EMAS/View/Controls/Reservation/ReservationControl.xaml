@@ -9,6 +9,15 @@
     <d:Control.DataContext>
         <viewmodel:ReservationControlVM/>
     </d:Control.DataContext>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/View/Styles/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -29,7 +38,7 @@
                 </Grid.RowDefinitions>
 
                 <Label Content="Список резервов" Grid.Column="0"/>
-                <DataGrid ItemsSource="{Binding FilteredReservations, Mode=OneWay}" AutoGenerateColumns="False" SelectedItem="{Binding SelectedReservation}" Grid.Column="0" Grid.Row="1">
+                <DataGrid ItemsSource="{Binding FilteredReservations, Mode=OneWay}" AutoGenerateColumns="False" SelectedItem="{Binding SelectedReservation}" Grid.Column="0" Grid.Row="1" AlternationCount="2" RowStyle="{Binding Mode=OneWay, Source={StaticResource AlternatingRowStyle}}" CanUserAddRows="False" CanUserDeleteRows="False">
                     <DataGrid.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="Закончить резерв" Command="{Binding EndReservationCommand}"/>
@@ -57,29 +66,5 @@
             </Grid>
         </Border>
 
-        <Border BorderBrush="White" Grid.Row="2" BorderThickness="3,3,3,3" >
-            <Grid Background="White">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="130"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="130"/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-
-                <Label Content="Фильтрация по свойствам резерва" Grid.Row="0" Grid.ColumnSpan="10" FontWeight="Bold"/>
-
-                <Label Content="Поиск по Id резерва:" Grid.Row="1" Grid.Column="0"/>
-                <TextBox Text="{Binding DesiredReservation.Id, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1"/>
-                <Label Content="Дата начала резерва:" Grid.Row="1" Grid.Column="2"/>
-                <DatePicker SelectedDate="{Binding SelectedStartDate, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="3"/>
-
-                <Button Content="Очистить фильтры" Grid.Column="3" Grid.Row="2" Command="{Binding ClearFiltersCommand}"/>
-            </Grid>
-        </Border>
     </Grid>
 </UserControl>

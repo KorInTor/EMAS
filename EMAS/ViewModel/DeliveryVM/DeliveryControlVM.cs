@@ -13,7 +13,7 @@ namespace EMAS.ViewModel.DeliveryVM
         public event Action<SentEvent> DeliveryConfirmationRequested;
 
         [ObservableProperty]
-        private ObservableCollection<SentEvent> _filteredDeliveries;
+        private ObservableCollection<SentEvent> _filteredDeliveries = [];
 
         [ObservableProperty]
         private SentEvent _selectedDelivery;
@@ -45,6 +45,8 @@ namespace EMAS.ViewModel.DeliveryVM
 
         private void ConfirmDelivery()
         {
+            if (!CanConfirmDelivery())
+                return;
             DeliveryConfirmationRequested?.Invoke(SelectedDelivery);
         }
 
@@ -74,17 +76,12 @@ namespace EMAS.ViewModel.DeliveryVM
         {
             List<SentEvent> source = IsIncomingSelected ? IncomingDeliveries : OutgoingDeliveries;
 
-            List<SentEvent> filteredList = [];
-
-            if (source.Count == 0)
-            {
-                FilteredDeliveries = new ObservableCollection<SentEvent>(filteredList);
-                return;
-            }
-
             //TODO: Add Actual Filter Logic;
-
-            FilteredDeliveries = new ObservableCollection<SentEvent>(source);
+            FilteredDeliveries.Clear();
+            foreach (var delivery in source)
+            {
+                FilteredDeliveries.Add(delivery);
+            }
         }
 
         partial void OnSelectedDeliveryChanged(SentEvent value)

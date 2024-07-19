@@ -10,6 +10,15 @@
     <d:Control.DataContext>
         <viewmodel:DeliveryControlVM/>
     </d:Control.DataContext>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/View/Styles/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -34,7 +43,7 @@
             </Grid.RowDefinitions>
 
             <Label Content="Список доставок" Grid.Row="0" Grid.Column="0"/>
-            <DataGrid ItemsSource="{Binding FilteredDeliveries, Mode=OneWay}" AutoGenerateColumns="False" SelectedItem="{Binding SelectedDelivery}" Grid.Column="0" Grid.Row="1">
+                <DataGrid ItemsSource="{Binding FilteredDeliveries, Mode=OneWay}" AutoGenerateColumns="False" SelectedItem="{Binding SelectedDelivery}" Grid.Column="0" Grid.Row="1" AlternationCount="2" RowStyle="{Binding Mode=OneWay, Source={StaticResource AlternatingRowStyle}}" CanUserAddRows="False" CanUserDeleteRows="False">
                 <DataGrid.ContextMenu>
                     <ContextMenu>
                             <MenuItem Header="Принять" Command="{Binding ConfirmDeliveryCommand}"/>
@@ -51,7 +60,14 @@
                     <DataGridTextColumn Header="ID" Binding="{Binding Id, Mode=OneWay}" />
                     <DataGridTextColumn Header="Дата отправления" Binding="{Binding DateTime, Mode=OneWay}" />
                     <DataGridTextColumn Header="Коментарий" Binding="{Binding Comment, Mode=OneWay}" />
-                    <DataGridTextColumn CanUserResize="False" Width="3" IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Name="ViewHistoryButton" Content="Принять" Command="{Binding DataContext.ConfirmDeliveryCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:DeliveryControl}}}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn CanUserResize="False" Width="3" IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>
 
