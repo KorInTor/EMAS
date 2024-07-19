@@ -77,14 +77,13 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="130"/>
                     <ColumnDefinition/>
-                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <Button Content="Добавить" Grid.Column="0" Grid.Row="10" Command="{Binding OpenAdditionWindow}"/>
-                <Button Content="Отправить" Grid.Column="0" Grid.Row="10" Command="{Binding CreateDeliveryCommand}"/>
+                <Button Content="Добавить" Grid.Column="0" Grid.Row="0" Command="{Binding OpenAdditionWindow}"/>
+                <Button Content="Отправить" Grid.Column="1" Grid.Row="0" Command="{Binding CreateDeliveryCommand}"/>
             </Grid>
         </Border>
     </Grid>
