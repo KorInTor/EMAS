@@ -73,6 +73,16 @@ namespace EMAS.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Byte[].
         /// </summary>
+        public static byte[] Spiner {
+            get {
+                object obj = ResourceManager.GetObject("Spiner", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Byte[].
+        /// </summary>
         public static byte[] synchronizeIcon {
             get {
                 object obj = ResourceManager.GetObject("synchronizeIcon", resourceCulture);

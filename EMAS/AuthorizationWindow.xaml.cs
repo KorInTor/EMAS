@@ -22,7 +22,20 @@ namespace EMAS
         {
             InitializeComponent();
             AuthorizationVM dataContext = (AuthorizationVM)this.DataContext;
-            //dataContext.LoginSucceeded += Hide;
+            dataContext.LoginStarted += ShowThrobber;
+            dataContext.LoginFailed += HideThrobber;
+        }
+
+        private void HideThrobber(string obj)
+        {
+            LoginInputGroupBox.Visibility = Visibility.Visible;
+            LoadingSpinner.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowThrobber()
+        {
+            LoginInputGroupBox.Visibility = Visibility.Hidden;
+            LoadingSpinner.Visibility = Visibility.Visible;
         }
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)

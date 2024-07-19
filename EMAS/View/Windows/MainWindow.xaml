@@ -8,7 +8,7 @@
         xmlns:viewmodel="clr-namespace:EMAS.ViewModel"
         xmlns:properties="clr-namespace:EMAS.Properties"
         mc:Ignorable="d"
-        Title="EquipmentWindow" Height="1100" Width="1200">
+        Title="Главное окно" Height="554" Width="1200">
     <Window.DataContext>
         <viewmodel:LocationController/>
     </Window.DataContext>
@@ -17,18 +17,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Menu Grid.Row="0" Height="25" VerticalAlignment="Top">
-            <MenuItem Header="Синхронизировать" Command="{Binding SynchronizeDataCommand}">
-                <MenuItem.Icon>
-                    <Image Source="{Binding Source={x:Static properties:Resources.synchronizeIcon}}" Width="auto" Height="auto"/>
-                </MenuItem.Icon>
-            </MenuItem>
-            <MenuItem Header="Окна" >
-                <MenuItem Header="Окно администрации"/>
-                <Separator />
-            </MenuItem>
-            <MenuItem Header="О программе"/>
-        </Menu>
+        <controlls:TopMenuControl DataContext="{Binding DataContext.TopMenuVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}"/>
         <TabControl x:Name="MainTabControl" SelectedItem="{Binding CurrentLocation}" ItemsSource="{Binding Locations}" DisplayMemberPath="Name" Grid.Row="1">
             <TabControl.ContentTemplate>
                 <DataTemplate>

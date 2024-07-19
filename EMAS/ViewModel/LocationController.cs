@@ -39,6 +39,9 @@ namespace EMAS.ViewModel
         }
 
         public SingleLocationVM MainEquipmentVM { get; set; } = new();
+
+        public TopMenuVM TopMenuVM { get; set; } = new();
+
         public LocationController()
         {
             Locations = DataBaseClient.GetInstance().SelectLocations();
@@ -51,6 +54,8 @@ namespace EMAS.ViewModel
             MainEquipmentVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
             MainEquipmentVM.ReservationControlVM.ReservationCompletionRequested += ShowReservationCompleteionWindow;
             Task.Run(SyncWithDataBase);
+
+            TopMenuVM.DataSyncRequested += SynchronizeData;
         }
 
         public static List<StorableObjectEvent> GetHistoryOfEquipmentPiece(int Id)
@@ -106,7 +111,6 @@ namespace EMAS.ViewModel
             reservationCreationVM.ReservationCreated -= TryAddReservation;
         }
 
-        [RelayCommand]
         private void SynchronizeData()
         {
             DataBaseClient.GetInstance().SyncData(Locations);

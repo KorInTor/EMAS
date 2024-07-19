@@ -36,7 +36,7 @@ namespace EMAS.ViewModel
         private LocationPermission _selectedLocation;
 
         private PermissionInfo currentUserPermissions = SessionManager.PermissionInfo;
-        public static IWindowsDialogueService DialogueService { get; private set; }
+        public static IWindowsDialogueService DialogueService { get; private set; } = new WindowsDialogueService();
 
         public PermissionChangerVM()
         {

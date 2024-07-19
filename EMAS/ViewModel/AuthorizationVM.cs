@@ -1,16 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Emas.View.Windows;
 using EMAS.Exceptions;
 using EMAS.Service;
 using EMAS.Service.Connection;
-using Emas.View.Windows;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 
 namespace EMAS.ViewModel
 {
@@ -18,6 +11,7 @@ namespace EMAS.ViewModel
     {
         public event Action<string> LoginFailed;
         public event Action LoginSucceeded;
+        public event Action LoginStarted;
 
         private RelayCommand _loginCommand;
 
@@ -29,13 +23,10 @@ namespace EMAS.ViewModel
         public static IWindowsDialogueService DialogueService { get; private set; }
         public AuthorizationVM()
         {
-            LetMeInCommand = new RelayCommand(FastLogin);
             DialogueService = new WindowsDialogueService();
         }
 
-        public RelayCommand LoginCommand => _loginCommand ??= new RelayCommand(Login);
-        public RelayCommand LetMeInCommand { get; }
-
+        [RelayCommand]
         private void FastLogin()
         {
             Username = "Пряхин";
@@ -43,14 +34,13 @@ namespace EMAS.ViewModel
             Login();
         }
 
+        [RelayCommand]
         private void Login()
         {
+            LoginStarted?.Invoke();
             try
             {
                 SessionManager.Login(Username, Password);
-                LoginSucceeded?.Invoke();
-                DialogueService.ShowSuccesfullMessage("Вход успешен собираем данные.");
-                DialogueService.ShowWindow<MainWindow>();
             }
             catch (ConnectionFailedException)
             {
@@ -67,6 +57,9 @@ namespace EMAS.ViewModel
                 LoginFailed?.Invoke("Неправильный пароль.");
                 DialogueService.ShowFailMessage("Неправильный пароль.");
             }
+            LoginSucceeded?.Invoke();
+            DialogueService.ShowSuccesfullMessage("Вход успешен собираем данные.");
+            DialogueService.ShowWindow<MainWindow>();
         }
     }
 }

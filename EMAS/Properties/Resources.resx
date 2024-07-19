@@ -121,6 +121,9 @@
   <data name="OilTeamLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\OilTeamLogo.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Spiner" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Spiner.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="synchronizeIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\synchronizeIcon.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
