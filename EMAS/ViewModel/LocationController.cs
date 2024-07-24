@@ -52,10 +52,18 @@ namespace EMAS.ViewModel
             SingleLocVM.EquipmentVM.ReservationCreationRequested += ShowReservationCreationWindow;
             SingleLocVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
             SingleLocVM.ReservationControlVM.ReservationCompletionRequested += ShowReservationCompleteionWindow;
+
+            SingleLocVM.MaterialsVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
+            SingleLocVM.MaterialsVM.ReservationCreationRequested += ShowReservationCreationWindow;
             Task.Run(SyncWithDataBase);
         }
 
         public static List<StorableObjectEvent> GetHistoryOfEquipmentPiece(int Id)
+        {
+            return DataBaseClient.GetInstance().SelectForStorableObjectId(Id);
+        }
+
+        public static List<StorableObjectEvent> GetHistoryOfMaterialPiece(int Id)
         {
             return DataBaseClient.GetInstance().SelectForStorableObjectId(Id);
         }

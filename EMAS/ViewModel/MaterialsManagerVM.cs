@@ -206,7 +206,9 @@ namespace EMAS.ViewModel
 
         private void RequestHistoryWindow()
         {
-            throw new NotImplementedException();
+            HistoryVM historyVM = new HistoryVM();
+            historyVM.StorableObjectEvents = LocationController.GetHistoryOfMaterialPiece(SelectedMaterials.Object.Id);
+            DialogueService.ShowWindow<HistoryWindow>(historyVM);
         }
 
         private void RequestCommentsWindow()
