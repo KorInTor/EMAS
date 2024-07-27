@@ -285,8 +285,7 @@ namespace EMAS.Service.Connection
             AdditionEvent additionEvent = (AdditionEvent)newStorableObjectEvent;
             foreach (var storableObject in additionEvent.ObjectsInEvent)
             {
-                if (storableObject is Equipment equipmentInEvent)
-                    locationIdDictionary[additionEvent.LocationId].StorableObjectsList.Add(equipmentInEvent);
+                locationIdDictionary[additionEvent.LocationId].StorableObjectsList.AddRange(additionEvent.ObjectsInEvent);
             }
         }
 
@@ -299,7 +298,7 @@ namespace EMAS.Service.Connection
 
             foreach (var storableObject in newStorableObjectEvent.ObjectsInEvent)
             {
-                locationIdDictionary[newDelivery.DepartureId].StorableObjectsList.RemoveAll(equipmentOnLocation => equipmentOnLocation.Id == storableObject.Id);
+                locationIdDictionary[newDelivery.DepartureId].StorableObjectsList.RemoveAll(objectOnLocation => objectOnLocation.Id == storableObject.Id);
             }
         }
 

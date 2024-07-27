@@ -3,11 +3,16 @@ using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
 using EMAS.Service;
 using EMAS.Service.Connection;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace EMAS.ViewModel
 {
-    public partial class EquipmentAdditionVM : ObservableObject
+    public partial class MaterialsAdditionVM : ObservableObject
     {
         public event Action AdditionConfirmed;
         public event Action<string> AdditionFailed;
@@ -15,22 +20,20 @@ namespace EMAS.ViewModel
         private int _currentLocationId;
 
         [ObservableProperty]
-        private Equipment _newEquipment = new();
+        private MaterialPiece _newMaterialPiece = new();
 
         [ObservableProperty]
         private RelayCommand _confirmAdditionCommand;
 
-        // Почему тэги отдельным полем идут??
-        [ObservableProperty]
-        private string _tags;
-
         public static IWindowsDialogueService DialogueService { get; private set; }
-        public EquipmentAdditionVM()
+
+        public MaterialsAdditionVM()
         {
             ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
             _currentLocationId = 0;
         }
-        public EquipmentAdditionVM(int locationId)
+
+        public MaterialsAdditionVM(int locationId)
         {
             ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
             _currentLocationId = locationId;
@@ -38,10 +41,9 @@ namespace EMAS.ViewModel
 
         private void ConfirmAddition()
         {
-            try
+            try 
             {
-                NewEquipment.Tags = [.. Tags.Split('\n')];
-                DataBaseClient.GetInstance().Add(NewEquipment, _currentLocationId);
+                DataBaseClient.GetInstance().Add(NewMaterialPiece, _currentLocationId);
                 DialogueService.ShowSuccesfullMessage("Добавленно успешно!");
                 AdditionConfirmed?.Invoke();
             }
@@ -51,11 +53,7 @@ namespace EMAS.ViewModel
                 AdditionFailed?.Invoke(exception.Message);
                 Debug.WriteLine(exception.Message);
             }
-        }
-
-        public void ChangeCurrentLocationId(int id)
-        {
-            _currentLocationId = id;
+            
         }
     }
 }

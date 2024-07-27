@@ -20,6 +20,8 @@ namespace EMAS.ViewModel
         public List<string> Permissions { get; set; }
         //New VM goes here.
         public EquipmentManagerVM EquipmentVM { get; set; } = new();
+
+        public MaterialsManagerVM MaterialsVM { get; set; } = new();
         public DeliveryControlVM DeliveryControlVM { get; set;} = new ();
         public ReservationControlVM ReservationControlVM { get; set; } = new();
         
@@ -30,7 +32,11 @@ namespace EMAS.ViewModel
             EquipmentVM.CurrentLocationId = LocationInfo.Id;
             EquipmentVM.ChangeSourceList(SplitByTypes(LocationInfo.StorableObjectsList).Item1);
 
+            MaterialsVM.CurrentLocationId = LocationInfo.Id;
+            MaterialsVM.ChangeSourceList(SplitByTypes(LocationInfo.StorableObjectsList).Item2);
+
             EquipmentVM.ChangeCommandAccess(Permissions);
+            MaterialsVM.ChangeCommandAccess(Permissions);
             DeliveryControlVM.ChagneSourceList(LocationInfo.IncomingDeliveries,LocationInfo.OutgoingDeliveries,true);
             ReservationControlVM.ChangeSourceList(LocationInfo.Reservations,true);
         }
@@ -43,7 +49,7 @@ namespace EMAS.ViewModel
         private ValueTuple<List<Equipment>, List<MaterialPiece>> SplitByTypes(IEnumerable<IStorableObject> storableObjects)
         {
             List<Equipment> equipmentList = [];
-            List<MaterialPiece> materialList = [];
+            List<MaterialPiece> materialList = []; //<<<---- this mfer is empty for some reason
 
             foreach (var storableObject in storableObjects)
             {

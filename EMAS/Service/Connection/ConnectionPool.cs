@@ -26,7 +26,7 @@ namespace EMAS.Service.Connection
                 if (_connectionString == null)
                 {
                     NpgsqlConnectionStringBuilder builder = new NpgsqlConnectionStringBuilder();
-                    builder.Host = "26.34.196.234";
+                    builder.Host = "localhost";
                     builder.Port = 5432;
                     builder.Database = "praktik";
                     builder.Username = "praktikant";
@@ -87,9 +87,10 @@ namespace EMAS.Service.Connection
         public static void TryConnect()
         {
             using var conection = new NpgsqlConnection(ConnectionString);
+            conection.Open();
             try
             {
-                conection.Open();
+                
                 conection.Close();
             }
             catch (Exception ex)
