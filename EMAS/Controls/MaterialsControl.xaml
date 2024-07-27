@@ -1,0 +1,68 @@
+﻿<UserControl x:Class="EMAS.Controls.MaterialsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:EMAS.Controls"
+             xmlns:ViewModel="clr-namespace:EMAS.ViewModel"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <d:Control.DataContext>
+        <ViewModel:MaterialsManagerVM/>
+    </d:Control.DataContext>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="200"/>
+        </Grid.RowDefinitions>
+
+        <DataGrid ItemsSource="{Binding FilteredMaterialsList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedMaterials}">
+            <DataGrid.ContextMenu>
+                <ContextMenu ItemsSource="{Binding NamedCommands}">
+                    <ContextMenu.ItemContainerStyle>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Header" Value="{Binding Key}"/>
+                            <Setter Property="Command" Value="{Binding Value}"/>
+                        </Style>
+                    </ContextMenu.ItemContainerStyle>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="ID" Binding="{Binding Object.Id, Mode=OneWay}" />
+                <DataGridTextColumn Header="Название" Binding="{Binding Object.Name, Mode=OneWay}" />
+                <DataGridTextColumn Header="Тип" Binding="{Binding Object.Type, Mode=OneWay}" />
+                <DataGridTextColumn Header="Измеряется в" Binding="{Binding Object.Units, Mode=OneWay}" />
+                <DataGridTextColumn Header="Количество" Binding="{Binding Object.Amount, Mode=OneWay}" />
+                <DataGridTextColumn Header="Дополнительно" Binding="{Binding Object.Extras, Mode=OneWay}" />
+                <DataGridTextColumn Header="Инвентарный номер" Binding="{Binding Object.InventoryNumber, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Тип хранения" Binding="{Binding Object.StorageType, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Описание" Binding="{Binding Object.Description, Mode=OneWay}"/>
+                <DataGridTemplateColumn Header="Комментарии">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Name="ViewCommentsButton" Content="Просмотр" 
+                            Command="{Binding DataContext.OpenCommentsWindow, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MaterialsControl}}}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="История">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Name="ViewHistoryButton" Content="Просмотр" 
+                            Command="{Binding DataContext.OpenHistoryWindowCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MaterialsControl}}}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

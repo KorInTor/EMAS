@@ -9,7 +9,7 @@ namespace EMAS.Service.Connection
 {
     public static class ConnectionOptions
     {
-        private static string _host = "26.34.196.234";
+        private static string _host = "localhost";
 
         private static int _port = 5432;
 
