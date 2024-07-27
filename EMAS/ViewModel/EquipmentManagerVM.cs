@@ -201,7 +201,7 @@ namespace EMAS.ViewModel
         private void RequestHistoryWindow()
         {
             HistoryVM historyVM = new HistoryVM();
-            historyVM.StorableObjectEvents = LocationController.GetHistoryOfEquipmentPiece(SelectedEquipment.Object.Id);
+            historyVM.StorableObjectEvents = LocationController.GetHistoryForStorableObject(SelectedEquipment.Object.Id);
             DialogueService.ShowWindow<HistoryWindow>(historyVM);
         }
 

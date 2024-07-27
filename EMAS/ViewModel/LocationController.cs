@@ -58,12 +58,7 @@ namespace EMAS.ViewModel
             Task.Run(SyncWithDataBase);
         }
 
-        public static List<StorableObjectEvent> GetHistoryOfEquipmentPiece(int Id)
-        {
-            return DataBaseClient.GetInstance().SelectForStorableObjectId(Id);
-        }
-
-        public static List<StorableObjectEvent> GetHistoryOfMaterialPiece(int Id)
+        public static List<StorableObjectEvent> GetHistoryForStorableObject(int Id)
         {
             return DataBaseClient.GetInstance().SelectForStorableObjectId(Id);
         }
