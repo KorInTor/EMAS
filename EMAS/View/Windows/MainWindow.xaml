@@ -21,7 +21,7 @@
         <TabControl x:Name="MainTabControl" SelectedItem="{Binding CurrentLocation}" ItemsSource="{Binding Locations}" DisplayMemberPath="Name" Grid.Row="1">
             <TabControl.ContentTemplate>
                 <DataTemplate>
-                    <controlls:SingleLocationControl DataContext="{Binding DataContext.MainEquipmentVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}"/>
+                    <controlls:SingleLocationControl DataContext="{Binding DataContext.SingleLocationVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}"/>
                 </DataTemplate>
             </TabControl.ContentTemplate>
         </TabControl>

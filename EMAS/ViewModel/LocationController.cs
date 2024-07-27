@@ -38,7 +38,7 @@ namespace EMAS.ViewModel
             }
         }
 
-        public SingleLocationVM MainEquipmentVM { get; set; } = new();
+        public SingleLocationVM SingleLocationVM { get; set; } = new();
 
         public TopMenuVM TopMenuVM { get; set; } = new();
 
@@ -49,13 +49,13 @@ namespace EMAS.ViewModel
             DataBaseClient.GetInstance().NewEventsOccured += ShowNewEventsInfo;
             DialogueService = new WindowsDialogueService();
 
-            SingleLocVM.EquipmentVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
-            SingleLocVM.EquipmentVM.ReservationCreationRequested += ShowReservationCreationWindow;
-            SingleLocVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
-            SingleLocVM.ReservationControlVM.ReservationCompletionRequested += ShowReservationCompleteionWindow;
+            SingleLocationVM.EquipmentVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
+            SingleLocationVM.EquipmentVM.ReservationCreationRequested += ShowReservationCreationWindow;
+            SingleLocationVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
+            SingleLocationVM.ReservationControlVM.ReservationCompletionRequested += ShowReservationCompleteionWindow;
 
-            SingleLocVM.MaterialsVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
-            SingleLocVM.MaterialsVM.ReservationCreationRequested += ShowReservationCreationWindow;
+            SingleLocationVM.MaterialsVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
+            SingleLocationVM.MaterialsVM.ReservationCreationRequested += ShowReservationCreationWindow;
             Task.Run(SyncWithDataBase);
 
             TopMenuVM.DataSyncRequested += SynchronizeData;
@@ -72,8 +72,8 @@ namespace EMAS.ViewModel
             {
                 return;
             }
-            SingleLocVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
-            SingleLocVM.LocationInfo = value;
+            SingleLocationVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
+            SingleLocationVM.LocationInfo = value;
         }
 
         private void ShowDeliveryConfiramtionWindow(SentEvent delivery)
@@ -95,7 +95,7 @@ namespace EMAS.ViewModel
         private void ShowNewEventsInfo(List<StorableObjectEvent> list)
         {
             //TODO Add windwos that shows what changed;
-            SingleLocVM.UpdateLocationData(CurrentLocation);
+            SingleLocationVM.UpdateLocationData(CurrentLocation);
         }
 
         private void ShowReservationCompleteionWindow(ReservedEvent reservationtoComplete)

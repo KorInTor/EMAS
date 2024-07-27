@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace EMAS.Controls
+namespace EMAS.View.Controls
 {
     /// <summary>
     /// Interaction logic for MaterialsControl.xaml
