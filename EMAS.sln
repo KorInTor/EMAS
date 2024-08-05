@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Model", "Model\Model.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service", "Service\Service.csproj", "{B27D981D-E786-4422-BC7B-4F581F1D9726}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EMAS_Web", "EMAS_Web\EMAS_Web.csproj", "{19410F05-96D1-4492-8FEC-57A1EC9E5033}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{B27D981D-E786-4422-BC7B-4F581F1D9726}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B27D981D-E786-4422-BC7B-4F581F1D9726}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B27D981D-E786-4422-BC7B-4F581F1D9726}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19410F05-96D1-4492-8FEC-57A1EC9E5033}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19410F05-96D1-4492-8FEC-57A1EC9E5033}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19410F05-96D1-4492-8FEC-57A1EC9E5033}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19410F05-96D1-4492-8FEC-57A1EC9E5033}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
