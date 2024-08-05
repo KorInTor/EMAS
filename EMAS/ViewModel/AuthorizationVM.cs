@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EMAS_WPF;
 using EMAS_WPF.Windows;
 using Model.Exceptions;
 using Service;

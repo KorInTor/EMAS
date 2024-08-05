@@ -2,7 +2,7 @@
 using Model.Event;
 using Service.Connection.DataAccess.QueryBuilder;
 
-namespace Service.Connection.DataAccess.Tests
+namespace Service.TestCase
 {
     public class SelectQueryBuilderTests
     {

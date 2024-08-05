@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WPFView.AdditionWindow"
-        xmlns:ViewModel="clr-namespace:WPFViewModel" x:Class="WPFView.AdditionWindow.EmployeeAddition"
+        xmlns:local="clr-namespace:EMAS_WPF.AdditionWindow"
+        xmlns:ViewModel="clr-namespace:ViewModel" x:Class="EMAS_WPF.AdditionWindow.EmployeeAddition"
         mc:Ignorable="d"
         Title="EmployeeAddition" ResizeMode="NoResize" Height="202" Width="270">
     <Window.DataContext>

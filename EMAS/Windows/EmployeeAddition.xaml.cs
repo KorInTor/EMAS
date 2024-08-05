@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace WPFView.AdditionWindow
+namespace EMAS_WPF.AdditionWindow
 {
     /// <summary>
     /// Логика взаимодействия для EmployeeAddition.xaml

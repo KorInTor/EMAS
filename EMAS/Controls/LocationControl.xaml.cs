@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace WPFView.Control
+namespace EMAS_WPF.Control
 {
     /// <summary>
     /// Логика взаимодействия для LocationControl.xaml

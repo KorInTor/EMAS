@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS_WPF.Windows.Dialogue.Reservation"
-        xmlns:reservation="clr-namespace:WPFView.Controls.Reservation"
+        xmlns:reservation="clr-namespace:EMAS_WPF.Controls.Reservation"
         mc:Ignorable="d"
         Title="ReservationConfirmationWindow" Height="450" Width="800">
     <Grid>

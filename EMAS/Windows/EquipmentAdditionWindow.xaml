@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS_WPF.Windows"
-        xmlns:ViewModel="clr-namespace:WPFViewModel" x:Class="EMAS_WPF.Windows.EquipmentAdditionWindow"
+        xmlns:ViewModel="clr-namespace:ViewModel" x:Class="EMAS_WPF.Windows.EquipmentAdditionWindow"
         mc:Ignorable="d"
         Title="EquipmentAdditionWindow" Height="450" Width="800">
     <Window.DataContext>

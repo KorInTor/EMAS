@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace Service
+namespace EMAS_WPF
 {
     public class WindowsDialogueService : IWindowsDialogueService
     {

@@ -9,6 +9,7 @@ using ViewModel.DeliveryVM;
 using ViewModel.ReservationVM;
 using EMAS_WPF.Windows.Dialogue.Delivery;
 using EMAS_WPF.Windows.Dialogue.Reservation;
+using EMAS_WPF;
 
 namespace ViewModel
 {

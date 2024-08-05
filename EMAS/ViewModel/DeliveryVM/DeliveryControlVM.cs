@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Model;
 using Model.Event;
-using EMAS_Service;
+using EMAS_WPF;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 

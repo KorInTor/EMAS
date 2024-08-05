@@ -6,6 +6,7 @@ using Service;
 using Service.Connection;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using EMAS_WPF;
 
 namespace ViewModel.ReservationVM
 {

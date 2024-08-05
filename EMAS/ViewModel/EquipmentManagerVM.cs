@@ -1,48 +1,44 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Model;
+using Model.Enum;
 using Service;
-using EMAS_WPF.Windows.Dialogue;
+using Service.Connection;
 using EMAS_WPF.Windows;
-using System;
-using System.Collections.Generic;
+using EMAS_WPF.Windows.Dialogue;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Diagnostics;
-using Model.Enum;
-using DocumentFormat.OpenXml.Packaging;
-using EMAS_WPF.Windows;
+using System.Reflection;
+using EMAS_WPF;
 
 namespace ViewModel
 {
-    public partial class MaterialsManagerVM : ObservableObject
+    public partial class EquipmentManagerVM : ObservableObject
     {
         public event Action<int> HistoryWindowRequested;
         public event Action<int> AdditionWindowRequested;
-        public event Action<int, IStorableObject[]> DeliveryCreationRequested;
+        public event Action<int,IStorableObject[]> DeliveryCreationRequested;
         public event Action<int, IStorableObject[]> ReservationCreationRequested;
 
         [ObservableProperty]
-        private List<MaterialPiece> _materialsSourceList = new();
+        private List<Equipment> _equipmentSourceList = new();
 
-        public List<IStorableObject> SelectedMaterialsList
+        public List<IStorableObject> SelectedEquipmentList
         {
             get
             {
                 List<IStorableObject> selectedObjectsList = [];
-                foreach (var selectableMaterials in FilteredMaterialsList)
+                foreach (var selectableEquipment in FilteredEquipmentList)
                 {
-                    if (selectableMaterials.IsSelected)
-                        selectedObjectsList.Add(selectableMaterials.Object);
+                    if (selectableEquipment.IsSelected)
+                        selectedObjectsList.Add(selectableEquipment.Object);
                 }
                 return selectedObjectsList;
             }
         }
 
-        private List<SelectableObject<MaterialPiece>> FiltrationSource { get; set; } = new();
+        private List<SelectableObject<Equipment>> FiltrationSource { get; set; } = new();
 
         public int CurrentLocationId;
 
@@ -66,24 +62,21 @@ namespace ViewModel
         public RelayCommand OpenEditWindow { get; set; }
         public RelayCommand CreateDeliveryCommand { get; set; }
         public RelayCommand CreateReservationCommand { get; set; }
-        public RelayCommand OpenCommentsWindow { get; set; }
 
         [ObservableProperty]
         public Dictionary<string, RelayCommand> _namedCommands = [];
 
         [ObservableProperty]
-        private SelectableObject<MaterialPiece> _selectedMaterials;
+        private SelectableObject<Equipment> _selectedEquipment;
 
         [ObservableProperty]
-        private ObservableCollection<SelectableObject<MaterialPiece>> _filteredMaterialsList;
+        private ObservableCollection<SelectableObject<Equipment>> _filteredEquipmentList;
 
         [ObservableProperty]
-        private MaterialPiece _desiredMaterialPiece = new();
+        private Equipment _desiredEquipment = new();
 
         public static IWindowsDialogueService DialogueService { get; private set; }
-
-
-        public MaterialsManagerVM()
+        public EquipmentManagerVM()
         {
             ClearFiltersCommand = new RelayCommand(ClearFilters);
             OpenHistoryWindowCommand = new RelayCommand(RequestHistoryWindow);
@@ -91,17 +84,16 @@ namespace ViewModel
             OpenEditWindow = new RelayCommand(RequestEditWindow, () => CanEdit);
             CreateDeliveryCommand = new RelayCommand(RequestDeliveryCreation, () => CanSend);
             CreateReservationCommand = new RelayCommand(RequestReservationCreation, () => CanEdit);
-            OpenCommentsWindow = new RelayCommand(RequestCommentsWindow, () => true);
+
             InitCommandDictionary();
-            DesiredMaterialPiece.PropertyChanged += FilterMaterials;
+            DesiredEquipment.PropertyChanged += FilterEquipment;
 
             DialogueService = new WindowsDialogueService();
-            //Debug.WriteLine($"HERE ARE ALL ANSWERS ----->>> {FilteredMaterialsList.Count}");
         }
 
         private void RequestReservationCreation()
         {
-            ReservationCreationRequested?.Invoke(CurrentLocationId, [.. SelectedMaterialsList]);
+            ReservationCreationRequested?.Invoke(CurrentLocationId, [.. SelectedEquipmentList]);
         }
 
         private void InitCommandDictionary()
@@ -113,7 +105,7 @@ namespace ViewModel
 
         private void RequestDeliveryCreation()
         {
-            DeliveryCreationRequested?.Invoke(CurrentLocationId, [.. SelectedMaterialsList]);
+            DeliveryCreationRequested?.Invoke(CurrentLocationId, [.. SelectedEquipmentList]);
         }
 
         private void RequestEditWindow()
@@ -126,33 +118,33 @@ namespace ViewModel
             CanAdd = false;
             CanEdit = false;
             CanSend = false;
-            Dictionary<string, RelayCommand> newNamedCommandList = [];
+            Dictionary<string,RelayCommand> newNamedCommandList = [];
 
-            foreach (string permission in permissions)
+            foreach(string permission in permissions)
             {
                 if (Enum.TryParse(permission, out PermissionType permissionType))
                 {
                     switch (permissionType)
                     {
-                        case PermissionType.MaterialsAdd:
-                            {
-                                CanAdd = true;
+                        case PermissionType.EquipmentAdd:
+                        {
+                            CanAdd = true;
                                 newNamedCommandList.Add("Добавить", OpenAdditionWindow);
-                                break;
-                            }
-                        case PermissionType.MaterialsEdit:
-                            {
-                                CanEdit = true;
+                            break;
+                        }
+                        case PermissionType.EquipmentEdit:
+                        {
+                            CanEdit = true;
                                 newNamedCommandList.Add("Изменить", OpenEditWindow);
                                 newNamedCommandList.Add("Зарезервировать", CreateReservationCommand);
-                                break;
-                            }
+                            break;
+                        }
                         case PermissionType.DeliveryAccess:
-                            {
-                                CanSend = true;
+                        {
+                            CanSend = true;
                                 newNamedCommandList.Add("Отправить", CreateDeliveryCommand);
-                                break;
-                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -160,70 +152,74 @@ namespace ViewModel
             NamedCommands = newNamedCommandList;
         }
 
-        public void ChangeSourceList(List<MaterialPiece> newSource)
+        public void ChangeSourceList(List<Equipment> newSource)
         {
-            MaterialsSourceList = newSource;
+            EquipmentSourceList = newSource;
             FiltrationSource.Clear();
-            foreach (var equipment in MaterialsSourceList)
+            foreach (var equipment in EquipmentSourceList)
             {
                 FiltrationSource.Add(new(equipment));
             }
-            FilterMaterials(this, new PropertyChangedEventArgs(nameof(MaterialsSourceList)));
+            FilterEquipment(this, new PropertyChangedEventArgs(nameof(EquipmentSourceList)));
         }
 
-        private void FilterMaterials(object? sender, PropertyChangedEventArgs e)
+        private void FilterEquipment(object? sender, PropertyChangedEventArgs e)
         {
             Debug.WriteLine($"Поменялось свойство фильтрации:{e.PropertyName}");
             if (FiltrationSource.Count == 0)
             {
-                FilteredMaterialsList = [];
+                FilteredEquipmentList = [];
                 return;
             }
 
             var filteredList = FiltrationSource.Where(selectableObject =>
             {
-                if (selectableObject.Object is not MaterialPiece materialPiece) return false;
+                if (selectableObject.Object is not Equipment equipment) return false;
 
-                return
-                (string.IsNullOrEmpty(DesiredMaterialPiece.Name) || materialPiece.Name.Contains(DesiredMaterialPiece.Name)) &&
-                (string.IsNullOrEmpty(DesiredMaterialPiece.Description) || materialPiece.Description.Contains(DesiredMaterialPiece.Description)) &&
-                (string.IsNullOrEmpty(DesiredMaterialPiece.Type) || materialPiece.Type.Contains(DesiredMaterialPiece.Type)) &&
-                (DesiredMaterialPiece.Id == 0 || materialPiece.Id == DesiredMaterialPiece.Id) &&
-                (string.IsNullOrEmpty(DesiredMaterialPiece.Units) || materialPiece.Units.Contains(DesiredMaterialPiece.Units)) &&
-                (DesiredMaterialPiece.Amount == 0 || materialPiece.Amount == DesiredMaterialPiece.Amount) &&
-                (string.IsNullOrEmpty(DesiredMaterialPiece.StorageType) || materialPiece.Units.Contains(DesiredMaterialPiece.StorageType));
+                return (string.IsNullOrEmpty(DesiredEquipment.Name) || equipment.Name.Contains(DesiredEquipment.Name)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Description) || equipment.Description.Contains(DesiredEquipment.Description)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Type) || equipment.Type.Contains(DesiredEquipment.Type)) &&
+                    (DesiredEquipment.Id == 0 || equipment.Id == DesiredEquipment.Id) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Units) || equipment.Units.Contains(DesiredEquipment.Units)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Limit) || equipment.Limit.Contains(DesiredEquipment.Limit)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.AccuracyClass) || equipment.AccuracyClass.Contains(DesiredEquipment.AccuracyClass)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Manufacturer) || equipment.Manufacturer.Contains(DesiredEquipment.Manufacturer)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.RegistrationNumber) || equipment.RegistrationNumber.Contains(DesiredEquipment.RegistrationNumber)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.FactoryNumber) || equipment.FactoryNumber.Contains(DesiredEquipment.FactoryNumber)) &&
+                    (string.IsNullOrEmpty(DesiredEquipment.Status) || equipment.Status.Contains(DesiredEquipment.Status));
             }).ToList();
 
-            FilteredMaterialsList = new(filteredList);
+            FilteredEquipmentList = new (filteredList);
         }
-
 
         private void RequestAdditionWindow()
         {
             AdditionWindowRequested?.Invoke(CurrentLocationId);
-            var dataContext = new MaterialsAdditionVM(CurrentLocationId);
-            DialogueService.ShowWindow<MaterialsAdditionWindow>(dataContext);
+            var dataContext = new EquipmentAdditionVM(CurrentLocationId);
+            DialogueService.ShowWindow<EquipmentAdditionWindow>(dataContext);
         }
 
         private void RequestHistoryWindow()
         {
             HistoryVM historyVM = new HistoryVM();
-            historyVM.StorableObjectEvents = LocationController.GetHistoryForStorableObject(SelectedMaterials.Object.Id);
+            historyVM.StorableObjectEvents = LocationController.GetHistoryForStorableObject(SelectedEquipment.Object.Id);
             DialogueService.ShowWindow<HistoryWindow>(historyVM);
-        }
-
-        private void RequestCommentsWindow()
-        {
-            throw new NotImplementedException();
         }
 
         private void ClearFilters()
         {
-            DesiredMaterialPiece.Name = string.Empty;
-            DesiredMaterialPiece.Type = string.Empty;
-            DesiredMaterialPiece.Description = string.Empty;
-            DesiredMaterialPiece.StorageType = string.Empty;
-            DesiredMaterialPiece.Units = string.Empty;
+            DesiredEquipment.Name = string.Empty;
+            DesiredEquipment.Description = string.Empty;
+            DesiredEquipment.Type = string.Empty;
+            DesiredEquipment.Id = 0;
+            DesiredEquipment.Units = string.Empty;
+            DesiredEquipment.Limit = string.Empty;
+            DesiredEquipment.AccuracyClass = string.Empty;
+            DesiredEquipment.Manufacturer = string.Empty;
+            DesiredEquipment.RegistrationNumber = string.Empty;
+            DesiredEquipment.FactoryNumber = string.Empty;
+            DesiredEquipment.Status = string.Empty;
         }
+
     }
 }

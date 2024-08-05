@@ -1,7 +1,7 @@
-﻿<Application x:Class="EMAS.App"
+﻿<Application x:Class="EMAS_WPF.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:EMAS"
+             xmlns:local="clr-namespace:EMAS_WPF"
              StartupUri="AuthorizationWindow.xaml">
     <Application.Resources>
          

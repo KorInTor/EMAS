@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS_WPF.Windows.Dialogue"
-        xmlns:controls="clr-namespace:WPFView.Controls" 
-        xmlns:viewmodel="clr-namespace:WPFViewModel" 
+        xmlns:controls="clr-namespace:EMAS_WPF.Controls" 
+        xmlns:viewmodel="clr-namespace:ViewModel" 
         d:DataContext="{d:DesignInstance Type=viewmodel:LocationPickerVM}"
         mc:Ignorable="d"
         Title="{Binding WindowHeaderText}" Height="auto" Width="auto" DataContext="{Binding DataContext, ElementName=LocationControl}">

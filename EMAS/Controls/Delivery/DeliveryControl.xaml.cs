@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace WPFView.Controls.Delivery
+namespace EMAS_WPF.Controls.Delivery
 {
     /// <summary>
     /// Логика взаимодействия для DeliveryControl.xaml

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS_WPF.Windows"
-        xmlns:viewmodel="clr-namespace:WPFViewModel"
+        xmlns:viewmodel="clr-namespace:ViewModel"
         mc:Ignorable="d"
         Title="{Binding WindowHeader}" Height="450" Width="800">
     <Window.DataContext>

@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WPFView.Controls.Reservation
+namespace EMAS_WPF.Controls.Reservation
 {
     /// <summary>
     /// Логика взаимодействия для ReservationCreationControl.xaml

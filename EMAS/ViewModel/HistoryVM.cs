@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Model.Event;
+using Service;
 
 namespace ViewModel
 {

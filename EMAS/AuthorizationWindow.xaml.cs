@@ -11,7 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace EMAS
+namespace EMAS_WPF
 {
     /// <summary>
     /// Interaction logic for AuthorizationWindow.xaml

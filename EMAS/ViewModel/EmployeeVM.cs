@@ -4,11 +4,12 @@ using Model;
 using Service;
 using Service.Connection;
 using Service.Security;
-using WPFView.AdditionWindow;
+using EMAS_WPF.AdditionWindow;
 using EMAS_WPF.Windows;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
+using EMAS_WPF;
 
 namespace ViewModel
 {

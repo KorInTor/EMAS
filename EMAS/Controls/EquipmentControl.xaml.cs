@@ -1,6 +1,6 @@
 ﻿using System.Windows.Controls;
 
-namespace WPFView.Controls
+namespace EMAS_WPF.Controls
 {
     /// <summary>
     /// Логика взаимодействия для EquipmentControl.xaml

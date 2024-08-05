@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Model.Event;
 using Service;
 using Service.Connection;
+using EMAS_WPF;
 
 namespace ViewModel.ReservationVM
 {

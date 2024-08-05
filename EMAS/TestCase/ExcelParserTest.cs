@@ -3,7 +3,7 @@ using Model;
 using Service.Serialization;
 using System.IO;
 
-namespace EMAS.TestCases
+namespace EMAS_WPF.TestCases
 {
     //[TestClass] - Задел на будущие тесты используя MSTest.
     public class ExcelParserTest

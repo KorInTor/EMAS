@@ -2,7 +2,7 @@
 using System.Data;
 using System.Windows;
 
-namespace EMAS
+namespace EMAS_WPF
 {
     /// <summary>
     /// Interaction logic for App.xaml

@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS_WPF.Windows.Dialogue"
-        xmlns:ViewModel="clr-namespace:WPFViewModel"
-        xmlns:Controls="clr-namespace:WPFView.Controls"
+        xmlns:ViewModel="clr-namespace:ViewModel"
+        xmlns:Controls="clr-namespace:EMAS_WPF.Controls"
         mc:Ignorable="d"
         Title="HistoryWindow" Height="500" Width="380">
     <Window.DataContext>

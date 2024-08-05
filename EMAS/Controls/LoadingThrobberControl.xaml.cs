@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WPFView.Controls
+namespace EMAS_WPF.Controls
 {
     /// <summary>
     /// Логика взаимодействия для LoadingThrobberControl.xaml

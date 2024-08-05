@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EMAS_WPF.Windows.Dialogue.Delivery"
-        xmlns:Delivery="clr-namespace:WPFView.Controls.Delivery" x:Class="EMAS_WPF.Windows.Dialogue.Delivery.DeliveryConfirmationWindow"
+        xmlns:Delivery="clr-namespace:EMAS_WPF.Controls.Delivery" x:Class="EMAS_WPF.Windows.Dialogue.Delivery.DeliveryConfirmationWindow"
         mc:Ignorable="d"
         Title="DeliveryConfirmationWindow" Height="450" Width="800">
     <Grid>

@@ -4,7 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace WPFView.Converters
+namespace EMAS_WPF.Converters
 {
     public class DataGridColoredRowConverter : IValueConverter
     {

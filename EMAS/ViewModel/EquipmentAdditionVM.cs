@@ -3,16 +3,12 @@ using CommunityToolkit.Mvvm.Input;
 using Model;
 using Service;
 using Service.Connection;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EMAS_WPF;
 
 namespace ViewModel
 {
-    public partial class MaterialsAdditionVM : ObservableObject
+    public partial class EquipmentAdditionVM : ObservableObject
     {
         public event Action AdditionConfirmed;
         public event Action<string> AdditionFailed;
@@ -20,20 +16,22 @@ namespace ViewModel
         private int _currentLocationId;
 
         [ObservableProperty]
-        private MaterialPiece _newMaterialPiece = new();
+        private Equipment _newEquipment = new();
 
         [ObservableProperty]
         private RelayCommand _confirmAdditionCommand;
 
-        public static IWindowsDialogueService DialogueService { get; private set; }
+        // Почему тэги отдельным полем идут??
+        [ObservableProperty]
+        private string _tags;
 
-        public MaterialsAdditionVM()
+        public static IWindowsDialogueService DialogueService { get; private set; }
+        public EquipmentAdditionVM()
         {
             ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
             _currentLocationId = 0;
         }
-
-        public MaterialsAdditionVM(int locationId)
+        public EquipmentAdditionVM(int locationId)
         {
             ConfirmAdditionCommand = new RelayCommand(ConfirmAddition);
             _currentLocationId = locationId;
@@ -41,9 +39,10 @@ namespace ViewModel
 
         private void ConfirmAddition()
         {
-            try 
+            try
             {
-                DataBaseClient.GetInstance().Add(NewMaterialPiece, _currentLocationId);
+                NewEquipment.Tags = [.. Tags.Split('\n')];
+                DataBaseClient.GetInstance().Add(NewEquipment, _currentLocationId);
                 DialogueService.ShowSuccesfullMessage("Добавленно успешно!");
                 AdditionConfirmed?.Invoke();
             }
@@ -53,7 +52,11 @@ namespace ViewModel
                 AdditionFailed?.Invoke(exception.Message);
                 Debug.WriteLine(exception.Message);
             }
-            
+        }
+
+        public void ChangeCurrentLocationId(int id)
+        {
+            _currentLocationId = id;
         }
     }
 }

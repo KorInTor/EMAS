@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace WPFView.Controls.Delivery
+namespace EMAS_WPF.Controls.Delivery
 {
     /// <summary>
     /// Логика взаимодействия для DeliveryConfirmationCotrol.xaml
