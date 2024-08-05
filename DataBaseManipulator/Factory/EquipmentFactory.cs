@@ -1,5 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Drawing;
-using EMAS.Model;
+using Model;
 
 namespace DataBaseManipulator.Factory
 {

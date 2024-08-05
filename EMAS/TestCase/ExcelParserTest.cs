@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
-using EMAS.Model;
-using EMAS.Service.Serialization;
+using Model;
+using Service.Serialization;
 using System.IO;
 
 namespace EMAS.TestCases

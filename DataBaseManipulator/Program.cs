@@ -1,7 +1,7 @@
 ﻿using DataBaseManipulator.Factory;
-using EMAS.Exceptions;
-using EMAS.Model;
-using EMAS.Service.Connection;
+using Model.Exceptions;
+using Model;
+using Service.Connection;
 using Npgsql;
 using System.Diagnostics;
 

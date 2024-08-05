@@ -1,8 +1,8 @@
 ﻿using Npgsql;
-using EMAS.Model.Event;
-using EMAS.Service.Connection.DataAccess.QueryBuilder;
+using Model.Event;
+using Service.Connection.DataAccess.QueryBuilder;
 
-namespace EMAS.Service.Connection.DataAccess.Tests
+namespace Service.Connection.DataAccess.Tests
 {
     public class SelectQueryBuilderTests
     {

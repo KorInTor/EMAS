@@ -1,0 +1,71 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EMAS_WPF.Windows"
+        xmlns:ViewModel="clr-namespace:WPFViewModel" x:Class="EMAS_WPF.Windows.EquipmentAdditionWindow"
+        mc:Ignorable="d"
+        Title="EquipmentAdditionWindow" Height="450" Width="800">
+    <Window.DataContext>
+        <ViewModel:EquipmentManagerVM/>
+    </Window.DataContext>
+    <Grid Margin="3,0,3,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="9*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Column="0" Grid.Row="0">
+            <Label  Content="Марка:"/>
+            <ComboBox  Text="{Binding NewEquipment.Name}" IsEditable="True"/>
+
+            <Label  Content="Тип:"/>
+            <ComboBox  Text="{Binding NewEquipment.Type}" IsEditable="True"/>
+
+            <Label  Content="Класс точности:"/>
+            <ComboBox  Text="{Binding NewEquipment.AccuracyClass}" IsEditable="True"/>
+
+            <Label  Content="Еденицы измерения:"/>
+            <ComboBox  Text="{Binding NewEquipment.Units}" IsEditable="True"/>
+
+            <Label  Content="Предел измерение:"/>
+            <ComboBox  Text="{Binding NewEquipment.Limit}" IsEditable="True"/>
+
+            <Label  Content="Производитель:"/>
+            <ComboBox Text="{Binding NewEquipment.Manufacturer}" IsEditable="True"/>
+
+            <Label FontStyle="Italic" Foreground="#FF3A3A3A">
+                <TextBlock TextWrapping="Wrap"><Run Text="Выше стоящие значения можно выбрать из выпдающего спсика или написать собственное."/></TextBlock>
+            </Label>
+
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Grid.Row="0">
+            <Label  Content="Серийный номер:"/>
+            <TextBox  Text="{Binding NewEquipment.FactoryNumber}"/>
+
+            <Label  Content="Регистрационный номер:"/>
+            <TextBox  Text="{Binding NewEquipment.RegistrationNumber}"/>
+
+            <Label Content="Статус:"/>
+            <TextBox Text="{Binding NewEquipment.Status}"/>
+
+            <Label Content="Описание/Коментарий:"/>
+            <TextBox  Text="{Binding NewEquipment.Description}"/>
+
+            <Label Content="Тэги:"/>
+            <TextBox Text="{Binding Tags, ValidatesOnNotifyDataErrors=True}" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" Height="183"/>
+            
+            <Label FontStyle="Italic" Foreground="#FF3A3A3A">
+                <TextBlock TextWrapping="Wrap"><Run Text="Тэги нужно писать c новой строки!"/></TextBlock>
+            </Label>
+
+        </StackPanel>
+
+        <Button Content="Добавить" Grid.ColumnSpan="2" Grid.Row="1" Command="{Binding ConfirmAdditionCommand, ValidatesOnNotifyDataErrors=True}"/>
+    </Grid>
+</Window>

@@ -1,4 +1,4 @@
-﻿using EMAS.Model;
+﻿using Model;
 
 namespace DataBaseManipulator.Factory
 {

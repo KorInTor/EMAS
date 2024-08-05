@@ -1,5 +1,5 @@
-﻿using EMAS.ViewModel;
-using Emas.View.Windows;
+﻿using ViewModel;
+using EMAS_WPF.Windows;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
