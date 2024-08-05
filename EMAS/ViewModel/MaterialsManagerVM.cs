@@ -2,8 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using EMAS.Model;
 using EMAS.Service;
-using EMAS.Windows.Dialogue;
-using EMAS.Windows;
+using Emas.View.Windows.Dialogue;
+using Emas.View.Windows;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,6 +14,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using EMAS.Model.Enum;
 using DocumentFormat.OpenXml.Packaging;
+using EMAS.View.Windows;
 
 namespace EMAS.ViewModel
 {

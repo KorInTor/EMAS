@@ -1,0 +1,29 @@
+﻿<Window x:Class="Emas.View.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Emas.View.Windows"
+        xmlns:controlls="clr-namespace:EMAS.View.Controls"
+        xmlns:viewmodel="clr-namespace:EMAS.ViewModel"
+        xmlns:properties="clr-namespace:EMAS.Properties"
+        mc:Ignorable="d"
+        Title="Главное окно" Height="554" Width="1200">
+    <Window.DataContext>
+        <viewmodel:LocationController/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <controlls:TopMenuControl DataContext="{Binding DataContext.TopMenuVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}"/>
+        <TabControl x:Name="MainTabControl" SelectedItem="{Binding CurrentLocation}" ItemsSource="{Binding Locations}" DisplayMemberPath="Name" Grid.Row="1">
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <controlls:SingleLocationControl DataContext="{Binding DataContext.SingleLocationVM, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}"/>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+    </Grid>
+</Window>

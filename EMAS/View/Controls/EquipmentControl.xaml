@@ -1,0 +1,89 @@
+﻿<UserControl x:Class="EMAS.View.Controls.EquipmentControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:EMAS.View.Controls" 
+             xmlns:ViewModel="clr-namespace:EMAS.ViewModel"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <d:UserControl.DataContext>
+        <ViewModel:EquipmentManagerVM/>
+    </d:UserControl.DataContext>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/View/Styles/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+        
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <DataGrid ItemsSource="{Binding FilteredEquipmentList, Mode=OneWay}" AutoGenerateColumns="False" Grid.Row="0" SelectedItem="{Binding SelectedEquipment}" AlternationCount="2" RowStyle="{Binding Mode=OneWay, Source={StaticResource AlternatingRowStyle}}" CanUserAddRows="False" CanUserDeleteRows="False">
+            <DataGrid.ContextMenu>
+                <ContextMenu ItemsSource="{Binding NamedCommands}">
+                    <ContextMenu.ItemContainerStyle>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Header" Value="{Binding Key}"/>
+                            <Setter Property="Command" Value="{Binding Value}"/>
+                        </Style>
+                    </ContextMenu.ItemContainerStyle>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="ID" Binding="{Binding Object.Id, Mode=OneWay}" />
+                <DataGridTextColumn Header="Марка" Binding="{Binding Object.Name, Mode=OneWay}" />
+                <DataGridTextColumn Header="Тип" Binding="{Binding Object.Type, Mode=OneWay}" />
+                <DataGridTextColumn Header="Заводской номер" Binding="{Binding Object.FactoryNumber, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Единицы измерений" Binding="{Binding Object.Units, Mode=OneWay}" />
+                <DataGridTextColumn Header="Предел измерений" Binding="{Binding Object.Limit, Mode=OneWay}" />
+                <DataGridTextColumn Header="Класс точности" Binding="{Binding Object.AccuracyClass, Mode=OneWay}" />
+                <DataGridTextColumn Header="Инвентарный номер" Binding="{Binding Object.FactoryNumber, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Статсуc" Binding="{Binding Object.Status, Mode=OneWay}"/>
+                <DataGridTextColumn Header="Описание" Binding="{Binding Object.Description, Mode=OneWay}"/>
+                <DataGridTemplateColumn Header="История">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Name="ViewHistoryButton" Content="Просмотр" 
+                        Command="{Binding DataContext.OpenHistoryWindowCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:EquipmentControl}}}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Border BorderBrush="White" Grid.Row="1" BorderThickness="3,3,3,3" >
+            <Grid Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Button Content="Добавить" Grid.Column="0" Grid.Row="0" Command="{Binding OpenAdditionWindow}"/>
+                <Button Content="Отправить" Grid.Column="1" Grid.Row="0" Command="{Binding CreateDeliveryCommand}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

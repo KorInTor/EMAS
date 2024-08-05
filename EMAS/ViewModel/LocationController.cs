@@ -7,8 +7,8 @@ using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.ViewModel.DeliveryVM;
 using EMAS.ViewModel.ReservationVM;
-using EMAS.Windows.Dialogue.Delivery;
-using EMAS.Windows.Dialogue.Reservation;
+using Emas.View.Windows.Dialogue.Delivery;
+using Emas.View.Windows.Dialogue.Reservation;
 
 namespace EMAS.ViewModel
 {
@@ -37,10 +37,11 @@ namespace EMAS.ViewModel
                 return loationIdNameDictionary;
             }
         }
-        /// <summary>
-        /// Переименован с MainEquipmentVM на SingleLocVM
-        /// </summary>
-        public SingleLocationVM SingleLocVM { get; set; } = new();
+
+        public SingleLocationVM SingleLocationVM { get; set; } = new();
+
+        public TopMenuVM TopMenuVM { get; set; } = new();
+
         public LocationController()
         {
             Locations = DataBaseClient.GetInstance().SelectLocations();
@@ -48,14 +49,16 @@ namespace EMAS.ViewModel
             DataBaseClient.GetInstance().NewEventsOccured += ShowNewEventsInfo;
             DialogueService = new WindowsDialogueService();
 
-            SingleLocVM.EquipmentVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
-            SingleLocVM.EquipmentVM.ReservationCreationRequested += ShowReservationCreationWindow;
-            SingleLocVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
-            SingleLocVM.ReservationControlVM.ReservationCompletionRequested += ShowReservationCompleteionWindow;
+            SingleLocationVM.EquipmentVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
+            SingleLocationVM.EquipmentVM.ReservationCreationRequested += ShowReservationCreationWindow;
+            SingleLocationVM.DeliveryControlVM.DeliveryConfirmationRequested += ShowDeliveryConfiramtionWindow;
+            SingleLocationVM.ReservationControlVM.ReservationCompletionRequested += ShowReservationCompleteionWindow;
 
-            SingleLocVM.MaterialsVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
-            SingleLocVM.MaterialsVM.ReservationCreationRequested += ShowReservationCreationWindow;
+            SingleLocationVM.MaterialsVM.DeliveryCreationRequested += ShowDeliveryCreationWindow;
+            SingleLocationVM.MaterialsVM.ReservationCreationRequested += ShowReservationCreationWindow;
             Task.Run(SyncWithDataBase);
+
+            TopMenuVM.DataSyncRequested += SynchronizeData;
         }
 
         public static List<StorableObjectEvent> GetHistoryForStorableObject(int Id)
@@ -69,8 +72,8 @@ namespace EMAS.ViewModel
             {
                 return;
             }
-            SingleLocVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
-            SingleLocVM.LocationInfo = value;
+            SingleLocationVM.Permissions = _permissions.Permissions[CurrentLocation.Id];
+            SingleLocationVM.LocationInfo = value;
         }
 
         private void ShowDeliveryConfiramtionWindow(SentEvent delivery)
@@ -92,7 +95,7 @@ namespace EMAS.ViewModel
         private void ShowNewEventsInfo(List<StorableObjectEvent> list)
         {
             //TODO Add windwos that shows what changed;
-            SingleLocVM.UpdateLocationData(CurrentLocation);
+            SingleLocationVM.UpdateLocationData(CurrentLocation);
         }
 
         private void ShowReservationCompleteionWindow(ReservedEvent reservationtoComplete)
@@ -111,7 +114,6 @@ namespace EMAS.ViewModel
             reservationCreationVM.ReservationCreated -= TryAddReservation;
         }
 
-        [RelayCommand]
         private void SynchronizeData()
         {
             DataBaseClient.GetInstance().SyncData(Locations);

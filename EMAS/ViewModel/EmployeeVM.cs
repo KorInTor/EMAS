@@ -5,7 +5,7 @@ using EMAS.Service;
 using EMAS.Service.Connection;
 using EMAS.Service.Security;
 using EMAS.View.AdditionWindow;
-using EMAS.Windows;
+using Emas.View.Windows;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
