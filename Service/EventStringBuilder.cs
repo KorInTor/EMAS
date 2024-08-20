@@ -12,38 +12,50 @@ namespace Service
 
         public static string EventToString(StorableObjectEvent storableObjectEvent)
         {
-            string employeeName = employees.Where(x => x.Id == storableObjectEvent.EmployeeId).Select(x => x.Fullname).FirstOrDefault();
+            return EventsListToStringList([storableObjectEvent]).First();
+        }
 
-            string info = $"{EventTypeToString(storableObjectEvent.EventType)}. Дата:{storableObjectEvent.DateTime}. Ответственный: {employeeName}.";
-
-            switch (storableObjectEvent)
+        public static List<string> EventsListToStringList(List<StorableObjectEvent> storableObjectEvents)
+        {
+            List<string> eventsList = [];
+            foreach (var storableObjectEvent in storableObjectEvents)
             {
-                case SentEvent sentEvent:
-                    info = SentEventStringBuilder(sentEvent, info);
-                    break;
-                case ReservedEvent reservedEvent:
-                    info = ReservedEventStringBuilder(reservedEvent, info);
-                    break;
-                case ArrivedEvent arrivedEvent:
-                    info = ArrivedEventStringBuilder(arrivedEvent, info);
-                    break;
-                case ReserveEndedEvent reserveEndedEvent:
-                    info = ReserveEndedEventStringBuilder(reserveEndedEvent, info);
-                    break;
-                case AdditionEvent additionEvent:
-                    info = AdditionEventStringBuilder(additionEvent, info);
-                    break;
-                //case EventType.Decommissioned:
-                //    return DecommissionedEventStringBuilder(storableObjectEvent, info);
-                //case EventType.DataChanged:
-                //    return DataChangedEventStringBuilder(storableObjectEvent, info);
+                string employeeName = employees.Where(x => x.Id == storableObjectEvent.EmployeeId).Select(x => x.Fullname).FirstOrDefault();
 
-                default:
-                    throw new NotImplementedException("Данный тип события ещё не поддерживается.");
+                string info = $"{EventTypeToString(storableObjectEvent.EventType)}. Дата:{storableObjectEvent.DateTime}. Ответственный: {employeeName}.";
+
+                switch (storableObjectEvent)
+                {
+                    case SentEvent sentEvent:
+                        info = SentEventStringBuilder(sentEvent, info);
+                        break;
+                    case ReservedEvent reservedEvent:
+                        info = ReservedEventStringBuilder(reservedEvent, info);
+                        break;
+                    case ArrivedEvent arrivedEvent:
+                        info = ArrivedEventStringBuilder(arrivedEvent, info);
+                        break;
+                    case ReserveEndedEvent reserveEndedEvent:
+                        info = ReserveEndedEventStringBuilder(reserveEndedEvent, info);
+                        break;
+                    case AdditionEvent additionEvent:
+                        info = AdditionEventStringBuilder(additionEvent, info);
+                        break;
+                    //case EventType.Decommissioned:
+                    //    return DecommissionedEventStringBuilder(storableObjectEvent, info);
+                    //case EventType.DataChanged:
+                    //    return DataChangedEventStringBuilder(storableObjectEvent, info);
+
+                    default:
+                        throw new NotImplementedException("Данный тип события ещё не поддерживается.");
+                }
+
+                info = info.Replace(". ", ".\r\n");
+
+                eventsList.Add(info);
             }
 
-            info = info.Replace(". ", ".\r\n");
-            return info;
+            return eventsList;
         }
 
         private static string AdditionEventStringBuilder(AdditionEvent additionEvent, string info)

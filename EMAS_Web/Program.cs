@@ -8,9 +8,12 @@ namespace EMAS_Web
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddDistributedMemoryCache();// добавляем IDistributedMemoryCache
+            builder.Services.AddSession();  // добавляем сервисы сессии
 
             var app = builder.Build();
 
+            app.UseSession();
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
@@ -20,6 +23,7 @@ namespace EMAS_Web
             }
 
             app.UseHttpsRedirection();
+
             app.UseStaticFiles();
 
             app.UseRouting();

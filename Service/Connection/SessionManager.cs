@@ -35,6 +35,22 @@ namespace Service.Connection
             CreateNewSession();
         }
 
+        public static int GetUserId(string username, string password)
+        {
+            string passwordHash = PasswordManager.Hash(password);
+            ConnectionPool.TryConnect();
+            if (!IsUsernameCorrect(username))
+            {
+                throw new InvalidUsernameException();
+            }
+            if (!IsPasswordCorrect(username, passwordHash))
+            {
+                throw new InvalidPasswordException();
+            }
+            var employeeAccess = new EmployeeDataAccess();
+            return employeeAccess.SelectByUsername(username).Id;
+        }
+
         private static void SetCurrentSessionProperties(string username)
         {
             var employeeAccess = new EmployeeDataAccess();

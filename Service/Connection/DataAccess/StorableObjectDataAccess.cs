@@ -99,7 +99,7 @@ namespace Service.Connection.DataAccess
 
             string query = "SELECT id, type_id, location_id FROM public.storable_object WHERE id = @id;";
 
-            Dictionary<StorableObjectType, List<int>> typesIdsDictionary = [];
+            Dictionary<StorableObjectType, List<int>> typesIdsDictionary = new Dictionary<StorableObjectType, List<int>>();
 
             foreach (int id in ids)
             {
@@ -107,7 +107,7 @@ namespace Service.Connection.DataAccess
 
                 command.Parameters.AddWithValue("@id", id);
 
-                var reader = command.ExecuteReader();
+                using var reader = command.ExecuteReader();
 
                 if (reader.Read())
                 {
@@ -115,28 +115,24 @@ namespace Service.Connection.DataAccess
                     {
                         if (!typesIdsDictionary.ContainsKey(StorableObjectType.Equipment))
                         {
-                            typesIdsDictionary.Add(StorableObjectType.Equipment, []);
+                            typesIdsDictionary.Add(StorableObjectType.Equipment, new List<int>());
                         }
                         typesIdsDictionary[StorableObjectType.Equipment].Add(id);
-                        
                     }
                     if (reader.GetInt32(1) == (int)StorableObjectType.Material)
                     {
                         if (!typesIdsDictionary.ContainsKey(StorableObjectType.Material))
                         {
-                            typesIdsDictionary.Add(StorableObjectType.Material, []);
+                            typesIdsDictionary.Add(StorableObjectType.Material, new List<int>());
                         }
-
                         typesIdsDictionary[StorableObjectType.Material].Add(id);
                     }
-
-
                 }
             }
 
             ConnectionPool.ReleaseConnection(connection);
 
-            List<IStorableObject> foundedObjects = [];
+            List<IStorableObject> foundedObjects = new List<IStorableObject>();
 
             foreach (var type in typesIdsDictionary.Keys)
             {

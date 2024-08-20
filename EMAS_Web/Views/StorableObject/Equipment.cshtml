@@ -1,0 +1,46 @@
+﻿@model List<Model.Equipment>
+
+<h2>Список оборудования</h2>
+
+<table id="equipmentTable" class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Название</th>
+            <th>Тип</th>
+            <th>Производитель</th>
+            <th>Статус</th>
+            <th>Описание</th>
+            <th>Регистрационный номер</th>
+            <th>История</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+                <td>@item.Type</td>
+                <td>@item.Manufacturer</td>
+                <td>
+                    <select>
+                        <option value="@item.Status">@item.Status</option>
+                        <option value="ph1">Placeholder1</option>
+                        <option value="ph2">Placeholder2</option>
+                    </select>
+                </td>
+                <td>@item.Description</td>
+                <td>@item.RegistrationNumber</td>
+                <td>
+                    <form asp-controller="StorableObject" asp-action="History" method="get">
+                        <input type="hidden" name="storableObjectId" value="@item.Id" />
+                        <button type="submit" class="btn btn-primary">История</button>
+                    </form>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
+

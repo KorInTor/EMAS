@@ -1,0 +1,23 @@
+﻿@{
+    ViewBag.Title = "Логин";
+}
+
+<h2>Логин</h2>
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div style="color: red;">@ViewBag.ErrorMessage</div>
+}
+
+@using (Html.BeginForm())
+{
+    <div>
+        <label>Имя пользователя</label>
+        <input type="text" name="username" class="form-control" />
+    </div>
+    <div>
+        <label>Пароль</label>
+        <input type="password" name="password" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Войти</button>
+}

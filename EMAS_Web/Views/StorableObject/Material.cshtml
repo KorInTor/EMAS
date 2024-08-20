@@ -1,0 +1,34 @@
+﻿@model List<Model.MaterialPiece>
+
+<h2>Список материалов</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Тип</th>
+            <th>Название</th>
+            <th></th>
+            <th>Кол-во</th>
+            <th>Инвентарный номер</th>
+            <th>Место хранения</th>
+            <th>Описание</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Type</td>
+                <td>@item.Name</td>
+                <td>@item.Units</td>
+                <td>@item.Amount</td>
+                <td>@item.InventoryNumber</td>
+                <td>@item.StorageType</td>
+                <td>@item.Description</td>
+            </tr>
+        }
+    </tbody>
+</table>
+

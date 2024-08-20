@@ -15,11 +15,12 @@ namespace EMAS_Web.Controllers
 
         public IActionResult Index()
         {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
+            if (HttpContext.Session.GetString("UserId") == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+            ViewBag.UserId = HttpContext.Session.GetString("UserId");
+            ViewBag.Username = HttpContext.Session.GetString("Username");
             return View();
         }
 
