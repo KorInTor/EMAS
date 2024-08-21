@@ -22,7 +22,7 @@ namespace EMAS_Web.Controllers
             var dbUser = GetUserFromDatabase(username, password);
             if (dbUser != null)
             {
-                HttpContext.Session.SetString("UserId", dbUser.Id.ToString());
+                HttpContext.Session.SetInt32("UserId", dbUser.Id);
                 HttpContext.Session.SetString("Username", dbUser.Username);
 
                 return RedirectToAction("Index", "Home");
@@ -38,7 +38,7 @@ namespace EMAS_Web.Controllers
         {
             try
             {
-                var User = new User { Id = SessionManager.GetUserId(username, password), Username = username};
+                var User = new User { Id = LocalSessionManager.GetUserId(username, password), Username = username};
                 return User;
             }
             catch (InvalidUsernameException)

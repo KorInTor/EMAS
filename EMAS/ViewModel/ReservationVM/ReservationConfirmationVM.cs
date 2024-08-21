@@ -56,7 +56,7 @@ namespace ViewModel.ReservationVM
         [RelayCommand(CanExecute = nameof(CanCompleteReservation))]
         private void MakeReservationCompleted()
         {
-            ReserveEndedEvent reserveEndedEvent = new(SessionManager.UserId, 0, EventType.ReserveEnded, EndDate, _ReservationToComplete.ObjectsInEvent, EndComment, _ReservationToComplete.Id);
+            ReserveEndedEvent reserveEndedEvent = new(LocalSessionManager.UserId, 0, EventType.ReserveEnded, EndDate, _ReservationToComplete.ObjectsInEvent, EndComment, _ReservationToComplete.Id);
 
             ReservationCompleted?.Invoke(reserveEndedEvent);
         }

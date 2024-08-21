@@ -5,6 +5,7 @@ using Service;
 using Service.Connection;
 using System.Diagnostics;
 using EMAS_WPF;
+using Model.Event;
 
 namespace ViewModel
 {
@@ -42,7 +43,8 @@ namespace ViewModel
             try
             {
                 NewEquipment.Tags = [.. Tags.Split('\n')];
-                DataBaseClient.GetInstance().Add(NewEquipment, _currentLocationId);
+                var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [NewEquipment], _currentLocationId);
+                DataBaseClient.GetInstance().Add(addition);
                 DialogueService.ShowSuccesfullMessage("Добавленно успешно!");
                 AdditionConfirmed?.Invoke();
             }

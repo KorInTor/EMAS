@@ -61,7 +61,7 @@ namespace ViewModel.DeliveryVM
         [RelayCommand(CanExecute = nameof(CanCreate))]
         private void ConfrimDeliveryCreation()
         {
-            DeliveryCreated?.Invoke(new SentEvent(SessionManager.UserId, 0, EventType.Sent, DateTime.Now, StorableObjectsInDelivery.ToList(), DepartureComment, departureLocationId, SelectedDestination.Key));
+            DeliveryCreated?.Invoke(new SentEvent(LocalSessionManager.UserId, 0, EventType.Sent, DateTime.Now, StorableObjectsInDelivery.ToList(), DepartureComment, departureLocationId, SelectedDestination.Key));
         }
 
         [RelayCommand]

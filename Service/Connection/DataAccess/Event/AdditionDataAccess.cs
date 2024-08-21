@@ -5,8 +5,12 @@ namespace Service.Connection.DataAccess.Event
 {
     public class AdditionDataAccess
     {
+        private StorableObjectDataAccess _storableObjectDataAccess = new();
+
         public void InsertAdditionEvent(NpgsqlConnection connection, AdditionEvent additionEvent)
         {
+            _storableObjectDataAccess.Add(additionEvent.ObjectsInEvent, additionEvent.LocationId);
+
             using var command = new NpgsqlCommand("INSERT INTO \"event\".addition (event_id, location_id) VALUES(@id, @locatioId); ", connection);
             command.Parameters.AddWithValue("@id", additionEvent.Id);
             command.Parameters.AddWithValue("@locatioId", additionEvent.LocationId);

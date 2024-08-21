@@ -27,7 +27,7 @@ namespace ViewModel
         public static IWindowsDialogueService DialogueService { get; private set; }
         public MainMenuVM()
         {
-            IsAdministrator = SessionManager.PermissionInfo.IsCurrentEmployeeAdmin;
+            IsAdministrator = LocalSessionManager.PermissionInfo.IsCurrentEmployeeAdmin;
 
             OpenEquipmentWindow = new RelayCommand(RequestEquipmentWindow);
             OpenAboutWindow = new RelayCommand(RequestAboutWindow);

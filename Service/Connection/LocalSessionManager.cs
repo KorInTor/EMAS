@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Service.Connection
 {
-    public static class SessionManager
+    public static class LocalSessionManager
     {
         public static PermissionInfo PermissionInfo { get; private set; }
 

@@ -18,7 +18,7 @@ namespace ViewModel
 
         private IWindowsDialogueService dialogueService = new WindowsDialogueService();
 
-        private PermissionInfo _currentUserPermissions = SessionManager.PermissionInfo;
+        private PermissionInfo _currentUserPermissions = LocalSessionManager.PermissionInfo;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(OpenAdminMenuCommand))]

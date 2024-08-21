@@ -77,10 +77,6 @@ namespace Service.Connection.DataAccess
             }
 
             ConnectionPool.ReleaseConnection(connection);
-
-            EventDataAccess eventDataAccess = new();
-            AdditionEvent newEvent = new(SessionManager.UserId, 0, EventType.Addition, DateTime.Now, new List<IStorableObject>(objectsToAdd), locationId);
-            eventDataAccess.Add(newEvent);
         }
 
         public void Add(IStorableObject objectToAdd, int locationId)

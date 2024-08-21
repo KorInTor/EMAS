@@ -4,6 +4,8 @@ using Model;
 using Service.Connection;
 using Npgsql;
 using System.Diagnostics;
+using Model.Event;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 internal class Program
 {
@@ -17,7 +19,7 @@ internal class Program
         try
         {
             Console.Write("Trying to connect as PDS");
-            Task task = Task.Run(() => SessionManager.Login("Пряхин", "ps123123"));
+            Task task = Task.Run(() => LocalSessionManager.Login("Пряхин", "ps123123"));
             EmulateBusyness(task);
         }
         catch (ConnectionFailedException)
@@ -185,7 +187,8 @@ internal class Program
             int remaining = randEquipmentList.Count / namedLocations.Keys.Count;
             while (remaining != 0)
             {
-                DataBaseClient.GetInstance().Add(randEquipmentList.Last(), locationId);
+                var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randEquipmentList.Last()], locationId);
+                DataBaseClient.GetInstance().Add(addition);
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
@@ -196,7 +199,8 @@ internal class Program
             int remaining = randEquipmentList.Count;
             while (remaining != 0)
             {
-                DataBaseClient.GetInstance().Add(randEquipmentList.Last(), namedLocations.Keys.Last());
+                var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randEquipmentList.Last()], namedLocations.Keys.Last());
+                DataBaseClient.GetInstance().Add(addition);
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
@@ -210,7 +214,8 @@ internal class Program
             int remaining = randMaterialsList.Count / namedLocations.Keys.Count;
             while (remaining != 0)
             {
-                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), locationId);
+                var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randMaterialsList.Last()], locationId);
+                DataBaseClient.GetInstance().Add(addition);
                 randMaterialsList.RemoveAt(randMaterialsList.Count - 1);
                 remaining -= 1;
             }
@@ -221,7 +226,8 @@ internal class Program
             int remaining = randMaterialsList.Count;
             while (remaining != 0)
             {
-                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), namedLocations.Keys.Last());
+                var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randMaterialsList.Last()], namedLocations.Keys.Last());
+                DataBaseClient.GetInstance().Add(addition);
                 randMaterialsList.RemoveAt(randMaterialsList.Count - 1);
                 remaining -= 1;
             }
@@ -241,7 +247,8 @@ internal class Program
         {
             for (int i = 0; i < materialPiecesToLocationsRatio; i++)
             {
-                DataBaseClient.GetInstance().Add(randMaterialsList.Last(), locationId);// <-- Here
+                var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randMaterialsList.Last()], locationId);
+                DataBaseClient.GetInstance().Add(addition);
                 randMaterialsList.Remove(randMaterialsList.Last());
             }
             if (randMaterialsList.Count > materialPiecesToLocationsRatio + 1)

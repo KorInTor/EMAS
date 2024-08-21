@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EMAS_WPF;
+using Model.Event;
 
 namespace ViewModel
 {
@@ -44,7 +45,8 @@ namespace ViewModel
         {
             try 
             {
-                DataBaseClient.GetInstance().Add(NewMaterialPiece, _currentLocationId);
+                var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [NewMaterialPiece], _currentLocationId);
+                DataBaseClient.GetInstance().Add(addition);
                 DialogueService.ShowSuccesfullMessage("Добавленно успешно!");
                 AdditionConfirmed?.Invoke();
             }

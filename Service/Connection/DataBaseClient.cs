@@ -28,6 +28,7 @@ namespace Service.Connection
                 lastEventId = value;
             }
         }
+
         private static DataBaseClient instance;
 
         private DataBaseClient()
@@ -44,11 +45,6 @@ namespace Service.Connection
             return instance;
         }
 
-        public void Add(IStorableObject storableObject, int locationId)
-        {
-            storableObjectDataAccess.Add(storableObject, locationId);
-            return;
-        }
         public void Add(object objectToAdd)
         {
             if (objectToAdd is Employee newEmployee)

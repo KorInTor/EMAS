@@ -42,7 +42,7 @@ namespace ViewModel.ReservationVM
         [RelayCommand(CanExecute = nameof(CanCreate))]
         private void ConfrimReservationCreation()
         {
-            ReservationCreated?.Invoke(new ReservedEvent(SessionManager.UserId,0,EventType.Reserved,DateTime.Now, [.. StorableObjectsInReservation], ReservStartComment,LocationIdlocationName.Item1));
+            ReservationCreated?.Invoke(new ReservedEvent(LocalSessionManager.UserId,0,EventType.Reserved,DateTime.Now, [.. StorableObjectsInReservation], ReservStartComment,LocationIdlocationName.Item1));
         }
 
         [RelayCommand]

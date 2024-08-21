@@ -41,7 +41,7 @@ namespace ViewModel
             LoginStarted?.Invoke();
             try
             {
-                SessionManager.Login(Username, Password);
+                LocalSessionManager.Login(Username, Password);
             }
             catch (ConnectionFailedException)
             {

@@ -97,13 +97,12 @@ namespace Service.Connection.DataAccess
 
         public List<SentEvent> SelectActiveDeliveriesOutOfLocation(int locationId)
         {
-            var conditions = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id),true);
+            var notArrivedCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id),true);
+            var departureCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DepartureId),Comparison.Equal,locationId);
 
-            IEnumerable<StorableObjectEvent> activeDeliveries = Task.Run(() => SelectAsync([conditions])).Result;
+            IEnumerable<SentEvent> activeDeliveries = Select([notArrivedCondition, departureCondition], typeof(SentEvent)).OfType<SentEvent>();
 
-            List<SentEvent> sentEvents = deliveryDataAccess.SelectSentEvent(activeDeliveries);
-
-            return sentEvents;
+            return activeDeliveries.ToList();
         }
 
         public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)

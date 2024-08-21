@@ -24,7 +24,7 @@ namespace ViewModel
         [ObservableProperty]
         private List<Location> _locations = [];
 
-        private PermissionInfo _permissions = SessionManager.PermissionInfo;
+        private PermissionInfo _permissions = LocalSessionManager.PermissionInfo;
         public IWindowsDialogueService DialogueService { get; set; }
         public Dictionary<int, string> LocationIdNameDictionary
         {

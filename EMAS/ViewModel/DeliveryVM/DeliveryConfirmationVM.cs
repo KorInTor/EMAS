@@ -54,7 +54,7 @@ namespace ViewModel.DeliveryVM
         [RelayCommand(CanExecute = nameof(CanCompleteDelivery))]
         private void MakeDeliveryCompleted()
         {
-            ArrivedEvent arrivedEvent = new(new(SessionManager.UserId, 0, EventType.Arrived, _arriveDate, _deliveryToComplete.ObjectsInEvent), ArriveComment, _deliveryToComplete.Id);
+            ArrivedEvent arrivedEvent = new(new(LocalSessionManager.UserId, 0, EventType.Arrived, _arriveDate, _deliveryToComplete.ObjectsInEvent), ArriveComment, _deliveryToComplete.Id);
 
             DeliveryCompleted?.Invoke(arrivedEvent);
         }

@@ -36,7 +36,7 @@ namespace ViewModel
         [ObservableProperty]
         private LocationPermission _selectedLocation;
 
-        private PermissionInfo currentUserPermissions = SessionManager.PermissionInfo;
+        private PermissionInfo currentUserPermissions = LocalSessionManager.PermissionInfo;
         public static IWindowsDialogueService DialogueService { get; private set; } = new WindowsDialogueService();
 
         public PermissionChangerVM()
