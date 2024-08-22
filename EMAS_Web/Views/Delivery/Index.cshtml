@@ -34,7 +34,7 @@
 
                 <td>
                     <form asp-controller="Delivery" asp-action="Confirm" method="get">
-                        <input type="hidden" name="storableObjectId" value="@item.Id" />
+                        <input type="hidden" name="sentEventId" value="@item.Id" />
                         <button type="submit" class="btn btn-primary">Подтвердить</button>
                     </form>
                 </td>

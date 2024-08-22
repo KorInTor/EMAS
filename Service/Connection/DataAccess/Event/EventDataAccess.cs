@@ -60,16 +60,19 @@ namespace Service.Connection.DataAccess
                 }
                 if (newEvent is ArrivedEvent arrivedEvent)
                 {
-                    if (deliveryDataAccess.IsCompleted([arrivedEvent]))
-                        throw new EventAlreadyCompletedException();
-
                     deliveryDataAccess.Complete(arrivedEvent);
+
+                    //-* Обновление локаций для объектов. *-
+                    //На данный момент единственный способ понять куда нам перемещать storableObject.
+                    StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
+                    var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id),Comparison.Equal,arrivedEvent.SentEventId);
+                    var completedSentEvent = (SentEvent)Select([condition], typeof(SentEvent)).First();
+
+                    storableObjectDataAccess.UpdateLocation(arrivedEvent.ObjectsInEvent, completedSentEvent.DestinationId);
+                    //-* ... *-
                 }
                 if (newEvent is ReserveEndedEvent reserveEndedEvent)
                 {
-                    if (reservationDataAccess.IsCompleted([reserveEndedEvent]))
-                        throw new EventAlreadyCompletedException();
-
                     reservationDataAccess.Complete(reserveEndedEvent);
                 }
 

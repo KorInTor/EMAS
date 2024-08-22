@@ -15,12 +15,11 @@ namespace EMAS_Web.Controllers
 
         public IActionResult Index()
         {
-            if (HttpContext.Session.GetString("UserId") == null)
+            if (HttpContext.Session.GetInt32("UserId") == null)
             {
                 return RedirectToAction("Login", "Account");
             }
-            ViewBag.UserId = HttpContext.Session.GetString("UserId");
-            ViewBag.Username = HttpContext.Session.GetString("Username");
+            ViewBag.UserId = HttpContext.Session.GetInt32("UserId");
             return View();
         }
 

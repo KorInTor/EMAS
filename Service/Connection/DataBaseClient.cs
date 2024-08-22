@@ -129,6 +129,13 @@ namespace Service.Connection
                 return false;
         }
 
+        public StorableObjectEvent SelectEventById(long eventId, Type typeOfEvent = null)
+        {
+            var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id),Comparison.Equal,eventId);
+
+            return eventDataAccess.Select([condition], typeOfEvent).First();
+        }
+
         public List<SentEvent> GetDeliverysOutOf(int locationId)
         {
             return eventDataAccess.SelectActiveDeliveriesOutOfLocation(locationId);
@@ -137,6 +144,11 @@ namespace Service.Connection
         public List<IStorableObject> SelectStorableObjectOn(int locationId)
         {
             return storableObjectDataAccess.SelectOnLocation(locationId).ToList();
+        }
+
+        public List<IStorableObject> SelectStorableObjectsByIds(IEnumerable<int> ids)
+        {
+            return storableObjectDataAccess.SelectByIds(ids).ToList();
         }
 
         public List<ReservedEvent> GetReservationOn(int locationId)
