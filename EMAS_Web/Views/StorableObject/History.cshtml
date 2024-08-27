@@ -1,6 +1,9 @@
-﻿@model List<string>
+﻿@model List<Model.Event.StorableObjectEvent>
 
+<ul class="list-group">
 @foreach(var eventEntry in Model)
 {
-	@eventEntry <br />
+	string stringEntry = Service.EventStringBuilder.EventToString(eventEntry);
+	<li class="list-group-item">@stringEntry</li>
 }
+</ul>

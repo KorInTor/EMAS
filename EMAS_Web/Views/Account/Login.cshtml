@@ -9,13 +9,13 @@
     <div style="color: red;">@ViewBag.ErrorMessage</div>
 }
 
-@using (Html.BeginForm())
+@using(Html.BeginForm())
 {
-    <div>
+    <div class="mb-3">
         <label>Имя пользователя</label>
         <input type="text" name="username" class="form-control" />
     </div>
-    <div>
+    <div class="mb-3">
         <label>Пароль</label>
         <input type="password" name="password" class="form-control" />
     </div>

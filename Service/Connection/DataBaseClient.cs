@@ -162,6 +162,11 @@ namespace Service.Connection
             return employeeDataAccess.Select();
         }
 
+        public Employee? SelectEmployee(int employeeId)
+        {
+            return employeeDataAccess.SelectById(employeeId);
+        }
+
         public List<Location> SelectLocations()
         {
             return locationDataAccess.Select();
@@ -358,5 +363,6 @@ namespace Service.Connection
         {
             return IsDataUpToDate(out _);
         }
+
     }
 }

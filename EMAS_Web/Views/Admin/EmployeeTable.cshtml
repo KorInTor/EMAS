@@ -1,0 +1,30 @@
+﻿@model List<Model.Employee>
+<table id="equipmentTable" class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Полное имя</th>
+            <th>E-Mail</th>
+            <th>Имя пользователя</th>
+            <th></th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (Model.Employee employee in Model)
+        {
+            <tr>
+                <td>@employee.Id</td>
+                <td>@employee.Fullname</td>
+                <td>@employee.Email</td>
+                <td>@employee.Username</td>
+                <td>
+                    <form asp-controller="Admin" asp-action="EmployeeEditor" method="get">
+                        <input type="hidden" name="employeeId" value="@employee.Id" />
+                        <button type="submit" class="btn btn-primary">Права Доступа</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

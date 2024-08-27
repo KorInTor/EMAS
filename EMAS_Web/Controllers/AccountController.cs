@@ -24,6 +24,7 @@ namespace EMAS_Web.Controllers
             {
                 HttpContext.Session.SetInt32("UserId", dbUser.Id);
                 HttpContext.Session.SetString("Username", dbUser.Username);
+                HttpContext.Session.SetString("UserFullname", DataBaseClient.GetInstance().SelectEmployee(dbUser.Id).Fullname);
 
                 return RedirectToAction("Index", "Home");
             }

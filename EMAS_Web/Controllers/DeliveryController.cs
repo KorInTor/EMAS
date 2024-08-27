@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EMAS_Web.Filters;
+using Microsoft.AspNetCore.Mvc;
 using Model.Event;
 using Service.Connection;
 using System.Diagnostics;
 
 namespace EMAS_Web.Controllers
 {
+    [AuthorizationFilter]
     public class DeliveryController : Controller
     {
         public IActionResult Index(int locationId = 1)
@@ -15,10 +17,6 @@ namespace EMAS_Web.Controllers
         [HttpGet]
         public IActionResult Create(IEnumerable<string> selectedIds, int departureId)
         {
-            if (HttpContext.Session.GetInt32("UserId") == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
 
             if (selectedIds == null || !selectedIds.Any())
             {
@@ -47,11 +45,6 @@ namespace EMAS_Web.Controllers
         [HttpPost]
         public IActionResult Create(IEnumerable<string> selectedIds, DateTime dateTime, string comment, string destinationName, int destinationId, int departureId)
         {
-            if (HttpContext.Session.GetInt32("UserId") == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
             if (selectedIds == null || !selectedIds.Any())
             {
                 ViewBag.Message = "Не выбрано ни одного элемента.";
@@ -73,11 +66,6 @@ namespace EMAS_Web.Controllers
         public IActionResult Confirm(long sentEventId)
         {
             var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventById(sentEventId, typeof(SentEvent));
-
-            if (HttpContext.Session.GetInt32("UserId") == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
 
             List<string> shortInfos = [];
             foreach(var item in sentEventToConfirm.ObjectsInEvent)

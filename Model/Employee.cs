@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Model.Enum;
 using Service.Connection;
 using System;
 using System.Collections.Generic;
@@ -36,15 +37,19 @@ namespace Model
         private string _passwordHash = string.Empty;
 
         private string _username = string.Empty;
-        private PermissionInfo _permissionInfo;
 
-        public Employee(int id, string fullname, string username, string email, PermissionInfo permissionInfo)
+        private bool _isAdmin = false;
+
+        private List<Permission> _permissions;
+
+        public Employee(int id, string fullname, string username, string email, List<Permission> permissions, bool isAdmin)
         {
             Id = id;
             Fullname = fullname;
             Username = username;
             Email = email;
-            PermissionInfo = permissionInfo;
+            _permissions = permissions;
+            _isAdmin = isAdmin;
         }
 
         public Employee(string fullname, string email, string username)
@@ -103,10 +108,48 @@ namespace Model
             set => SetProperty(ref _passwordHash, value);
         }
 
+        public List<Permission> Permissions { get => _permissions; set => _permissions = value; }
+
         public PermissionInfo PermissionInfo
         {
-            get => _permissionInfo;
-            set => SetProperty(ref _permissionInfo, value);
+            get
+            {
+                Dictionary<int, List<string>> permissionsDictionary = [];
+
+                foreach (var permission in _permissions)
+                {
+                    List<string> permissionsList = [];
+                    if (!permissionsDictionary.ContainsKey(permission.LocationId))
+                    {
+                        permissionsDictionary.Add(permission.LocationId, []);
+                    }
+                    permissionsDictionary[permission.LocationId].Add(permission.ToString());
+                }
+
+                var permissionInfo = new PermissionInfo(_isAdmin, permissionsDictionary);
+
+                return permissionInfo;
+            }
+
+            set
+            {
+                _isAdmin = value.IsCurrentEmployeeAdmin;
+                _permissions.Clear();
+                foreach(var key in value.Permissions.Keys)
+                {
+                    foreach (var permission in value.Permissions[key])
+                    {
+                        if (System.Enum.TryParse(permission, out PermissionType permissionType))
+                        {
+                            _permissions.Add(new Permission(key,permissionType));
+                        }
+                        else
+                        {
+                            throw new InvalidCastException("Unable to cast string to enum");
+                        }
+                    }
+                }
+            }
         }
     }
 }

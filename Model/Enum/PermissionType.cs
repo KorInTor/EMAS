@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Model.Enum
+﻿namespace Model.Enum
 {
     public enum PermissionType
     {
@@ -13,5 +7,27 @@ namespace Model.Enum
         EquipmentEdit = 3,
         MaterialsAdd = 4,
         MaterialsEdit = 5
+    }
+
+    public static class PermissionTypeExtensions
+    {
+        public static string RuLocalString(this PermissionType enumValue)
+        {
+            switch (enumValue)
+            {
+                case PermissionType.DeliveryAccess:
+                    return "Работа с доставками";
+                case PermissionType.EquipmentAdd:
+                    return "Добавление оборудования";
+                case PermissionType.EquipmentEdit:
+                    return "Измененеие оборудования";
+                case PermissionType.MaterialsAdd:
+                    return "Добавление материалов";
+                case PermissionType.MaterialsEdit:
+                    return "Изменение материалов";
+                default:
+                    throw new NotImplementedException();
+            }
+        }
     }
 }

@@ -32,8 +32,7 @@ namespace Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    PermissionInfo permissionInfo = GetPermissionInfo(reader.GetInt32(0));
-                    employeeList.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(3), reader.GetString(2), permissionInfo));
+                    employeeList.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(3), reader.GetString(2), GetPermissions(reader.GetInt32(0)), IsEmployeeAdmin(reader.GetInt32(0))));
                 }
             }
 
@@ -56,8 +55,7 @@ namespace Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    PermissionInfo permissionInfo = GetPermissionInfo(id);
-                    employee = new Employee(id, reader.GetString(0), reader.GetString(1), reader.GetString(2), permissionInfo);
+                    employee = new Employee(id, reader.GetString(0), reader.GetString(1), reader.GetString(2), GetPermissions(id), IsEmployeeAdmin(id));
                 }
             }
 
@@ -79,8 +77,7 @@ namespace Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    PermissionInfo permissionInfo = GetPermissionInfo(reader.GetInt32(0));
-                    employee = new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), permissionInfo);
+                    employee = new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), GetPermissions(reader.GetInt32(0)), IsEmployeeAdmin(reader.GetInt32(0)));
                 }
             }
 
@@ -127,16 +124,13 @@ namespace Service.Connection.DataAccess
             deleteCommand.ExecuteNonQuery();
 
             string insertQuery = "INSERT INTO \"permission\".employee_permissions (employee_id, permission_type, location_id) VALUES (@employeeId, @permissionType, @location_id);";
-            foreach (var permissionsOnLocation in objectToUpdate.PermissionInfo.Permissions)
+            foreach (var permission in objectToUpdate.Permissions)
             {
-                foreach (var permission in permissionsOnLocation.Value)
-                {
-                    using var insertCommand = new NpgsqlCommand(insertQuery, connection);
-                    insertCommand.Parameters.AddWithValue("@employeeId", objectToUpdate.Id);
-                    insertCommand.Parameters.AddWithValue("@location_id", permissionsOnLocation.Key);
-                    insertCommand.Parameters.AddWithValue("@permissionType", (int)Enum.Parse(typeof(PermissionType), permission));
-                    insertCommand.ExecuteNonQuery();
-                }
+                using var insertCommand = new NpgsqlCommand(insertQuery, connection);
+                insertCommand.Parameters.AddWithValue("@employeeId", objectToUpdate.Id);
+                insertCommand.Parameters.AddWithValue("@location_id", permission.LocationId);
+                insertCommand.Parameters.AddWithValue("@permissionType", (int)permission.PermissionType) ;
+                insertCommand.ExecuteNonQuery();
             }
 
             ConnectionPool.ReleaseConnection(connection);
@@ -176,6 +170,31 @@ namespace Service.Connection.DataAccess
             return permissions;
         }
 
+        public List<Permission> SelectEmployeePermissionsList(int employeeId)
+        {
+            var connection = ConnectionPool.GetConnection();
+
+            List<Permission> permissions = [];
+
+            string sql = "SELECT permission_type, location_id " +
+            "FROM \"permission\".employee_permissions " +
+            "WHERE employee_id = @employeeId";
+
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@employeeId", employeeId);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var permission = new Permission(reader.GetInt32(1), (PermissionType)reader.GetInt32(0));
+                    permissions.Add(permission);
+                }
+            }
+            ConnectionPool.ReleaseConnection(connection);
+            return permissions;
+        }
+
         public bool IsEmployeeAdmin(int employeeId)
         {
             var connection = ConnectionPool.GetConnection();
@@ -194,6 +213,11 @@ namespace Service.Connection.DataAccess
         public PermissionInfo GetPermissionInfo(int employeeId)
         {
             return new PermissionInfo(IsEmployeeAdmin(employeeId), SelectEmployeePermissions(employeeId));
+        }
+
+        public List<Permission> GetPermissions(int employeeId)
+        {
+            return SelectEmployeePermissionsList(employeeId);
         }
 
         public void Add(Employee[] objectToAdd)

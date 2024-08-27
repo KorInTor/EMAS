@@ -1,9 +1,12 @@
 using EMAS_Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using EMAS_Web.Filters;
 
 namespace EMAS_Web.Controllers
 {
+
+    [AuthorizationFilter]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -15,10 +18,6 @@ namespace EMAS_Web.Controllers
 
         public IActionResult Index()
         {
-            if (HttpContext.Session.GetInt32("UserId") == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
             ViewBag.UserId = HttpContext.Session.GetInt32("UserId");
             return View();
         }
