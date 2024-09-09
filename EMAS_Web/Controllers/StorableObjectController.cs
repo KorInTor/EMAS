@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using EMAS_Web.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Model;
 using Model.Event;
 using Service;
 using Service.Connection;
+using Service.Connection.DataAccess;
 
 namespace EMAS_Web.Controllers
 {
     public class StorableObjectController : Controller
     {
+
+
         public IActionResult Material(int locationId = 1)
         {
             List<MaterialPiece> materialList = [];
@@ -24,7 +29,7 @@ namespace EMAS_Web.Controllers
             ViewBag.LocationId = locationId;
             return View(materialList);
         }
-
+        /*
         public IActionResult Equipment(int locationId = 1)
         {
             List<Equipment> equipmentList = [];
@@ -36,10 +41,10 @@ namespace EMAS_Web.Controllers
                     equipmentList.Add(equipment);
                 }
             }
-
             ViewBag.LocationId = locationId;
             return View(equipmentList);
         }
+        */
 
         public IActionResult AddEquipment()
         {
@@ -84,6 +89,33 @@ namespace EMAS_Web.Controllers
         public IActionResult History(int storableObjectId)
         {
             return View(DataBaseClient.GetInstance().SelectForStorableObjectId(storableObjectId));
+        }
+
+        public IActionResult Equipment(int locationId = 1)
+        {
+            EmployeeDataAccess currentUserInfo = new EmployeeDataAccess();
+            int checkId = Convert.ToInt32(HttpContext.Session.GetInt32("UserId"));
+            var permissionsRaw = currentUserInfo.SelectEmployeePermissionsList(Convert.ToInt32(HttpContext.Session.GetInt32("UserId")));
+
+            // Custom class intended to be used as parcel containing fields required for Equipment Razor Page to have it's data
+            EquipmentModel model = new EquipmentModel();
+            List<Equipment> equipmentList = new List<Equipment>();
+
+            foreach(var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
+            {
+                if (item is Equipment equipment)
+                {
+                    equipmentList.Add(equipment);
+                }
+            }
+
+            List<Permission> permissions = (from ps in permissionsRaw where ps.LocationId == locationId && ps.PermissionType.ToString().StartsWith("Equipment") select ps).ToList();
+
+
+
+            model.Equipment = equipmentList;
+            model.Permissions = permissions;
+            return View(model); 
         }
     }
 }

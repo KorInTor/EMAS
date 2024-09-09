@@ -1,4 +1,4 @@
-﻿@model List<Model.Equipment>
+﻿@model EMAS_Web.Models.EquipmentModel
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <head>
@@ -40,55 +40,93 @@
         }
     </script>
 
+    <link rel="stylesheet" href="~/css/main_page.css">
 </head>
 
-<h2>Список оборудования</h2>
+<body>
+    <h2>Список оборудования</h2>
 
-<table id="equipmentTable" class="table">
-    <thead>
-        <tr>
-            <th></th>
-            <th>Id</th>
-            <th>Название</th>
-            <th>Тип</th>
-            <th>Производитель</th>
-            <th>Статус</th>
-            <th>Описание</th>
-            <th>Регистрационный номер</th>
-            <th>История</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+    <table id="equipmentTable" class="table">
+        <thead>
             <tr>
-                <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
-                <td>@item.Id</td>
-                <td>@item.Name</td>
-                <td>@item.Type</td>
-                <td>@item.Manufacturer</td>
-                <td>
-                    <select>
-                        <option value="@item.Status">@item.Status</option>
-                        <option value="ph1">Placeholder1</option>
-                        <option value="ph2">Placeholder2</option>
-                    </select>
-                </td>
-                <td>@item.Description</td>
-                <td>@item.RegistrationNumber</td>
-                <td>
-                    <form asp-controller="StorableObject" asp-action="History" method="get">
-                        <input type="hidden" name="storableObjectId" value="@item.Id" />
-                        <button type="submit" class="btn btn-primary">История</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                <th></th>
+                <th>
+                    Id
+                    <div class="dropdown">
+                        <button onclick="toggleDropdown()" class="dropbtn"></button>
+                        <div id="myDropdown" class="dropdown-content">
+                            <a href="#">Link 1</a>
+                            <a href="#">Link 2</a>
+                            <a href="#">Link 3</a>
+                        </div>
+                    </div>
 
-<div class="fixed-bottom">
-    <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
-    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest()">Создать доставку</button>
-    <button class="btn btn-info">Изменить</button>
-</div>
+                </th>
+                <th>Название </th>
+                <th>Тип</th>
+                <th>Производитель</th>
+                <th>Статус</th>
+                <th>Описание</th>
+                <th>Регистрационный номер</th>
+                <th>История</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Equipment)
+            {
+                <tr>
+                    <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.Type</td>
+                    <td>@item.Manufacturer</td>
+                    <td>
+                        <select>
+                            <option value="@item.Status">@item.Status</option>
+                            <option value="ph1">Placeholder1</option>
+                            <option value="ph2">Placeholder2</option>
+                        </select>
+                    </td>
+                    <td>@item.Description</td>
+                    <td>@item.RegistrationNumber</td>
+                    <td>
+                        <form asp-controller="StorableObject" asp-action="History" method="get">
+                            <input type="hidden" name="storableObjectId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary">История</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="fixed-bottom">
+        <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
+        <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest()">Создать доставку</button>
+        <button class="btn btn-info">Изменить</button>
+        @foreach(var permission in Model.Permissions)
+        {
+            <button class="btn btn-primary">
+                @{
+                    string buttonText = string.Empty;
+                    switch (permission.PermissionType.ToString())
+                    {
+                        case "EquipmentEdit":
+                            buttonText = "Изменить";
+                            break;
+                        case "EquipmentAdd":
+                            buttonText = "Добавить";
+                        break;
+                        case "EquipmentDelete":
+                            buttonText = "Удалить";
+                        break;
+                    }
+
+                }
+                @buttonText
+                </button>
+        }
+    </div>
+
+    <script src="~/js/main_page.js"></script>
+</body>
