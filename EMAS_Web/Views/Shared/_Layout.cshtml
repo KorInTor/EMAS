@@ -36,6 +36,9 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EmployeeTable">Сотрудники</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EquipmentStatusEditor">Статусы Оборудования</a>
+                        </li>
                     </ul>
                     @{
                         var userFullname = Context.Session.GetString("UserFullname");

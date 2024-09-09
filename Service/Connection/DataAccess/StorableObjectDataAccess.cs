@@ -8,19 +8,13 @@ namespace Service.Connection.DataAccess
 {
     public class StorableObjectDataAccess
     {
-        private IStorableObjectDataAccess<Equipment> equipmentDataAccess;
+        public EquipmentDataAccess equipmentDataAccess;
         private IStorableObjectDataAccess<MaterialPiece> materialDataAccess;
 
         public StorableObjectDataAccess()
         {
             equipmentDataAccess = new EquipmentDataAccess();
             materialDataAccess = new MaterialDataAccess();
-        }
-
-        public StorableObjectDataAccess(IStorableObjectDataAccess<Equipment> customEquipmentDataAccess, IStorableObjectDataAccess<MaterialPiece> customMaterialDataAccess)
-        {
-            equipmentDataAccess = customEquipmentDataAccess;
-            materialDataAccess = customMaterialDataAccess;
         }
 
         /// <summary>

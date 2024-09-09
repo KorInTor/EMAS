@@ -3,14 +3,53 @@ using Model;
 using Model.Enum;
 using Service.Connection;
 using Service.Security;
+using System.Diagnostics;
 
 namespace EMAS_Web.Controllers
 {
     public class AdminController : Controller
     {
+        public class StatusUpdate
+        {
+            public int Id { get; set; }
+            public string Value { get; set; }
+        }
+
         public IActionResult Index()
         {
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult EquipmentStatusEditor()
+        {
+            return View(DataBaseClient.GetInstance().SelectEquipmentStatuses());
+        }
+
+        [HttpPost]
+        public IActionResult EquipmentStatusEditor([FromBody] IEnumerable<StatusUpdate> statuses)
+        {
+            if (statuses == null || !statuses.Any())
+            {
+                Response.StatusCode = 400; // Bad Request
+                return Json(new { message = "Список статусов пуст или невалиден." });
+            }
+
+            Debug.WriteLine("Полученные статусы");
+            foreach (var status in statuses)
+            {
+                Debug.WriteLine(status);
+            }
+
+            List<(int, string)> statusTuples = [];
+            foreach(var status in statuses)
+            {
+                statusTuples.Add((status.Id, status.Value));
+            }
+
+            DataBaseClient.GetInstance().UpdateEquipmentStatuses(statusTuples);
+
+            return Json(new { message = "Список успешно обновлён" });
         }
 
         public IActionResult EmployeeTable()

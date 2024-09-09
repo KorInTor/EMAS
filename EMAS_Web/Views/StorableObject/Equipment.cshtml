@@ -70,8 +70,14 @@
                 <td>
                     <select>
                         <option value="@item.Status">@item.Status</option>
-                        <option value="ph1">Placeholder1</option>
-                        <option value="ph2">Placeholder2</option>
+
+                        @foreach (KeyValuePair<int, string> status in ViewBag.Statuses)
+                        {
+                            @if(status.Value != item.Status)
+                            {
+                                <option value="@status.Key">@status.Value</option>
+                            }
+                        }
                     </select>
                 </td>
                 <td>@item.Description</td>
