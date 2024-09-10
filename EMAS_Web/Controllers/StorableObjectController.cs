@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using EMAS_Web.Models;
+﻿using EMAS_Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Model;
@@ -29,10 +28,14 @@ namespace EMAS_Web.Controllers
             ViewBag.LocationId = locationId;
             return View(materialList);
         }
-        /*
+        
         public IActionResult Equipment(int locationId = 1)
         {
+            EmployeeDataAccess currentUserInfo = new EmployeeDataAccess();
+
             List<Equipment> equipmentList = [];
+            List<Permission> permissions = (from prm in currentUserInfo.SelectEmployeePermissionsList(Convert.ToInt32(HttpContext.Session.GetInt32("UserId")))
+                                           where prm.PermissionType.ToString().StartsWith("Equipment") && prm.LocationId == locationId select prm).ToList();
 
             foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
             {
@@ -41,10 +44,29 @@ namespace EMAS_Web.Controllers
                     equipmentList.Add(equipment);
                 }
             }
+            List<string> permissionsStrings = [];
+            foreach(var permission in permissions)
+            {
+                switch(permission.PermissionType.ToString())
+                {
+                    case "EquipmentAdd":
+                        permissionsStrings.Add("Добавить");
+                        break;
+                    case "EquipemntDelete":
+                        permissionsStrings.Add("Удалить");
+                        break;
+                    case "EquipemntEdit":
+                        permissionsStrings.Add("Изменить");
+                        break;
+                }
+            }
+
             ViewBag.LocationId = locationId;
+            ViewBag.PermissionNames = permissionsStrings;
+            ViewBag.Permissions = permissions;
             return View(equipmentList);
         }
-        */
+       
 
         public IActionResult AddEquipment()
         {
@@ -91,6 +113,7 @@ namespace EMAS_Web.Controllers
             return View(DataBaseClient.GetInstance().SelectForStorableObjectId(storableObjectId));
         }
 
+        /*
         public IActionResult Equipment(int locationId = 1)
         {
             EmployeeDataAccess currentUserInfo = new EmployeeDataAccess();
@@ -117,5 +140,6 @@ namespace EMAS_Web.Controllers
             model.Permissions = permissions;
             return View(model); 
         }
+        */
     }
 }
