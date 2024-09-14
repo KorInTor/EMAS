@@ -183,7 +183,7 @@ namespace Service.Connection
                 defaultConditions.Add(ceilingCondition);
             }
 
-            //-* Addition Event *-
+            //-* Addition Event *-//
 
             List<BaseCondition> additionConditions = [];
 
@@ -192,11 +192,28 @@ namespace Service.Connection
 
             events.AddRange(eventDataAccess.Select(additionConditions, typeof(AdditionEvent)));
 
-            //-* Delivery Event *-
+            //-* Delivery Event *-//
 
-            //-* Reservation Event *-
+            List<BaseCondition> deliveryConditions = [];
+			deliveryConditions.AddRange(defaultConditions);
+			deliveryConditions.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DestinationId), Comparison.Equal, locationId));
 
-            //-* Decomission Event *-
+            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(SentEvent)));
+            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(ArrivedEvent)));
+
+			deliveryConditions.RemoveAt(deliveryConditions.Count-1);
+            deliveryConditions.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DepartureId), Comparison.Equal, locationId));
+
+            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(SentEvent)));
+            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(ArrivedEvent)));
+
+            //-* Reservation Event *-//
+
+			//TODO Реализовать
+
+            //-* Decomission Event *-//
+
+			//TODO Реализовать
 
             return events;
 		}
