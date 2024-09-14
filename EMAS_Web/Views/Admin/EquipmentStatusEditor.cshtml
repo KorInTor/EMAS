@@ -1,0 +1,91 @@
+﻿@model Dictionary<int, string>
+
+<ul class="list-group" id="statusList">
+    @foreach (var status in Model)
+    {
+        <input type="text" class="list-group-item list-group-item-action" id="@status.Key" value="@status.Value" />
+    }
+</ul>
+<button type="button" class="btn btn-success" id="addButton">Добавить</button>
+<button type="button" class="btn btn-primary" id="editButton">Изменить</button>
+<button type="button" class="btn btn-danger" id="deleteButton">Удалить</button>
+<button type="button" class="btn btn-primary" id="confirmButton" style="display:none;">Подтвердить</button>
+<button type="button" class="btn btn-secondary" id="resetButton" style="display:none;">Сброс</button>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const statusList = document.getElementById("statusList");
+            const addButton = document.getElementById("addButton");
+            const deleteButton = document.getElementById("deleteButton");
+            const confirmButton = document.getElementById("confirmButton");
+            const resetButton = document.getElementById("resetButton");
+            let selectedStatus = null;
+
+            addButton.addEventListener("click", function () {
+                const newStatus = document.createElement("input");
+                newStatus.id = "0";
+                newStatus.type = "text";
+                newStatus.className = "list-group-item list-group-item-action";
+                newStatus.placeholder = "Введите название статуса";
+                statusList.appendChild(newStatus);
+                confirmButton.style.display = "inline-block";
+                resetButton.style.display = "inline-block";
+            });
+
+            statusList.addEventListener("click", function (event) {
+                if (event.target.tagName === "INPUT") {
+                    if (selectedStatus) {
+                        selectedStatus.classList.remove("active");
+                    }
+                    selectedStatus = event.target;
+                    selectedStatus.classList.add("active");
+                    confirmButton.style.display = "inline-block";
+                    resetButton.style.display = "inline-block";
+                }
+            });
+
+            deleteButton.addEventListener("click", function () {
+                if (selectedStatus) {
+                    statusList.removeChild(selectedStatus);
+                    selectedStatus = null;
+                    confirmButton.style.display = "inline-block";
+                    resetButton.style.display = "inline-block";
+                }
+            });
+
+            confirmButton.addEventListener("click", async function () {
+                try {
+                    const statuses = [];
+                    statusList.querySelectorAll(".list-group-item").forEach(item => {
+                        statuses.push({ id: parseInt(item.id), value: item.value });
+                    });
+                    console.log(statuses);
+
+                    const response = await fetch('/Admin/EquipmentStatusEditor', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(statuses)
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        alert(`Ошибка: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Ошибка при выполнении запроса:', error);
+                    alert('Произошла ошибка при выполнении запроса.');
+                }
+            });
+
+            resetButton.addEventListener("click", function () {
+                window.location.reload();
+            });
+        });
+    </script>
+}

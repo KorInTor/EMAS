@@ -1,13 +1,34 @@
 ﻿using Model;
 using Service.Connection.DataAccess.Interface;
 using Npgsql;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Service.Connection.DataAccess
 {
     public class EquipmentDataAccess : IStorableObjectDataAccess<Equipment>
     {
+        private static Dictionary<string, string> _propertyColumnNames;
+
+        public static Dictionary<string,string> PropertyColumnNames
+        {
+            get
+            {
+                if (_propertyColumnNames != null)
+                    return _propertyColumnNames;
+
+                _propertyColumnNames = [];
+
+                _propertyColumnNames.Add(nameof(Equipment.Name),"\"name\"");
+                _propertyColumnNames.Add(nameof(Equipment.Manufacturer), "manufacturer");
+                _propertyColumnNames.Add(nameof(Equipment.Type), "type");
+                _propertyColumnNames.Add(nameof(Equipment.Units), "measurment_units");
+                _propertyColumnNames.Add(nameof(Equipment.AccuracyClass), "accuracy_class");
+                _propertyColumnNames.Add(nameof(Equipment.Limit), "measurment_limit");
+                //_propertyColumnNames.Add(nameof(Equipment.FactoryNumber), "serial_number");
+                //_propertyColumnNames.Add(nameof(Equipment.RegistrationNumber), "inventory_number");
+
+                return _propertyColumnNames;
+            }
+        }
 
         public Equipment? SelectById(int id)
         {
@@ -18,6 +39,132 @@ namespace Service.Connection.DataAccess
                 return founded.FirstOrDefault();
         }
 
+        public Dictionary<int,string> SelectStatuses()
+        {
+            Dictionary<int, string> statuses = [];
+
+            string query = "SELECT id, \"name\"\r\nFROM public.equipment_status";
+			var connection = ConnectionPool.GetConnection();
+
+			using var command = new NpgsqlCommand(query, connection);
+
+			using var reader = command.ExecuteReader();
+			while (reader.Read())
+			{
+                statuses.Add(reader.GetInt32(0),reader.GetString(1));
+			}
+
+			ConnectionPool.ReleaseConnection(connection);
+
+			return statuses;
+		}
+
+        public Dictionary<string, List<string>> SelectDistinct(IEnumerable<string>? propertyToSelect = null)
+        {
+            Dictionary<string, List<string>> distinctPropertyValues = [];
+
+            IEnumerable<string> properties;
+            if (propertyToSelect != null)
+            {
+                properties = propertyToSelect;
+            }
+            else
+            {
+                properties = PropertyColumnNames.Keys;
+            }
+
+            string distinctQueryBlank = "SELECT distinct - FROM public.equipment;";
+
+            var connection = ConnectionPool.GetConnection();
+            foreach (string property in properties)
+            {
+                string distinctQuery = distinctQueryBlank.Replace("-", PropertyColumnNames[property]);
+
+                var command = new NpgsqlCommand(distinctQuery, connection);
+                var reader = command.ExecuteReader();
+                distinctPropertyValues.Add(property, []);
+                while (reader.Read())
+                {
+                    distinctPropertyValues[property].Add(reader.GetString(0));
+                }
+                reader.Close();
+                command.Dispose();
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+
+            return distinctPropertyValues;
+        }
+
+        public void UpdateStatuses(IEnumerable<(int,string)> statuses)
+        {
+            string insertQuery = "INSERT INTO public.equipment_status (\"name\") VALUES(@statusName);";
+            string deleteQuery = "DELETE FROM public.equipment_status WHERE id=@id;";
+            string updateQuery = "UPDATE public.equipment_status SET \"name\"=@newName WHERE id=@id;";
+
+            List<(int, string)> statusesToUpdate = [];
+            List<(int, string)> statusesToDelete = [];
+            List<(int, string)> statusesToInsert = [];
+
+            Dictionary<int, string> oldStatuses = SelectStatuses();
+            oldStatuses.Remove(-1);
+
+            foreach(var status in statuses)
+            {
+                if (status.Item1 == 0)
+                {
+                    statusesToInsert.Add(status);
+                    continue;
+                }
+
+                foreach (var oldInt in oldStatuses.Keys)
+                {
+                    if (status.Item1 == oldInt)
+                    {
+                        statusesToUpdate.Add(status);
+                        oldStatuses.Remove(oldInt);
+                        break;
+                    }
+                }
+            }
+
+            foreach (var oldStatus in oldStatuses)
+            {
+                statusesToDelete.Add((oldStatus.Key, oldStatus.Value));
+            }
+
+            var connection = ConnectionPool.GetConnection();
+
+            foreach (var newStatus in statusesToInsert)
+            {
+                using (var command = new NpgsqlCommand(insertQuery, connection))
+                {
+                    command.Parameters.AddWithValue("@statusName", newStatus.Item2);
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            foreach (var updatedStatus in statusesToUpdate)
+            {
+                using (var command = new NpgsqlCommand(updateQuery, connection))
+                {
+                    command.Parameters.AddWithValue("@id", updatedStatus.Item1);
+                    command.Parameters.AddWithValue("@newName", updatedStatus.Item2);
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            foreach (var removedStatus in statusesToDelete)
+            {
+                using (var command = new NpgsqlCommand(deleteQuery, connection))
+                {
+                    command.Parameters.AddWithValue("@id", removedStatus.Item1);
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+		}
 
         public void Update(Equipment objectToUpdate)
         {
@@ -37,9 +184,27 @@ namespace Service.Connection.DataAccess
         public void Add(IEnumerable<Equipment> objectsToAdd)
         {
             var connection = ConnectionPool.GetConnection();
-            foreach (var equipment in objectsToAdd)
+			Dictionary<int, string> statusesDictionary = SelectStatuses();
+
+			foreach (var equipment in objectsToAdd)
             {
-                
+                bool isStatusValid = false;
+                int statusId = 0;
+                foreach(KeyValuePair<int,string> status in statusesDictionary)
+                {
+                    if (equipment.Status == status.Value)
+                    {
+                        statusId = status.Key;
+						isStatusValid = true;
+					}
+                        
+                }
+
+                if (!isStatusValid)
+                {
+                    throw new ArgumentException("Такого статуса нет в базе данных");
+                }
+
                 string query = @"
                 INSERT INTO public.equipment
                 (id, name, manufacturer, type, measurment_units, accuracy_class, measurment_limit, serial_number, inventory_number, status, description)
@@ -57,7 +222,7 @@ namespace Service.Connection.DataAccess
                     command.Parameters.AddWithValue("@FactoryNumber", equipment.FactoryNumber);
                     command.Parameters.AddWithValue("@RegistrationNumber", equipment.RegistrationNumber);
                     //command.Parameters.AddWithValue("@Tags", string.Join(",", item.Tags)); Tags Will be Reworked
-                    command.Parameters.AddWithValue("@Status", equipment.Status);
+                    command.Parameters.AddWithValue("@Status", statusId);
                     command.Parameters.AddWithValue("@Description", equipment.Description);
 
                     _ = command.ExecuteNonQuery();
@@ -75,6 +240,7 @@ namespace Service.Connection.DataAccess
         public IEnumerable<Equipment> SelectByIds(IEnumerable<int> ids)
         {
             List<Equipment> foundedEquipmentList = [];
+            Dictionary<int, string> statusesDictionary = SelectStatuses(); 
             var connection = ConnectionPool.GetConnection();
             foreach (int id in ids)
             {
@@ -89,7 +255,7 @@ namespace Service.Connection.DataAccess
                 using var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
-                    string status = reader.GetString(0);
+                    string status = statusesDictionary[reader.GetInt32(0)];
                     string registrationNumber = reader.GetString(1);
                     string description = reader.GetString(2);
                     string? accuracyClass = reader.IsDBNull(3) ? null : reader.GetString(3);

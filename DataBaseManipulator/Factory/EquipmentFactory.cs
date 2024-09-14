@@ -180,7 +180,7 @@ namespace DataBaseManipulator.Factory
             {
                 var randEquipment = new Equipment();
                 randEquipment.Limit = GenerateLimits();
-                randEquipment.Status = "";
+                randEquipment.Status = "-";
                 randEquipment.Tags = [];
                 randEquipment.AccuracyClass = random.Next(5).ToString();
                 randEquipment.RegistrationNumber = GenerateSerialNumber();

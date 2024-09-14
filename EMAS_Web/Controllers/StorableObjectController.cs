@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Model;
 using Model.Event;
+using EMAS_Web.Filters;
 using Service;
 using Service.Connection;
 using Service.Connection.DataAccess;
@@ -61,6 +62,7 @@ namespace EMAS_Web.Controllers
                 }
             }
 
+            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             ViewBag.LocationId = locationId;
             ViewBag.PermissionNames = permissionsStrings;
             ViewBag.Permissions = permissions;
@@ -68,26 +70,26 @@ namespace EMAS_Web.Controllers
         }
        
 
+        [AuthorizationFilter]
         public IActionResult AddEquipment()
         {
-            int? userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            //TODO Доабвить server side провепрку на наличие прав
+
+            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
+            ViewBag.DistinctValues = DataBaseClient.GetInstance().SelectDistinctPropertyValues(typeof(Equipment));
+
 
             return View();
         }
 
         [HttpPost]
+        [AuthorizationFilter]
         public IActionResult AddEquipment(Equipment newEquipment, int locationId)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-            {
-                return RedirectToAction("Login", "Account");
-            }
-            
+
+            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
+
             try
             {
                 var addition = new AdditionEvent((int)userId, 0, EventType.Addition, DateTime.Now, [newEquipment], locationId);

@@ -41,7 +41,7 @@ namespace Service.Connection.DataAccess
         {
             var connection = ConnectionPool.GetConnection();
 
-            string sql = "SELECT * FROM public.location";
+            string sql = "SELECT * FROM public.location WHERE id > 0";
             using var command = new NpgsqlCommand(sql, connection);
 
             List<Location> list = [];
