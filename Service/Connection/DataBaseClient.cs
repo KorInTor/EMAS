@@ -1,8 +1,10 @@
-﻿using Model;
+﻿using DocumentFormat.OpenXml.EMMA;
+using Model;
 using Model.Event;
 using Service.Connection.DataAccess;
 using Service.Connection.DataAccess.Interface;
 using Service.Connection.DataAccess.QueryBuilder;
+using System.Collections.Generic;
 using System.Net.Http.Headers;
 
 namespace Service.Connection
@@ -134,10 +136,72 @@ namespace Service.Connection
 
 		public List<SentEvent> GetDeliverysOutOf(int locationId)
 		{
-			return eventDataAccess.SelectActiveDeliveriesOutOfLocation(locationId);
+            var notArrivedCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id), true);
+            var departureCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DepartureId), Comparison.Equal, locationId);
+
+            IEnumerable<SentEvent> activeDeliveries = eventDataAccess.Select([notArrivedCondition, departureCondition], typeof(SentEvent)).OfType<SentEvent>();
+
+            return activeDeliveries.ToList();
 		}
 
-		public List<IStorableObject> SelectStorableObjectOn(int locationId)
+        public List<SentEvent> GetDeliverysInTo(int locationId, bool selectActive = true)
+        {
+            var destinationCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DestinationId), Comparison.Equal, locationId);
+
+			List<BaseCondition> conditions = [destinationCondition];
+			if (selectActive == true)
+			{
+                var notArrivedCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id), true);
+				conditions.Add(notArrivedCondition);
+            }
+
+            IEnumerable<SentEvent> activeDeliveries = eventDataAccess.Select(conditions, typeof(SentEvent)).OfType<SentEvent>();
+
+            return activeDeliveries.ToList();
+        }
+
+		public List<StorableObjectEvent> SelectLocationBoundedEvents(int locationId, DateTime? floorDateValue = null, DateTime? ceilingDateValue = null)
+		{
+			List<StorableObjectEvent> events = [];
+
+            if (locationId == 0)
+			{
+				throw new ArgumentException("Missing Location Id");
+			}
+
+			List<BaseCondition> defaultConditions = [];
+
+			if (floorDateValue is not null)
+			{
+				var floorCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.DateTime), Comparison.GreaterThanOrEqual, floorDateValue);
+				defaultConditions.Add(floorCondition);
+            }
+
+            if (ceilingDateValue is not null)
+            {
+                var ceilingCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.DateTime), Comparison.GreaterThanOrEqual, ceilingDateValue);
+                defaultConditions.Add(ceilingCondition);
+            }
+
+            //-* Addition Event *-
+
+            List<BaseCondition> additionConditions = [];
+
+			additionConditions.AddRange(defaultConditions);
+			additionConditions.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<AdditionEvent>(x => x.LocationId), Comparison.Equal, locationId));
+
+            events.AddRange(eventDataAccess.Select(additionConditions, typeof(AdditionEvent)));
+
+            //-* Delivery Event *-
+
+            //-* Reservation Event *-
+
+            //-* Decomission Event *-
+
+            return events;
+		}
+
+        public List<IStorableObject> SelectStorableObjectOn(int locationId)
 		{
 			return storableObjectDataAccess.SelectOnLocation(locationId).ToList();
 		}
@@ -150,7 +214,7 @@ namespace Service.Connection
 		public List<ReservedEvent> GetReservationOn(int locationId)
 		{
 			var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal, locationId);
-			return (List<ReservedEvent>)Task.Run(() => eventDataAccess.SelectAsync([condition], typeof(ReservedEvent))).Result;
+			return eventDataAccess.Select([condition], typeof(ReservedEvent)).OfType<ReservedEvent>().ToList();
 		}
 		
 		public Dictionary<string,List<string>> SelectDistinctPropertyValues(Type objectToSelectPropertyFor, IEnumerable<string>? properties = null)

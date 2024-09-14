@@ -15,12 +15,38 @@
     </style>
 </head>
 
+
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        @if (ViewBag.Outgoing)
+        {
+            <span>Исходящие</span>
+        }
+        @if (!ViewBag.Outgoing)
+        {
+            <span>Входящие</span>
+        }
+    </button>
+    <ul class="dropdown-menu">
+        @if (!ViewBag.Outgoing)
+        {
+            <li><a asp-controller="Delivery" asp-action="Index" asp-route-selectOutgoing="true" asp-route-locationId="@ViewBag.LocationId" class="btn btn-primary">Выбрать Исходящие</a></li>
+        }
+        @if (ViewBag.Outgoing)
+        {
+            <li><a asp-controller="Delivery" asp-action="Index" asp-route-selectOutgoing="false" asp-route-locationId="@ViewBag.LocationId" class="btn btn-primary">Выбрать Входящие</a></li>
+        }
+    </ul>
+</div>
+
 <table id="deliveryTable" class="table">
     <thead>
         <tr>
             <th>Id</th>
             <th>Дата отправки</th>
             <th>Комментарий</th>
+            <th>@(ViewBag.Outgoing ? "Место Назначения" : "Отправлено Из")</th>
+            <th></th>
             <th></th>
         </tr>
     </thead>
@@ -31,12 +57,39 @@
                 <td>@item.Id</td>
                 <td>@item.DateTime</td>
                 <td>@item.Comment</td>
+                <td>
+                    @if (ViewBag.Outgoing)
+                    {
+                        @ViewBag.LocationDictionary[item.DestinationId]
+                    }
+                    @if (!ViewBag.Outgoing)
+                    {
+                        @ViewBag.LocationDictionary[item.DepartureId]
+                    }
+                </td>
 
                 <td>
                     <form asp-controller="Delivery" asp-action="Confirm" method="get">
                         <input type="hidden" name="sentEventId" value="@item.Id" />
                         <button type="submit" class="btn btn-primary">Подтвердить</button>
                     </form>
+                </td>
+                <td>
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#@item.Id" aria-expanded="false" aria-controls="@item.Id">
+                        Показать предметы в доставке
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="6">
+                    <div class="collapse" id="@item.Id">
+                        <div class="card card-body">
+                            @foreach (var storableObject in item.ObjectsInEvent)
+                            {
+                                <p>@storableObject.ShortInfo</p>
+                            }
+                        </div>
+                    </div>
                 </td>
             </tr>
         }

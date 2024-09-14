@@ -9,9 +9,20 @@ namespace EMAS_Web.Controllers
     [AuthorizationFilter]
     public class DeliveryController : Controller
     {
-        public IActionResult Index(int locationId = 1)
+        public IActionResult Index(int locationId = 1, bool selectOutgoing = false)
         {
-            return View(DataBaseClient.GetInstance().GetDeliverysOutOf(locationId));
+            ViewBag.Outgoing = selectOutgoing;
+            ViewBag.LocationId = locationId;
+            ViewBag.LocationDictionary = DataBaseClient.GetInstance().SelectNamedLocations();
+
+            if (selectOutgoing)
+            {
+                return View(DataBaseClient.GetInstance().GetDeliverysOutOf(locationId));
+            }
+            else
+            {
+                return View(DataBaseClient.GetInstance().GetDeliverysInTo(locationId));
+            }
         }
 
         [HttpGet]

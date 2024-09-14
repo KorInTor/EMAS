@@ -53,10 +53,18 @@ namespace Service.Connection.DataAccess
                 if (newEvent is SentEvent sentEvent)
                 {
                     deliveryDataAccess.Add(sentEvent);
+
+                    StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
+
+                    storableObjectDataAccess.UpdateLocation(newEvent.ObjectsInEvent, -1);
                 }
                 if (newEvent is ReservedEvent reservedEvent)
                 {
                     reservationDataAccess.Add(reservedEvent);
+
+                    StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
+
+                    storableObjectDataAccess.UpdateLocation(newEvent.ObjectsInEvent, -1);
                 }
                 if (newEvent is ArrivedEvent arrivedEvent)
                 {
