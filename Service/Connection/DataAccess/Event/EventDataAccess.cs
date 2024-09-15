@@ -5,6 +5,7 @@ using Service.Connection.DataAccess.Event;
 using Service.Connection.DataAccess.QueryBuilder;
 using Npgsql;
 using System.Windows;
+using DocumentFormat.OpenXml.Presentation;
 
 namespace Service.Connection.DataAccess
 {
@@ -14,6 +15,10 @@ namespace Service.Connection.DataAccess
         private readonly DeliveryDataAccess deliveryDataAccess = new();
         private readonly ReservationDataAccess reservationDataAccess = new();
         private readonly AdditionDataAccess additionDataAccess = new();
+        private readonly DecomissionDataAccess decomissionDataAccess = new();
+
+        private readonly int _busyAtEventLocationId = -1;
+        private readonly int _decomissionedLocationId = -2;
 
         private Dictionary<EventType, Type> TypeEnumToType = new Dictionary<EventType, Type>();
         public EventDataAccess()
@@ -48,6 +53,10 @@ namespace Service.Connection.DataAccess
 
                 if (newEvent is AdditionEvent additionEvent)
                 {
+                    StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
+
+                    storableObjectDataAccess.Add(additionEvent.ObjectsInEvent,additionEvent.LocationId);
+
                     additionDataAccess.InsertAdditionEvent(connection, additionEvent);
                 }
                 if (newEvent is SentEvent sentEvent)
@@ -56,7 +65,7 @@ namespace Service.Connection.DataAccess
 
                     StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
 
-                    storableObjectDataAccess.UpdateLocation(newEvent.ObjectsInEvent, -1);
+                    storableObjectDataAccess.UpdateLocation(newEvent.ObjectsInEvent, _busyAtEventLocationId);
                 }
                 if (newEvent is ReservedEvent reservedEvent)
                 {
@@ -64,7 +73,7 @@ namespace Service.Connection.DataAccess
 
                     StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
 
-                    storableObjectDataAccess.UpdateLocation(newEvent.ObjectsInEvent, -1);
+                    storableObjectDataAccess.UpdateLocation(newEvent.ObjectsInEvent, _busyAtEventLocationId);
                 }
                 if (newEvent is ArrivedEvent arrivedEvent)
                 {
@@ -82,6 +91,31 @@ namespace Service.Connection.DataAccess
                 if (newEvent is ReserveEndedEvent reserveEndedEvent)
                 {
                     reservationDataAccess.Complete(reserveEndedEvent);
+                }
+                if (newEvent is DecomissionedEvent decomissionedEvent)
+                {
+                    StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
+
+                    decomissionDataAccess.Insert(connection, decomissionedEvent);
+
+                    storableObjectDataAccess.UpdateLocation(decomissionedEvent.ObjectsInEvent,_decomissionedLocationId);
+
+                    if (decomissionedEvent.StartEventId != null && decomissionedEvent.StartEventType != null)
+                    {
+                        var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.Equal, decomissionedEvent.StartEventId);
+                        
+                        if (decomissionedEvent.StartEventType == EventType.Sent)
+                        {
+                            var decomissionedArrival = new ArrivedEvent(decomissionedEvent,"списан", (long)decomissionedEvent.StartEventId);
+                            deliveryDataAccess.Complete(decomissionedArrival);
+                        }
+                        if (decomissionedEvent.StartEventType == EventType.Reserved)
+                        {
+                            var decomissionedEndReserv = new ReserveEndedEvent(decomissionedEvent, "реализован", (long)decomissionedEvent.StartEventId);
+                            reservationDataAccess.Complete(decomissionedEndReserv);
+                        }
+
+                    }
                 }
 
                 preparedEquipmentEventObjectRelation.Add(newEvent.Id, newEvent.ObjectsInEvent.ToArray());
@@ -104,16 +138,6 @@ namespace Service.Connection.DataAccess
             }
 
             return true;
-        }
-
-        public List<SentEvent> SelectActiveDeliveriesOutOfLocation(int locationId)
-        {
-            var notArrivedCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id),true);
-            var departureCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DepartureId),Comparison.Equal,locationId);
-
-            IEnumerable<SentEvent> activeDeliveries = Select([notArrivedCondition, departureCondition], typeof(SentEvent)).OfType<SentEvent>();
-
-            return activeDeliveries.ToList();
         }
 
         public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
@@ -180,7 +204,8 @@ namespace Service.Connection.DataAccess
                             storableObjectEvent = new ReserveEndedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt64(5));
                             break;
                         case EventType.Decommissioned:
-                            throw new NotImplementedException();
+                            storableObjectEvent = new DecomissionedEvent(storableObjectEvent, reader.GetString(4));
+                            break;
                         case EventType.DataChanged:
                             throw new NotImplementedException();
                     }
@@ -207,7 +232,8 @@ namespace Service.Connection.DataAccess
                             storableObjectEvent = Select(conditions1, typeof(ReserveEndedEvent)).First();
                             break;
                         case EventType.Decommissioned:
-                            throw new NotImplementedException();
+                            storableObjectEvent = Select(conditions1, typeof(DecomissionedEvent)).First();
+                            break;
                         case EventType.DataChanged:
                             throw new NotImplementedException();
                     }
@@ -218,102 +244,6 @@ namespace Service.Connection.DataAccess
             ConnectionPool.ReleaseConnection(connection);
 
             return storableObjectEvents;
-        }
-
-        public async Task<IEnumerable<StorableObjectEvent>> SelectAsync(IEnumerable<BaseCondition> conditions, Type? typeOfEvent = null)
-        {
-            var storableObjectEvents = new List<StorableObjectEvent>();
-
-            typeOfEvent ??= typeof(StorableObjectEvent);
-
-            using var connection = ConnectionPool.GetConnection();
-
-            var queryBuilder = new SelectQueryBuilder(typeOfEvent, conditions);
-
-            using var command = queryBuilder.Build(connection);
-
-            using var reader = await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
-            {
-                var storableObjectEvent = new StorableObjectEvent(
-                    reader.GetInt32(0),
-                    reader.GetInt64(1),
-                    (EventType)reader.GetInt16(2),
-                    reader.GetDateTime(3),
-                    objectEventDataAccess.SelectObjectsInEvent(reader.GetInt64(1))
-                );
-
-                if (typeOfEvent != typeof(StorableObjectEvent))
-                {
-                    switch (storableObjectEvent.EventType)
-                    {
-                        case EventType.Addition:
-                            storableObjectEvent = new AdditionEvent(storableObjectEvent, reader.GetInt32(4));
-                            break;
-                        case EventType.Arrived:
-                            storableObjectEvent = new ArrivedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt64(5));
-                            break;
-                        case EventType.Sent:
-                            storableObjectEvent = new SentEvent(storableObjectEvent, reader.GetString(4), reader.GetInt32(5), reader.GetInt32(6));
-                            break;
-                        case EventType.Reserved:
-                            storableObjectEvent = new ReservedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt32(5));
-                            break;
-                        case EventType.ReserveEnded:
-                            storableObjectEvent = new ReserveEndedEvent(storableObjectEvent, reader.GetString(4), reader.GetInt64(5));
-                            break;
-                        case EventType.Decommissioned:
-                            throw new NotImplementedException();
-                        case EventType.DataChanged:
-                            throw new NotImplementedException();
-                    }
-                }
-                else
-                {
-                    List<BaseCondition> conditions1 = [new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.Equal, storableObjectEvent.Id)];
-
-                    switch (storableObjectEvent.EventType)
-                    {
-                        case EventType.Addition:
-                            storableObjectEvent = SelectAsync(conditions1, typeof(AdditionEvent)).Result.First();
-                            break;
-                        case EventType.Arrived:
-                            storableObjectEvent = SelectAsync(conditions1, typeof(ArrivedEvent)).Result.First();
-                            break;
-                        case EventType.Sent:
-                            storableObjectEvent = SelectAsync(conditions1, typeof(SentEvent)).Result.First();
-                            break;
-                        case EventType.Reserved:
-                            storableObjectEvent = SelectAsync(conditions1, typeof(ReservedEvent)).Result.First();
-                            break;
-                        case EventType.ReserveEnded:
-                            storableObjectEvent = SelectAsync(conditions1, typeof(ReserveEndedEvent)).Result.First();
-                            break;
-                        case EventType.Decommissioned:
-                            throw new NotImplementedException();
-                        case EventType.DataChanged:
-                            throw new NotImplementedException();
-                    }
-                }
-                storableObjectEvents.Add(storableObjectEvent);
-            }
-
-            ConnectionPool.ReleaseConnection(connection);
-            
-            return storableObjectEvents;
-        }
-
-        public void Complete(StorableObjectEvent completedEvent)
-        {
-            if (completedEvent is ArrivedEvent arrivedEvent)
-            {
-                deliveryDataAccess.Complete(arrivedEvent);
-            }
-            if (completedEvent is ReserveEndedEvent reserveEndedEvent)
-            {
-                reservationDataAccess.Complete(reserveEndedEvent);
-            }
         }
 
         public class StorableObjectInEventDataAccess
@@ -385,7 +315,6 @@ namespace Service.Connection.DataAccess
                 string query = "SELECT object_event.event_id, object_event.storable_object_id " +
                     "FROM public.storable_object_event AS object_event " +
                     "WHERE object_event.event_id = ANY(@ids) ";
-
 
                 using var command = new NpgsqlCommand(query, connection);
                 {

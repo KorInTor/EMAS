@@ -83,8 +83,10 @@ namespace EMAS_Web.Controllers
             {
                 shortInfos.Add(item.ShortInfo);
             }
-            ViewBag.ObjectsInfo = shortInfos;
+            //TODO just use SendEvent as @model on View component and build view elements there.
+            ViewBag.ObjectsInfo = shortInfos; 
             ViewBag.SentEventId = sentEventId;
+            //*- -*//
             return View();
         }
 

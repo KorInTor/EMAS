@@ -1,0 +1,62 @@
+﻿<h1>Создаём резерв на @ViewBag.CurrentLocation.Item2</h1>
+
+<input type="hidden" name="locationid" value="@ViewBag.CurrentLocation.Item1" />
+
+@foreach (int item in ViewBag.SelectedIds)
+{
+    <input type="hidden" name="selectedIds" value="@item" />
+    <p>@item</p>
+}
+
+<script>
+    function validateForm() {
+        var comment = document.querySelector('input[name="comment"]').value;
+        var dateTime = document.querySelector('input[name="dateTime"]').value;
+
+        // Пример проверки: убедитесь, что комментарий не пустой и дата отправки выбрана
+        if (!comment.trim()) {
+            alert('Комментарий не может быть пустым.');
+            return false; // Останавливает отправку формы
+        }
+
+        if (!dateTime) {
+            alert('Дата начала не выбрана.');
+            return false; // Останавливает отправку формы
+        }
+
+        // Если валидация прошла успешно, форма отправится
+        return true;
+    }
+</script>
+
+<form method="post" onsubmit="return validateForm()">
+    <div>
+        <p>
+            <label for="Comment">Комментарий</label><br />
+            <input type="text" name="comment" />
+        </p>
+        <p>
+            <label for="DateTime">Дата начала резерва</label><br />
+            <input type="datetime-local" name="dateTime" />
+        </p>
+        <p>
+            <input class="btn btn-success" type="submit" value="Создать резерв" />
+        </p>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        @if (ViewBag.Error)
+        {
+            <div class="alert alert-danger" role="alert">
+                @ViewBag.ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-success" role="alert">
+                Добавление успешно
+            </div>
+        }
+    }
+</form>

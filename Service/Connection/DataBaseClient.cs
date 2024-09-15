@@ -228,7 +228,7 @@ namespace Service.Connection
 			return storableObjectDataAccess.SelectByIds(ids).ToList();
 		}
 
-		public List<ReservedEvent> GetReservationOn(int locationId)
+		public List<ReservedEvent> SelectReservationOn(int locationId)
 		{
 			var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal, locationId);
 			return eventDataAccess.Select([condition], typeof(ReservedEvent)).OfType<ReservedEvent>().ToList();
