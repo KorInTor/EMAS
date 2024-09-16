@@ -6,7 +6,7 @@ using Model.Event;
 using EMAS_Web.Filters;
 using Service;
 using Service.Connection;
-using Service.Connection.DataAccess;
+using Service.Connection.DataAccess.Event;
 
 namespace EMAS_Web.Controllers
 {
@@ -18,6 +18,16 @@ namespace EMAS_Web.Controllers
         {
             List<MaterialPiece> materialList = [];
 
+            List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+                                                where prm.PermissionType.ToString().StartsWith("Material") && prm.LocationId == locationId
+                                                select prm).ToList();
+
+            permissionsList.Add((from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+                                 where prm.PermissionType.ToString() == "DeliveryAccess" && prm.LocationId == locationId
+                                 select prm).ToList().First());
+
+            List<string> permissionNames = [];
+
             foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
             {
                 if (item is MaterialPiece material)
@@ -26,17 +36,47 @@ namespace EMAS_Web.Controllers
                 }
             }
 
+            foreach (Permission prm in permissionsList)
+            {
+                switch (prm.PermissionType.ToString())
+                {
+                    case "MaterialAdd":
+                        permissionNames.Add("Добавить");
+                        break;
+
+                    case "MaterialEdit":
+                        permissionNames.Add("Изменить");
+                        break;
+
+                    case "MaterialDelete":
+                        permissionNames.Add("Удалить");
+                        break;
+
+                }
+            }
+
+            ViewBag.PermissionsNames = permissionNames;
             ViewBag.LocationId = locationId;
             return View(materialList);
         }
-        
+
         public IActionResult Equipment(int locationId = 1)
         {
-            EmployeeDataAccess currentUserInfo = new EmployeeDataAccess();
-
+            //int employeeId = 
             List<Equipment> equipmentList = [];
-            List<Permission> permissions = (from prm in currentUserInfo.SelectEmployeePermissionsList(Convert.ToInt32(HttpContext.Session.GetInt32("UserId")))
-                                           where prm.PermissionType.ToString().StartsWith("Equipment") && prm.LocationId == locationId select prm).ToList();
+
+            List<Location> locations = DataBaseClient.GetInstance().SelectLocations();
+            ViewBag.Locations = locations;
+
+            List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+                                                where prm.PermissionType.ToString().StartsWith("Equipment") && prm.LocationId == locationId
+                                                select prm).ToList();
+
+            permissionsList.Add((from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+                                 where prm.PermissionType.ToString() == "DeliveryAccess" && prm.LocationId == locationId
+                                 select prm).ToList().First());
+
+            List<string> permissionNames = [];
 
             foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
             {
@@ -45,30 +85,30 @@ namespace EMAS_Web.Controllers
                     equipmentList.Add(equipment);
                 }
             }
-            List<string> permissionsStrings = [];
-            foreach(var permission in permissions)
+
+            foreach (Permission prm in permissionsList)
             {
-                switch(permission.PermissionType.ToString())
+                switch (prm.PermissionType.ToString())
                 {
                     case "EquipmentAdd":
-                        permissionsStrings.Add("Добавить");
+                        permissionNames.Add("Добавить");
                         break;
-                    case "EquipemntDelete":
-                        permissionsStrings.Add("Удалить");
+
+                    case "EquipmentEdit":
+                        permissionNames.Add("Изменить");
                         break;
-                    case "EquipemntEdit":
-                        permissionsStrings.Add("Изменить");
+
+                    case "EquipmentDelete":
+                        permissionNames.Add("Удалить");
                         break;
+
                 }
             }
-
+            ViewBag.PermissionNames = permissionNames;
             ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             ViewBag.LocationId = locationId;
-            ViewBag.PermissionNames = permissionsStrings;
-            ViewBag.Permissions = permissions;
             return View(equipmentList);
         }
-       
 
         [AuthorizationFilter]
         public IActionResult AddEquipment()
@@ -95,7 +135,7 @@ namespace EMAS_Web.Controllers
                 var addition = new AdditionEvent((int)userId, 0, EventType.Addition, DateTime.Now, [newEquipment], locationId);
                 DataBaseClient.GetInstance().Add(addition);
             }
-            catch(Exception excpetion)
+            catch (Exception excpetion)
             {
                 ViewBag.ErrorMessage = excpetion.Message;
                 ViewBag.NoError = false;
@@ -103,8 +143,8 @@ namespace EMAS_Web.Controllers
             }
             ViewBag.NoError = true;
             return View();
-        }
 
+        }
         public IActionResult Index(int locationId)
         {
             return View();
@@ -115,6 +155,6 @@ namespace EMAS_Web.Controllers
             return View(DataBaseClient.GetInstance().SelectForStorableObjectId(storableObjectId));
         }
 
-        
+
     }
 }

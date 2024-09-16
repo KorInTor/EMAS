@@ -1,7 +1,40 @@
-﻿@model List<Model.MaterialPiece>
+﻿@using Model
+@model List<Model.MaterialPiece>
 
 <h2>Список материалов</h2>
 
+<style>
+    .fixed-bottom {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+        text-align: center;
+        padding: 10px;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+
+    .locations-bar {
+        position: fixed;
+        display: flex;
+        width: 100%;
+        background-color: transparent;
+        text-align: center;
+        padding: 10px;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+</style>
+
+<div class="locations-bar">
+    @{
+        foreach (Location location in ViewBag.Locations)
+        {
+            <form asp-controller="StorableObject" asp-action="Equipment">
+                <button type="submit" asp-route-locationId="@location.Id" class="btn btn-primary">@location.Name</button>
+            </form>
+        }
+    }
+</div>
 <table class="table">
     <thead>
         <tr>
@@ -31,4 +64,39 @@
         }
     </tbody>
 </table>
+
+<div class="fixed-bottom">
+    @{
+        foreach (string prm in ViewBag.PermissionsNames)
+        {
+
+            switch (prm)
+            {
+                case "Добавить":
+                    <form asp-controller="EquipmentPage" asp-action="Add">
+                        <button type="submit" class="btn btn-primary">Доабвить</button>
+                    </form>
+
+                    break;
+                case "Изменить":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">Изменить</button>
+                    </form>
+
+                    break;
+                case "В доставку":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">В доставку</button>
+                    </form>
+                    break;
+                case "Удалить":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">Удалить</button>
+                    </form>
+                    break;
+            }
+        }
+    }
+</div>
+
 

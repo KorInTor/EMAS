@@ -1,13 +1,25 @@
-﻿@model List<Model.Equipment>
+﻿@using Model
+@model List<Model.Equipment>
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <head>
     <style>
         .fixed-bottom {
             position: fixed;
+            display: flex;
             bottom: 0;
             width: 100%;
             background-color: #f1f1f1;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        }
+
+        .locations-bar {
+            position: fixed;
+            display: flex;
+            width: 100%;
+            background-color: transparent;
             text-align: center;
             padding: 10px;
             box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
@@ -45,127 +57,157 @@
     <link rel="stylesheet" href="~/css/main_page.css">
 </head>
 
-<body>
-    <h2>Список оборудования</h2>
+<h2>Список оборудования</h2>
 
-    <table id="equipmentTable" class="table">
-        <thead>
+<table id="equipmentTable" class="table">
+    <thead>
+        <tr>
+            <th></th>
+            <th>
+                Id
+                <div class="dropdown">
+                    <button onclick="toggleDropdown('IdDrop')" class="dropbtn"></button>
+                    <div id="IdDrop" class="dropdown-content">
+                        <a href="#">Link 1</a>
+                        <a href="#">Link 2</a>
+                        <a href="#">Link 3</a>
+                    </div>
+                </div>
+
+            </th>
+            <th>
+                Название
+                <div class="dropdown">
+                    <button onclick="toggleDropdown('NameDrop')" class="dropbtn"></button>
+                    <div id="NameDrop" class="dropdown-content">
+                        <a href="#">Link 1</a>
+                        <a href="#">Link 2</a>
+                        <a href="#">Link 3</a>
+                    </div>
+                </div>
+            </th>
+            <th>
+                Тип
+                <div class="dropdown">
+                    <button onclick="toggleDropdown('TypeDrop')" class="dropbtn"></button>
+                    <div id="TypeDrop" class="dropdown-content">
+                        <a href="#">Link 1</a>
+                        <a href="#">Link 2</a>
+                        <a href="#">Link 3</a>
+                    </div>
+                </div>
+            </th>
+            <th>
+                Производитель
+                <div class="dropdown">
+                    <button onclick="toggleDropdown('ProdDrop')" class="dropbtn"></button>
+                    <div id="ProdDrop" class="dropdown-content">
+                        <a href="#">Link 1</a>
+                        <a href="#">Link 2</a>
+                        <a href="#">Link 3</a>
+                    </div>
+                </div>
+            </th>
+            <th>
+                Статус
+                <div class="dropdown">
+                    <button onclick="toggleDropdown('StatusDrop')" class="dropbtn"></button>
+                    <div id="StatusDrop" class="dropdown-content">
+                        <a href="#">Link 1</a>
+                        <a href="#">Link 2</a>
+                        <a href="#">Link 3</a>
+                    </div>
+                </div>
+            </th>
+            <th>
+                Описание
+                <div class="dropdown">
+                    <button onclick="toggleDropdown('DescriptionDrop')" class="dropbtn"></button>
+                    <div id="DescriptionDrop" class="dropdown-content">
+                        <a href="#">Link 1</a>
+                        <a href="#">Link 2</a>
+                        <a href="#">Link 3</a>
+                    </div>
+                </div>
+            </th>
+            <th>
+                Регистрационный номер
+                <div class="dropdown">
+                    <button onclick="toggleDropdown('RegNumDrop')" class="dropbtn"></button>
+                    <div id="RegNumDrop" class="dropdown-content">
+                        <a href="#">Link 1</a>
+                        <a href="#">Link 2</a>
+                        <a href="#">Link 3</a>
+                    </div>
+                </div>
+            </th>
+            <th>История</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
             <tr>
-                <th></th>
-                <th>
-                    Id
-                    <div class="dropdown">
-                        <button onclick="toggleDropdown('IdDrop')" class="dropbtn"></button>
-                        <div id="IdDrop" class="dropdown-content">
-                            <a href="#">Link 1</a>
-                            <a href="#">Link 2</a>
-                            <a href="#">Link 3</a>
-                        </div>
-                    </div>
-
-                </th>
-                <th>Название 
-                     <div class="dropdown">
-                        <button onclick="toggleDropdown('NameDrop')" class="dropbtn"></button>
-                        <div id="NameDrop" class="dropdown-content">
-                            <a href="#">Link 1</a>
-                            <a href="#">Link 2</a>
-                            <a href="#">Link 3</a>
-                        </div>
-                    </div>
-                </th>
-                <th>Тип
-                     <div class="dropdown">
-                        <button onclick="toggleDropdown('TypeDrop')" class="dropbtn"></button>
-                        <div id="TypeDrop" class="dropdown-content">
-                            <a href="#">Link 1</a>
-                            <a href="#">Link 2</a>
-                            <a href="#">Link 3</a>
-                        </div>
-                    </div>
-                </th>
-                <th>Производитель
-                     <div class="dropdown">
-                        <button onclick="toggleDropdown('ProdDrop')" class="dropbtn"></button>
-                        <div id="ProdDrop" class="dropdown-content">
-                            <a href="#">Link 1</a>
-                            <a href="#">Link 2</a>
-                            <a href="#">Link 3</a>
-                        </div>
-                    </div>
-                </th>
-                <th>Статус
-                    <div class="dropdown">
-                        <button onclick="toggleDropdown('StatusDrop')" class="dropbtn"></button>
-                        <div id="StatusDrop" class="dropdown-content">
-                            <a href="#">Link 1</a>
-                            <a href="#">Link 2</a>
-                            <a href="#">Link 3</a>
-                        </div>
-                    </div>
-                </th>
-                <th>Описание
-                    <div class="dropdown">
-                        <button onclick="toggleDropdown('DescriptionDrop')" class="dropbtn"></button>
-                        <div id="DescriptionDrop" class="dropdown-content">
-                            <a href="#">Link 1</a>
-                            <a href="#">Link 2</a>
-                            <a href="#">Link 3</a>
-                        </div>
-                    </div>
-                </th>
-                <th>Регистрационный номер
-                    <div class="dropdown">
-                        <button onclick="toggleDropdown('RegNumDrop')" class="dropbtn"></button>
-                        <div id="RegNumDrop" class="dropdown-content">
-                            <a href="#">Link 1</a>
-                            <a href="#">Link 2</a>
-                            <a href="#">Link 3</a>
-                        </div>
-                    </div>
-                </th>
-                <th>История</th>
+                <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+                <td>@item.Type</td>
+                <td>@item.Manufacturer</td>
+                <td>
+                    <select>
+                        <option value="@item.Status">@item.Status</option>
+                        <option value="ph1">Placeholder1</option>
+                        <option value="ph2">Placeholder2</option>
+                    </select>
+                </td>
+                <td>@item.Description</td>
+                <td>@item.RegistrationNumber</td>
+                <td>
+                    <form asp-controller="StorableObject" asp-action="History" method="get">
+                        <input type="hidden" name="storableObjectId" value="@item.Id" />
+                        <button type="submit" class="btn btn-primary">История</button>
+                    </form>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
+        }
+    </tbody>
+</table>
+
+<div class="fixed-bottom">
+    <!--
+    <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
+    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest()">Создать доставку</button>
+    <button class="btn btn-info">Изменить</button>
+    -->
+    @{
+        foreach (string prm in ViewBag.PermissionNames)
+        {
+            switch (prm)
             {
-                <tr>
-                    <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.Type</td>
-                    <td>@item.Manufacturer</td>
-                    <td>
-                        <select>
-                            <option value="@item.Status">@item.Status</option>
-                            <option value="ph1">Placeholder1</option>
-                            <option value="ph2">Placeholder2</option>
-                        </select>
-                    </td>
-                    <td>@item.Description</td>
-                    <td>@item.RegistrationNumber</td>
-                    <td>
-                        <form asp-controller="StorableObject" asp-action="History" method="get">
-                            <input type="hidden" name="storableObjectId" value="@item.Id" />
-                            <button type="submit" class="btn btn-primary">История</button>
-                        </form>
-                    </td>
-                </tr>
+                case "Добавить":
+                    <form asp-controller="EquipmentPage" asp-action="Add">
+                        <button type="submit" class="btn btn-primary">@prm</button>
+                    </form>
+
+                    break;
+                case "Изменить":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">@prm</button>
+                    </form>
+
+                    break;
+                case "В доставку":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">@prm</button>
+                    </form>
+                    break;
+                case "Удалить":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">@prm</button>
+                    </form>
+                    break;
             }
-        </tbody>
-    </table>
+        }
+    }
 
-    <div class="fixed-bottom">
-        <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
-        <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest()">Создать доставку</button>
-        <button class="btn btn-info">Изменить</button>
-          @foreach(var permission in ViewBag.PermissionNames)
-          {
-            <button class="btn btn-primary">@permission</button>
-          }
-
-    </div>
-
-    <script src="~/js/main_page.js"></script>
-</body>
+</div>
