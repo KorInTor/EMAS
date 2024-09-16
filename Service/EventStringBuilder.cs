@@ -41,8 +41,9 @@ namespace Service
                     case AdditionEvent additionEvent:
                         info = AdditionEventStringBuilder(additionEvent, info);
                         break;
-                    //case EventType.Decommissioned:
-                    //    return DecommissionedEventStringBuilder(storableObjectEvent, info);
+                    case DecomissionedEvent decomissionedEvent:
+                        info = DecomissionedEventStringBuilder(decomissionedEvent,info);
+                        break;
                     //case EventType.DataChanged:
                     //    return DataChangedEventStringBuilder(storableObjectEvent, info);
 
@@ -56,6 +57,11 @@ namespace Service
             }
 
             return eventsList;
+        }
+
+        private static string DecomissionedEventStringBuilder(DecomissionedEvent decomissionedEvent, string info)
+        {
+            return info + $" По причине: {decomissionedEvent.Comment}";
         }
 
         private static string AdditionEventStringBuilder(AdditionEvent additionEvent, string info)

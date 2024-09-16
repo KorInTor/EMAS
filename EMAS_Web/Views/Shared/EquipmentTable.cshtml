@@ -28,10 +28,13 @@
                     <td>@item.Manufacturer</td>
                     <td>
                         <select id="status_@item.Id">
-                            <option value="@item.Status">@item.Status</option>
                             @foreach (KeyValuePair<int, string> status in statuses)
                             {
-                                @if (status.Value != item.Status)
+                                if(status.Value == item.Status)
+                                {
+                                    <option value="@status.Key" selected>@status.Value</option>
+                                }
+                                else
                                 {
                                     <option value="@status.Key">@status.Value</option>
                                 }

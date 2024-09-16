@@ -79,16 +79,14 @@ namespace EMAS_Web.Controllers
         public IActionResult Confirm(long reservedEventId, string comment, DateTime dateTime, bool isDecomissioned)
         {
             var reservedEventToConfirm = (ReservedEvent)DataBaseClient.GetInstance().SelectEventById(reservedEventId, typeof(ReservedEvent));
-
-            StorableObjectEvent endEvent = new();
-
+            StorableObjectEvent endEvent;
             if (isDecomissioned)
             {
                 endEvent = new ReserveEndedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.ReserveEnded, dateTime.ToUniversalTime(), reservedEventToConfirm.ObjectsInEvent, comment, reservedEventId);
             }
             else
             {
-                endEvent = new DecomissionedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.Decommissioned, dateTime.ToUniversalTime(), reservedEventToConfirm.ObjectsInEvent, comment,EventType.Reserved,reservedEventId);
+                endEvent = new DecomissionedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.Decommissioned, dateTime.ToUniversalTime(), reservedEventToConfirm.ObjectsInEvent, comment, EventType.Reserved, reservedEventId);
             }
 
             try
