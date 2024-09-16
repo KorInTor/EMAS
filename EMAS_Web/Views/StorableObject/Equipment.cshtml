@@ -58,6 +58,14 @@
 </head>
 
 <h2>Список оборудования</h2>
+@foreach(Location location in ViewBag.Locations){
+    <form asp-controller="StorableObject" asp-action="Equipment">
+        <button asp-route-locationId="@location.Id" class="btn btn-primary">@location.Name</button>
+    </form>
+}
+<div class="locations-bar">
+    
+</div>
 
 <table id="equipmentTable" class="table">
     <thead>
