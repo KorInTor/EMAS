@@ -1,0 +1,53 @@
+﻿@model List<Model.Equipment>
+@using Service.Connection
+
+<table id="equipmentTable" class="table">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Id</th>
+            <th>Название</th>
+            <th>Тип</th>
+            <th>Производитель</th>
+            <th>Статус</th>
+            <th>Описание</th>
+            <th>Регистрационный номер</th>
+            <th>История</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
+            @foreach (var item in Model)
+            {
+                <tr class="bg-danger">
+                    <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.Type</td>
+                    <td>@item.Manufacturer</td>
+                    <td>
+                        <select id="status_@item.Id">
+                            <option value="@item.Status">@item.Status</option>
+                            @foreach (KeyValuePair<int, string> status in statuses)
+                            {
+                                @if (status.Value != item.Status)
+                                {
+                                    <option value="@status.Key">@status.Value</option>
+                                }
+                            }
+                        </select>
+                    </td>
+                    <td>@item.Description</td>
+                    <td>@item.RegistrationNumber</td>
+                    <td>
+                        <form asp-controller="StorableObject" asp-action="History" method="get">
+                            <input type="hidden" name="storableObjectId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary">История</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

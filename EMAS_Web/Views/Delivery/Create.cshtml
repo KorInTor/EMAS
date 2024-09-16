@@ -1,19 +1,23 @@
-﻿<h1>Создаём доставку из @ViewBag.DepartureLocation.Item2</h1>
+﻿<h1>Создаём доставку из @ViewBag.DepartureLocation.Value</h1>
 
-<input type="hidden" name="departureId" value="@ViewBag.DepartureLocation.Item1" />
+<input type="hidden" name="departureId" value="@ViewBag.DepartureLocation.Key" />
 
-@foreach (int item in ViewBag.SelectedIds)
-{
-    <input type="hidden" name="selectedIds" value="@item" />
-    <p>@item</p>
-}
+<p>Будет в доставке</p>
 
-@if (ViewBag.ObjectsInfo is not null)
-{
-    @foreach (string item in ViewBag.ObjectsInfo)
+@{
+    List<Model.Equipment> equipmentList = [];
+
+    @foreach (Model.IStorableObject item in ViewBag.SelectedObjects)
     {
-        <p>@item</p>
+        @if (item is Model.Equipment equipment)
+        {
+            equipmentList.Add(equipment);
+        }
+
+        <input type="hidden" name="selectedIds" value="@item.Id" />
     }
+
+    @Html.Partial("EquipmentTable", @equipmentList)
 }
 
 <script>
@@ -38,14 +42,19 @@
 </script>
 
 <form method="post" onsubmit="return validateForm()">
-    <div>
-        @foreach (ValueTuple<int,string> location in ViewBag.Locations)
-        {
-            <input class="form-check-input" type="radio" name="destinationId" id="@location.Item2" value="@location.Item1">
-            <label class="form-check-label" for="@location.Item2">
-                @location.Item2
-            </label>
-        }
+    <div class="card w-auto mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Выберите место назначения</h5>
+            @foreach (KeyValuePair<int, string> location in ViewBag.Locations)
+            {
+                <div class="form-check">
+                    <label class="form-check-label" for="@location.Key">
+                        @location.Value
+                    </label>
+                    <input class="form-check-input" type="radio" name="destinationId" id="@location.Key" value="@location.Value">
+                </div>
+            }
+        </div>
     </div>
     
     <div>

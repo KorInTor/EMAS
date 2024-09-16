@@ -60,54 +60,7 @@
 
 <h2>Список оборудования</h2>
 
-<table id="equipmentTable" class="table">
-    <thead>
-        <tr>
-            <th></th>
-            <th>Id</th>
-            <th>Название</th>
-            <th>Тип</th>
-            <th>Производитель</th>
-            <th>Статус</th>
-            <th>Описание</th>
-            <th>Регистрационный номер</th>
-            <th>История</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
-                <td>@item.Id</td>
-                <td>@item.Name</td>
-                <td>@item.Type</td>
-                <td>@item.Manufacturer</td>
-                <td>
-                    <select>
-                        <option value="@item.Status">@item.Status</option>
-
-                        @foreach (KeyValuePair<int, string> status in ViewBag.Statuses)
-                        {
-                            @if(status.Value != item.Status)
-                            {
-                                <option value="@status.Key">@status.Value</option>
-                            }
-                        }
-                    </select>
-                </td>
-                <td>@item.Description</td>
-                <td>@item.RegistrationNumber</td>
-                <td>
-                    <form asp-controller="StorableObject" asp-action="History" method="get">
-                        <input type="hidden" name="storableObjectId" value="@item.Id" />
-                        <button type="submit" class="btn btn-primary">История</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@Html.Partial("EquipmentTable", Model)
 
 <div class="fixed-bottom">
     <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>

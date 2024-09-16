@@ -38,7 +38,6 @@ namespace EMAS_Web.Controllers
                 }
             }
 
-            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             ViewBag.LocationId = locationId;
             return View(equipmentList);
         }
