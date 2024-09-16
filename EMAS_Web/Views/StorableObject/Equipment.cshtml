@@ -60,7 +60,7 @@
 
 <h2>Список оборудования</h2>
 
-@Html.Partial("EquipmentTable", Model)
+@await Html.PartialAsync("EquipmentTable", Model)
 
 <div class="fixed-bottom">
     <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>

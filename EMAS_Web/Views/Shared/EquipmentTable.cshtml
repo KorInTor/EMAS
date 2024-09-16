@@ -1,59 +1,123 @@
 ﻿@model List<Model.Equipment>
 @using Service.Connection
 
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filterEquipmentModal">
+    Фильтровать
+</button>
+
+<div class="modal fade" id="filterEquipmentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Меню фильтров</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Здесь будут фильтры
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Применить фильтр</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <table id="equipmentTable" class="table">
-    <thead>
+    <thead class="border border-black">
         <tr>
-            <th></th>
-            <th>Id</th>
-            <th>Название</th>
-            <th>Тип</th>
-            <th>Производитель</th>
-            <th>Статус</th>
-            <th>Описание</th>
-            <th>Регистрационный номер</th>
-            <th>История</th>
+            <th><input class="form-check-input" type="checkbox" id="checkAll" onchange="checkAllVisible()"></th>
+            <th>Id 
+                <button class="btn btn-outline-dark p-0 rounded-0">▼</button>
+            </th>
+            <th>
+                Название 
+                <button class="btn btn-outline-dark p-0 rounded-0">▼</button>
+            </th>
+            <th>
+                Тип
+                <button class="btn btn-outline-dark p-0 rounded-0">▼</button>
+            </th>
+            <th>
+                Производитель
+                <button class="btn btn-outline-dark p-0 rounded-0">▼</button>
+            </th>
+            <th>
+                Статус
+                <button class="btn btn-outline-dark p-0 rounded-0">▼</button>
+            </th>
+            <th>
+                Описание
+                <button class="btn btn-outline-dark p-0 rounded-0">▼</button>
+            </th>
+            <th>
+                Регистрационный номер
+                <button class="btn btn-outline-dark p-0 rounded-0">▼</button>
+            </th>
+            <th>
+                История
+            </th>
         </tr>
     </thead>
     <tbody class="table w-100">
         @{
             var statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             bool paintGrey = false;
-            @foreach (var item in Model)
+                @foreach (var item in Model)
             {
                 paintGrey = !paintGrey;
-                <tr class="@(paintGrey ? "table-light" : "")">
-                    
-                    <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.Type</td>
-                    <td>@item.Manufacturer</td>
-                    <td>
-                        <select id="status_@item.Id">
-                            @foreach (KeyValuePair<int, string> status in statuses)
+                    <tr class="@(paintGrey ? "table-light" : "") d-table-row">
+                        
+                        <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
+                        <td>@item.Id</td>
+                        <td>@item.Name</td>
+                        <td>@item.Type</td>
+                        <td>@item.Manufacturer</td>
+                        <td>
+                            <select id="status_@item.Id">
+                                @foreach (KeyValuePair<int, string> status in statuses)
                             {
                                 if(status.Value == item.Status)
                                 {
-                                    <option value="@status.Key" selected>@status.Value</option>
+                                        <option value="@status.Key" selected>@status.Value</option>
                                 }
                                 else
                                 {
-                                    <option value="@status.Key">@status.Value</option>
+                                        <option value="@status.Key">@status.Value</option>
                                 }
                             }
-                        </select>
-                    </td>
-                    <td>@item.Description</td>
-                    <td>@item.RegistrationNumber</td>
-                    <td>
-                        <form asp-controller="StorableObject" asp-action="History" method="get">
-                            <input type="hidden" name="storableObjectId" value="@item.Id" />
-                            <button type="submit" class="btn btn-primary">История</button>
-                        </form>
-                    </td>
-                </tr>
+                            </select>
+                        </td>
+                        <td>@item.Description</td>
+                        <td>@item.RegistrationNumber</td>
+                        <td>
+                            <form asp-controller="StorableObject" asp-action="History" method="get">
+                                <input type="hidden" name="storableObjectId" value="@item.Id" />
+                                <button type="submit" class="btn btn-primary">История</button>
+                            </form>
+                        </td>
+                    </tr>
             }
         }
     </tbody>
 </table>
+
+<script>
+    function checkAllVisible(){
+        const mainCheckbox = document.getElementById("checkAll");
+        
+        const allSelectorCheckBoxes = document.querySelectorAll('input[type="checkbox"][id^="checkbox_"]');
+
+        allSelectorCheckBoxes.forEach(checkbox => { checkbox.checked = false; })
+
+        const visibleCheckboxes = document.querySelectorAll(
+            'tr:not(.d-none) td input[type="checkbox"][id^="checkbox_"]'
+        );
+
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = mainCheckbox.checked;
+        });
+    }
+
+
+</script>
