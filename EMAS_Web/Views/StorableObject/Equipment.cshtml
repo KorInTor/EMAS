@@ -14,16 +14,7 @@
             padding: 10px;
             box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
         }
-
-        .locations-bar {
-            position: fixed;
-            display: flex;
-            width: 100%;
-            background-color: transparent;
-            text-align: center;
-            padding: 10px;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-        }
+        
     </style>
     <script>
         function getSelectedCheckboxValues() {
@@ -58,14 +49,6 @@
 </head>
 
 <h2>Список оборудования</h2>
-@foreach(Location location in ViewBag.Locations){
-    <form asp-controller="StorableObject" asp-action="Equipment">
-        <button asp-route-locationId="@location.Id" class="btn btn-primary">@location.Name</button>
-    </form>
-}
-<div class="locations-bar">
-    
-</div>
 
 <table id="equipmentTable" class="table">
     <thead>
