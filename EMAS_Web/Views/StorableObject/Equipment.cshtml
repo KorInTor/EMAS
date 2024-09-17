@@ -54,83 +54,13 @@
     <thead>
         <tr>
             <th></th>
-            <th>
-                Id
-                <div class="dropdown">
-                    <button onclick="toggleDropdown('IdDrop')" class="dropbtn"></button>
-                    <div id="IdDrop" class="dropdown-content">
-                        <a href="#">Link 1</a>
-                        <a href="#">Link 2</a>
-                        <a href="#">Link 3</a>
-                    </div>
-                </div>
-
-            </th>
-            <th>
-                Название
-                <div class="dropdown">
-                    <button onclick="toggleDropdown('NameDrop')" class="dropbtn"></button>
-                    <div id="NameDrop" class="dropdown-content">
-                        <a href="#">Link 1</a>
-                        <a href="#">Link 2</a>
-                        <a href="#">Link 3</a>
-                    </div>
-                </div>
-            </th>
-            <th>
-                Тип
-                <div class="dropdown">
-                    <button onclick="toggleDropdown('TypeDrop')" class="dropbtn"></button>
-                    <div id="TypeDrop" class="dropdown-content">
-                        <a href="#">Link 1</a>
-                        <a href="#">Link 2</a>
-                        <a href="#">Link 3</a>
-                    </div>
-                </div>
-            </th>
-            <th>
-                Производитель
-                <div class="dropdown">
-                    <button onclick="toggleDropdown('ProdDrop')" class="dropbtn"></button>
-                    <div id="ProdDrop" class="dropdown-content">
-                        <a href="#">Link 1</a>
-                        <a href="#">Link 2</a>
-                        <a href="#">Link 3</a>
-                    </div>
-                </div>
-            </th>
-            <th>
-                Статус
-                <div class="dropdown">
-                    <button onclick="toggleDropdown('StatusDrop')" class="dropbtn"></button>
-                    <div id="StatusDrop" class="dropdown-content">
-                        <a href="#">Link 1</a>
-                        <a href="#">Link 2</a>
-                        <a href="#">Link 3</a>
-                    </div>
-                </div>
-            </th>
-            <th>
-                Описание
-                <div class="dropdown">
-                    <button onclick="toggleDropdown('DescriptionDrop')" class="dropbtn"></button>
-                    <div id="DescriptionDrop" class="dropdown-content">
-                        <a href="#">Link 1</a>
-                        <a href="#">Link 2</a>
-                        <a href="#">Link 3</a>
-                    </div>
-                </div>
-            </th>
-            <th>
-                Регистрационный номер
-                <div class="dropdown">
-                    <button onclick="toggleDropdown('RegNumDrop')" class="dropbtn"></button>
-                    <div id="RegNumDrop" class="dropdown-content">
-                        <a href="#">Link 1</a>
-                        <a href="#">Link 2</a>
-                        <a href="#">Link 3</a>
-                    </div>
-                </div>
+            <th>Id</th>
+            <th>Название</th>
+            <th>Тип </th>
+            <th>Производитель</th>
+            <th>Статус</th>
+            <th>Описание</th>
+            <th>Регистрационный номер
             </th>
             <th>История</th>
         </tr>
@@ -147,6 +77,14 @@
                 <td>
                     <select>
                         <option value="@item.Status">@item.Status</option>
+
+                        @foreach(KeyValuePair<int, string> status in ViewBag.Statuses)
+                        {
+                            @if(status.Value != item.Status)
+                            {
+                                <option value="@status.Key">status.Value</option>
+                            }
+                        }
                         <option value="ph1">Placeholder1</option>
                         <option value="ph2">Placeholder2</option>
                     </select>
