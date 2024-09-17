@@ -1,0 +1,61 @@
+﻿@using Model;
+
+
+
+<script>
+    function updateId(newId) {
+        document.querySelectorAll('.locationLink').forEach(link => {
+            link.href = link.href.replace(/locationid=\d+/, 'locationid=' + newId);
+        });
+    }
+</script>
+
+
+
+@{
+    <div class="collapse d-sm-inline-flex justify-content-between">
+        @{
+
+            Service.Connection.DataBaseClient dbc = Service.Connection.DataBaseClient.GetInstance();
+            foreach (Location location in dbc.SelectLocations())
+            {                               
+                <button onclick="updateId('@location.Id')" class="btn btn-primary">@location.Name</button>
+            }
+
+
+        }
+
+    </div>
+}
+
+
+@{
+    int id = 0;
+
+    <div class="listContainer">
+        <ul class="navbar-nav flex-grow-1">
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Equipment" asp-route-locationid="@id">Оборудование</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Material" asp-route-locationid="@id">Материалы</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Delivery" asp-action="Index" asp-route-locationid="@id">Доставки</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EmployeeTable">Сотрудники</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EquipmentStatusEditor">Статусы Оборудования</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Archive" asp-action="Index" asp-route-locationid="@id">Архив</a>
+            </li>
+        </ul>
+    </div>
+}
+

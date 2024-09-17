@@ -21,10 +21,10 @@ namespace EMAS_Web.Controllers
             List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
                                                 where prm.PermissionType.ToString().StartsWith("Material") && prm.LocationId == locationId
                                                 select prm).ToList();
-
+            /*
             permissionsList.Add((from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
                                  where prm.PermissionType.ToString() == "DeliveryAccess" && prm.LocationId == locationId
-                                 select prm).ToList().First());
+                                 select prm).ToList().First());*/
 
             List<string> permissionNames = [];
 
@@ -72,9 +72,10 @@ namespace EMAS_Web.Controllers
                                                 where prm.PermissionType.ToString().StartsWith("Equipment") && prm.LocationId == locationId
                                                 select prm).ToList();
 
+            /*
             permissionsList.Add((from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
                                  where prm.PermissionType.ToString() == "DeliveryAccess" && prm.LocationId == locationId
-                                 select prm).ToList().First());
+                                 select prm).ToList().First());*/
 
             List<string> permissionNames = [];
 
@@ -154,6 +155,7 @@ namespace EMAS_Web.Controllers
         {
             return View(DataBaseClient.GetInstance().SelectForStorableObjectId(storableObjectId));
         }
+
 
 
     }
