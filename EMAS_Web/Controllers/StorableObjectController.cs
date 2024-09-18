@@ -19,13 +19,8 @@ namespace EMAS_Web.Controllers
             List<MaterialPiece> materialList = [];
 
             List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
-                                                where prm.PermissionType.ToString().StartsWith("Material") && prm.LocationId == locationId
+                                                where  prm.LocationId == locationId
                                                 select prm).ToList();
-            
-            permissionsList.Add((from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
-                                 where prm.PermissionType.ToString() == "DeliveryAccess"
-                                 select prm).ToList().First());
-
             
 
             foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
@@ -46,19 +41,10 @@ namespace EMAS_Web.Controllers
             //int employeeId = 
             List<Equipment> equipmentList = [];
 
-            List<Location> locations = DataBaseClient.GetInstance().SelectLocations();
-            ViewBag.Locations = locations;
-
             List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
-                                                where prm.PermissionType.ToString().StartsWith("Equipment") && prm.LocationId == locationId
+                                                where prm.LocationId == locationId
                                                 select prm).ToList();
 
-            
-            permissionsList.Add((from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
-                                 where prm.PermissionType.ToString() == "DeliveryAccess"
-                                 select prm).ToList().First());
-
-            List<string> permissionNames = [];
 
             foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
             {
