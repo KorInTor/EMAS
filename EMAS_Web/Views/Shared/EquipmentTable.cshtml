@@ -10,7 +10,7 @@
 		<tr>
 			<th><input class="form-check-input" type="checkbox" id="checkAll" onchange="setCheckAllVisibleChildElements(document.querySelector('table#equipmentTable'), this.checked)"></th>
 			<th>
-				Id
+				Id<div class="resizer"></div>
 				@await Component.InvokeAsync("TableFilterMenu", new
 					{
 						tableId = "equipmentTable",
@@ -82,17 +82,17 @@
 		@foreach (var item in Model)
 		{
 			<tr class="d-table-row">
-				<td class="border border-4">
+				<td class="border border-1">
 					<input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="...">
 				</td>
-				<td class="border border-4">@item.Id</td>
-				<td class="border border-4">@item.Name</td>
-				<td class="border border-4">@item.Type</td>
-				<td class="border border-4">@item.Manufacturer</td>
-				<td class="border border-4">@item.Status</td>
-				<td class="border border-4">@item.Description</td>
-				<td class="border border-4">@item.RegistrationNumber</td>
-				<td class="border border-4">
+				<td class="border border-1">@item.Id</td>
+				<td class="border border-1">@item.Name</td>
+				<td class="border border-1">@item.Type</td>
+				<td class="border border-1">@item.Manufacturer</td>
+				<td class="border border-1">@item.Status</td>
+				<td class="border border-1">@item.Description</td>
+				<td class="border border-1">@item.RegistrationNumber</td>
+				<td class="border border-1">
 					<form asp-controller="StorableObject" asp-action="History" method="get">
 						<input type="hidden" name="storableObjectId" value="@item.Id" />
 						<button type="submit" class="btn btn-primary">История</button>
@@ -104,6 +104,7 @@
 </table>
 
 <script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
 
 <script>
 	let equipmentFilterMenu = new TableFilterMenu("equipmentTable", [1, 2, 3, 4, 5, 7]);
@@ -112,4 +113,6 @@
 		equipmentFilterMenu.bindButtons();
 		equipmentFilterMenu.updateRowsCount();
 	};
+
+	makeResizable(document.querySelector('table#equipmentTable'));
 </script>
