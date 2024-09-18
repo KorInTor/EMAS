@@ -14,46 +14,7 @@
         }
     </style>
     <script>
-        function getSelectedCheckboxValues() {
-            var selectedValues = [];
-            var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-            checkboxes.forEach(function (checkbox) {
-                selectedValues.push(checkbox.value);
-            });
-            return selectedValues;
-        }
-
-        function submitDeliveryRequest() {
-            var selectedValues = getSelectedCheckboxValues();
-            if (selectedValues.length === 0) {
-                alert('Пожалуйста, выберите хотя бы один элемент.');
-                return;
-            }
-
-            // Создание строки параметров запроса
-            var params = selectedValues.map(id => 'selectedIds=' + encodeURIComponent(id)).join('&');
-
-            params += '&departureId=' + encodeURIComponent(@ViewBag.LocationId);
-
-            // Отправка GET-запроса
-            window.location.href = '/Delivery/Create?' + params;
-        }
-
-        function submitReservationRequest() {
-            var selectedValues = getSelectedCheckboxValues();
-            if (selectedValues.length === 0) {
-                alert('Пожалуйста, выберите хотя бы один элемент.');
-                return;
-            }
-
-            // Создание строки параметров запроса
-            var params = selectedValues.map(id => 'selectedIds=' + encodeURIComponent(id)).join('&');
-
-            params += '&locationid=' + encodeURIComponent(@ViewBag.LocationId);
-
-            // Отправка GET-запроса
-            window.location.href = '/Reservation/Create?' + params;
-        }
+        
     </script>
 
 </head>
@@ -62,9 +23,11 @@
 
 @await Html.PartialAsync("EquipmentTable", Model)
 
+<script src="~/js/storableObjectScripts.js"></script>
+
 <div class="fixed-bottom">
     <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
-    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest()">Создать доставку</button>
-    <button type="button" class="btn btn-primary" onclick="submitReservationRequest()">Создать Резерв</button>
+    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать доставку</button>
+    <button type="button" class="btn btn-primary" onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать Резерв</button>
     <button class="btn btn-info">Изменить</button>
 </div>

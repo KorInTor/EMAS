@@ -1,0 +1,48 @@
+﻿<button class="btn btn-outline-dark p-0 rounded-0 dropdown-toggle" data-bs-toggle="dropdown" data-bs-target="#filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-bs-auto-close="false"></button>
+
+<div class="dropdown-menu filter-dropdown" id="filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-column-index="@ViewBag.ColumnIndex">
+
+	<div class="rounded p-2 m-2 border border-info border-3">
+		<span>Фильтры для</span> <span class="border border-success">@ViewBag.ColumnName</span>
+	</div>
+
+	<div class="container gap-3 ps-0">
+		<div class="col p-2 position-relative start-0">
+			<button class="btn btn-outline-primary sort-desc" >Сортировать по убыванию ↓</button>
+		</div>
+		<div class="col p-2  position-relative start-0">
+			<button class="btn btn-outline-primary sort-asc" >Сортировать по возрастанию ↑</button>
+		</div>
+	</div>
+	<div class="card m-2">
+		<div class="p-3">
+			<span> Поиск значений</span>
+			<input type="text" class="form-control" id="filter_searchBar" oninput="filterList(this.value, this.parentElement.parentElement.querySelector('div.filter-options'))">
+		</div>
+		<div class="p-3">
+			<input type="checkbox" id="filterList_checkAll" class="form-check-input" onchange="setCheckAllVisibleChildElements(this.parentElement.parentElement.querySelector('div.filter-options'), this.checked)">
+			<label class="form-check-label" for="filterList_checkAll">
+				Выбрать все
+			</label>
+		</div>
+		<div class="overflow-auto card m-2 filter-options" style="height: 200px;">
+			<ul class="list-group list-group-flush">
+				@foreach (string filterOption in ViewBag.FilterOptions)
+				{
+					<li class="list-group-item">
+						<input type="checkbox" value="@filterOption" id="filterList_@Html.Encode(filterOption)" class="form-check-input filter-value">
+						<label class="form-check-label" for="filterList_@Html.Encode(filterOption)">
+							@filterOption
+						</label>
+					</li>
+				}
+			</ul>
+		</div>
+	</div>
+	<div class="p-1">
+		<button class="btn btn-secondary" id="cancelFilter_@(ViewBag.TableId)" data-column="id"">Отменить</button>
+		<button class="btn btn-primary apply-filter" id="applyFilter_@(ViewBag.TableId)" data-column="id">
+			Применить
+		</button>
+	</div>
+</div>
