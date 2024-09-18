@@ -47,29 +47,29 @@
 
 <div class="fixed-bottom">
     @{
-        foreach (string prm in ViewBag.PermissionsNames)
+        foreach (Permission prm in ViewBag.PermissionList)
         {
 
-            switch (prm)
+            switch (prm.PermissionType.ToString())
             {
-                case "Добавить":
+                case "MaterialsAdd":
                     <form asp-controller="EquipmentPage" asp-action="Add">
                         <button type="submit" class="btn btn-primary">Доабвить</button>
                     </form>
 
                     break;
-                case "Изменить":
+                case "MaterialsEdit":
                     <form asp-controller="EquipmentPage" asp-action="Edit">
                         <button type="submit" class="btn btn-primary">Изменить</button>
                     </form>
 
                     break;
-                case "В доставку":
+                case "DeliveryAccess":
                     <form asp-controller="EquipmentPage" asp-action="Edit">
                         <button type="submit" class="btn btn-primary">В доставку</button>
                     </form>
                     break;
-                case "Удалить":
+                case "MaterialsDelete":
                     <form asp-controller="EquipmentPage" asp-action="Edit">
                         <button type="submit" class="btn btn-primary">Удалить</button>
                     </form>
