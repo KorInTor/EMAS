@@ -1,9 +1,9 @@
-﻿<button class="btn btn-outline-dark p-0 rounded-0 dropdown-toggle" data-bs-toggle="dropdown" data-bs-target="#filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-bs-auto-close="false"></button>
+﻿<button class="btn btn-outline-dark p-0 rounded-0 dropdown-toggle" data-bs-toggle="dropdown" data-bs-target="#filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-bs-auto-close="outside"></button>
 
-<div class="dropdown-menu filter-dropdown" id="filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-column-index="@ViewBag.ColumnIndex">
+<div class="dropdown-menu filter-dropdown pt-0" id="filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-column-index="@ViewBag.ColumnIndex" style="width: 500px;">
 
-	<div class="rounded p-2 m-2 border border-info border-3">
-		<span>Фильтры для</span> <span class="border border-success">@ViewBag.ColumnName</span>
+	<div class="p-2 rounded-top bg-dark">
+		<span class="text-white">Фильтры для</span> <span class="fw-bold text-white">@ViewBag.ColumnName</span>
 	</div>
 
 	<div class="container gap-3 ps-0">
