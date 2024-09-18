@@ -9,7 +9,7 @@
   
 <div class="fixed-bottom">
     @{
-        foreach (Permission prm in ViewBag.PermissionList)
+        foreach (Model.Permission prm in ViewBag.PermissionList)
         {
             switch (prm.PermissionType.ToString())
             {
