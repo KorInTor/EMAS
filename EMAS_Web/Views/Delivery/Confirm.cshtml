@@ -1,18 +1,16 @@
 ﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@model Model.Event.SentEvent
 
-@if (ViewBag.ObjectsInfo is not null)
+@foreach (var storableObject in Model.ObjectsInEvent)
 {
-    @foreach (string item in ViewBag.ObjectsInfo)
-    {
-        <p>@item</p>
-    }
+    <p>@storableObject.ShortInfo</p>
 }
 
 <form method="post">
     <div>
         <p>
             <label for="SentEventId">Id</label><br />
-            <input type="hidden" value="@ViewBag.SentEventId" disabled />
+            <input type="hidden" value="@Model.Id" disabled />
         </p>
         <p>
             <label for="Comment">Комментарий</label><br />

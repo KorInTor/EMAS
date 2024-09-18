@@ -1,0 +1,43 @@
+﻿@model Model.Event.ReservedEvent
+
+@foreach (Model.IStorableObject item in Model.ObjectsInEvent)
+{
+    <p>@item.ShortInfo</p>
+}
+
+<form method="post">
+    <div>
+        <input type="hidden" value="@Model.Id" name="reservedEventId" />
+        <p>
+            <label for="Comment">Комментарий</label><br />
+            <input type="text" name="comment" />
+        </p>
+        <p>
+            <label for="DateTime">Дата и время</label><br />
+            <input type="datetime-local" name="dateTime" />
+        </p>
+        <p>
+            <label for="isDecomissioned">Завершить как реализованный?</label><br />
+            <input type="checkbox" name="isDecomissioned" />
+        </p>
+        <p>
+            <input class="btn btn-success" type="submit" value="Завершить" />
+        </p>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        @if (ViewBag.Error)
+        {
+            <div class="alert alert-danger" role="alert">
+                @ViewBag.ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-success" role="alert">
+                Добавление успешно
+            </div>
+        }
+    }
+</form>

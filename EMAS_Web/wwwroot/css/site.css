@@ -20,3 +20,29 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.resizer {
+    position: absolute;
+    top: 0;
+    right: -2.5px;
+    width: 7px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    background-color: black;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    position: relative;
+}

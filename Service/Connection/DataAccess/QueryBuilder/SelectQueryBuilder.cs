@@ -43,6 +43,9 @@ namespace Service.Connection.DataAccess.QueryBuilder
                     propertyColumnDictionaries.Add(GetFullPropertyName<ReserveEndedEvent>(x => x.Id), "end_event_id");
                     propertyColumnDictionaries.Add(GetFullPropertyName<ReserveEndedEvent>(x => x.Comment), "reserve_end_info");
                     propertyColumnDictionaries.Add(GetFullPropertyName<ReserveEndedEvent>(x => x.ReserveEventId), "start_event_id");
+
+                    propertyColumnDictionaries.Add(GetFullPropertyName<DecomissionedEvent>(x => x.Id), "event_id");
+                    propertyColumnDictionaries.Add(GetFullPropertyName<DecomissionedEvent>(x => x.Comment), "reason");
                 }
 
                 return propertyColumnDictionaries;
@@ -66,6 +69,7 @@ namespace Service.Connection.DataAccess.QueryBuilder
                     typeTableDict.Add(typeof(ArrivedEvent), "\"event\".delivery");
                     typeTableDict.Add(typeof(ReservedEvent), "\"event\".reservation");
                     typeTableDict.Add(typeof(ReserveEndedEvent), "\"event\".reservation");
+                    typeTableDict.Add(typeof(DecomissionedEvent), "\"event\".decomission");
                 }
                 return typeTableDict;
             }
@@ -97,6 +101,7 @@ namespace Service.Connection.DataAccess.QueryBuilder
                     { typeof(ArrivedEvent), ("d.arrival_info, d.dispatch_event_id","\"event\".delivery as d","d.arrival_event_id") },
                     { typeof(ReservedEvent), ("r.reserve_start_info ,r.location_id","\"event\".reservation as r","r.start_event_id") },
                     { typeof(ReserveEndedEvent), ("r.reserve_end_info ,r.start_event_id","\"event\".reservation as r","r.end_event_id") },
+                    { typeof(DecomissionedEvent), ("d.reason ","\"event\".decomission as d","d.event_id") },
                 };
 
                 columns.Add("employee_id");

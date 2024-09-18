@@ -1,23 +1,11 @@
-﻿<h1>Создаём доставку из @ViewBag.DepartureLocation.Value</h1>
+﻿<h1>Создаём резерв на @ViewBag.CurrentLocation.Item2</h1>
 
-<input type="hidden" name="departureId" value="@ViewBag.DepartureLocation.Key" />
+<input type="hidden" name="locationid" value="@ViewBag.CurrentLocation.Item1" />
 
-<p>Будет в доставке</p>
-
-@{
-    List<Model.Equipment> equipmentList = [];
-
-    @foreach (Model.IStorableObject item in ViewBag.SelectedObjects)
-    {
-        @if (item is Model.Equipment equipment)
-        {
-            equipmentList.Add(equipment);
-        }
-
-        <input type="hidden" name="selectedIds" value="@item.Id" />
-    }
-
-    @Html.Partial("EquipmentTable", @equipmentList)
+@foreach (int item in ViewBag.SelectedIds)
+{
+    <input type="hidden" name="selectedIds" value="@item" />
+    <p>@item</p>
 }
 
 <script>
@@ -32,7 +20,7 @@
         }
 
         if (!dateTime) {
-            alert('Дата отправки не выбрана.');
+            alert('Дата начала не выбрана.');
             return false; // Останавливает отправку формы
         }
 
@@ -42,32 +30,17 @@
 </script>
 
 <form method="post" onsubmit="return validateForm()">
-    <div class="card w-auto mb-3">
-        <div class="card-body">
-            <h5 class="card-title">Выберите место назначения</h5>
-            @foreach (KeyValuePair<int, string> location in ViewBag.Locations)
-            {
-                <div class="form-check">
-                    <label class="form-check-label" for="@location.Key">
-                        @location.Value
-                    </label>
-                    <input class="form-check-input" type="radio" name="destinationId" id="@location.Key" value="@location.Value">
-                </div>
-            }
-        </div>
-    </div>
-    
     <div>
         <p>
             <label for="Comment">Комментарий</label><br />
             <input type="text" name="comment" />
         </p>
         <p>
-            <label for="DateTime">Дата отправки</label><br />
+            <label for="DateTime">Дата начала резерва</label><br />
             <input type="datetime-local" name="dateTime" />
         </p>
         <p>
-            <input class="btn btn-success" type="submit" value="Создать доставку" />
+            <input class="btn btn-success" type="submit" value="Создать резерв" />
         </p>
     </div>
 

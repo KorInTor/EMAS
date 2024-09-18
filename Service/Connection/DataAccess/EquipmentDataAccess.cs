@@ -108,8 +108,9 @@ namespace Service.Connection.DataAccess
 
             Dictionary<int, string> oldStatuses = SelectStatuses();
             oldStatuses.Remove(-1);
+            oldStatuses.Remove(-2);
 
-            foreach(var status in statuses)
+            foreach (var status in statuses)
             {
                 if (status.Item1 == 0)
                 {

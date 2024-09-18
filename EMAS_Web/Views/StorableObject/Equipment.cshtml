@@ -1,143 +1,26 @@
-﻿@using Model
 @model List<Model.Equipment>
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
-<head>
-    <style>
-        .fixed-bottom {
-            position: fixed;
-            display: flex;
-            bottom: 0;
-            width: 100%;
-            background-color: #f1f1f1;
-            text-align: center;
-            padding: 10px;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-        }
-        
-    </style>
-    <script>
-        function getSelectedCheckboxValues() {
-            var selectedValues = [];
-            var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-            checkboxes.forEach(function (checkbox) {
-                selectedValues.push(checkbox.value);
-            });
-            return selectedValues;
-        }
-
-        function submitDeliveryRequest() {
-            var selectedValues = getSelectedCheckboxValues();
-            if (selectedValues.length === 0) {
-                alert('Пожалуйста, выберите хотя бы один элемент.');
-                return;
-            }
-
-            // Создание строки параметров запроса
-            var params = selectedValues.map(id => 'selectedIds=' + encodeURIComponent(id)).join('&');
-
-            params += '&departureId=' + encodeURIComponent(@ViewBag.LocationId);
-
-            // Отправка GET-запроса
-            window.location.href = '/Delivery/Create?' + params;
-        }
-
-
-    </script>
-
-    <link rel="stylesheet" href="~/css/main_page.css">
-</head>
-
-<div class="container">
-
-</div>
-
 <h2>Список оборудования</h2>
 
-<table id="equipmentTable" class="table">
-    <thead>
-        <tr>
-            <th></th>
-            <th>Id</th>
-            <th>Название</th>
-            <th>Тип </th>
-            <th>Производитель</th>
-            <th>Статус</th>
-            <th>Описание</th>
-            <th>Регистрационный номер
-            </th>
-            <th>История</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td><input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="..."></td>
-                <td>@item.Id</td>
-                <td>@item.Name</td>
-                <td>@item.Type</td>
-                <td>@item.Manufacturer</td>
-                <td>
-                    <select>
-                        <option value="@item.Status">@item.Status</option>
+@await Html.PartialAsync("EquipmentTable", Model)
 
-                        @foreach(KeyValuePair<int, string> status in ViewBag.Statuses)
-                        {
-                            @if(status.Value != item.Status)
-                            {
-                                <option value="@status.Key">status.Value</option>
-                            }
-                        }
-                        <option value="ph1">Placeholder1</option>
-                        <option value="ph2">Placeholder2</option>
-                    </select>
-                </td>
-                <td>@item.Description</td>
-                <td>@item.RegistrationNumber</td>
-                <td>
-                    <form asp-controller="StorableObject" asp-action="History" method="get">
-                        <input type="hidden" name="storableObjectId" value="@item.Id" />
-                        <button type="submit" class="btn btn-primary">История</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
+<script src="~/js/storableObjectScripts.js"></script>
+  
 <div class="fixed-bottom">
-    <!--
-    <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
-    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest()">Создать доставку</button>
-    <button class="btn btn-info">Изменить</button>
-    -->
     @{
         foreach (Permission prm in ViewBag.PermissionList)
         {
             switch (prm.PermissionType.ToString())
             {
                 case "EquipemntAdd":
-                    <form asp-controller="EquipmentPage" asp-action="Add">
-                        <button type="submit" class="btn btn-primary">Добавить</button>
-                    </form>
-
+                    <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
                     break;
                 case "EquipmentEdit":
-                    <form asp-controller="EquipmentPage" asp-action="Edit">
-                        <button type="submit" class="btn btn-primary">Изменить</button>
-                    </form>
-
+                    <button type="button" class="btn btn-primary" onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать Резерв</button>
                     break;
                 case "DeliveryAccess":
-                    <form asp-controller="EquipmentPage" asp-action="Edit">
-                        <button type="submit" class="btn btn-primary">В доставку</button>
-                    </form>
-                    break;
-                case "EquipmentDelete":
-                    <form asp-controller="EquipmentPage" asp-action="Edit">
-                        <button type="submit" class="btn btn-primary">Удалить</button>
-                    </form>
+                    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать доставку</button>
                     break;
             }
         }

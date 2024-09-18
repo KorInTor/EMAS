@@ -1,4 +1,3 @@
-﻿using EMAS_Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Model;
@@ -38,7 +37,6 @@ namespace EMAS_Web.Controllers
 
         public IActionResult Equipment(int locationId = 1)
         {
-            //int employeeId = 
             List<Equipment> equipmentList = [];
 
             List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
@@ -53,7 +51,6 @@ namespace EMAS_Web.Controllers
                     equipmentList.Add(equipment);
                 }
             }
-
             ViewBag.PermissionList = permissionsList;
             ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             ViewBag.LocationId = locationId;

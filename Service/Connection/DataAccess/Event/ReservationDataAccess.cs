@@ -24,9 +24,6 @@ namespace Service.Connection.DataAccess.Event
 
         public void Complete(IEnumerable<ReserveEndedEvent> reservations)
         {
-            if (!IsCompleted(reservations))
-                throw new EventAlreadyCompletedException();
-
             foreach (var endReservationEvent in reservations)
             {
                 using var connection = ConnectionPool.GetConnection();

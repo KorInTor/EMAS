@@ -1,0 +1,118 @@
+﻿@model List<Model.Equipment>
+@using Service.Connection
+
+<div class="fs-3 m-3">
+	Количество найденных позиций = <span id="equipmentTable_visibleRowsCount" class="fs-3"></span>
+</div>
+
+<table id="equipmentTable" class="table table-striped table-bordered">
+	<thead>
+		<tr>
+			<th><input class="form-check-input" type="checkbox" id="checkAll" onchange="setCheckAllVisibleChildElements(document.querySelector('table#equipmentTable'), this.checked)"></th>
+			<th>
+				Id<div class="resizer"></div>
+				@await Component.InvokeAsync("TableFilterMenu", new
+					{
+						tableId = "equipmentTable",
+						columnIndex = "1",
+						filterOptions = Model.Select(e => e.Id.ToString()).Distinct().ToList(),
+						columnName = "Id"
+					})
+			</th>
+			<th>
+				Название<div class="resizer"></div>
+				@await Component.InvokeAsync("TableFilterMenu", new
+					{
+						tableId = "equipmentTable",
+						columnIndex = "2",
+						filterOptions = Model.Select(e => e.Name).Distinct().ToList(),
+						columnName = "Название"
+					})
+			</th>
+			<th>
+				Тип<div class="resizer"></div>
+				@await Component.InvokeAsync("TableFilterMenu", new
+					{
+						tableId = "equipmentTable",
+						columnIndex = "3",
+						filterOptions = Model.Select(e => e.Type).Distinct().ToList(),
+						columnName = "Тип"
+					})
+			</th>
+			<th>
+				Производитель<div class="resizer"></div>
+				@await Component.InvokeAsync("TableFilterMenu", new
+					{
+						tableId = "equipmentTable",
+						columnIndex = "4",
+						filterOptions = Model.Select(e => e.Manufacturer).Distinct().ToList(),
+						columnName = "Производитель"
+					})
+			</th>
+			<th>
+				Статус<div class="resizer"></div>
+				@await Component.InvokeAsync("TableFilterMenu", new
+					{
+						tableId = "equipmentTable",
+						columnIndex = "5",
+						filterOptions = Model.Select(e => e.Status).Distinct().ToList(),
+						columnName = "Статус"
+					})
+			</th>
+			<th>
+				Описание<div class="resizer"></div>
+
+			</th>
+			<th>
+				Регистрационный номер<div class="resizer"></div>
+				@await Component.InvokeAsync("TableFilterMenu", new
+					{
+						tableId = "equipmentTable",
+						columnIndex = "7",
+						filterOptions = Model.Select(e => e.RegistrationNumber).Distinct().ToList(),
+						columnName = "Регистрационный номер"
+					})
+			</th>
+			<th>
+				История
+			</th>
+		</tr>
+	</thead>
+	<tbody class="table w-100 table-group-divider">
+		@foreach (var item in Model)
+		{
+			<tr class="d-table-row">
+				<td class="border border-1">
+					<input class="form-check-input" type="checkbox" id="checkbox_@item.Id" value="@item.Id" aria-label="...">
+				</td>
+				<td class="border border-1">@item.Id</td>
+				<td class="border border-1">@item.Name</td>
+				<td class="border border-1">@item.Type</td>
+				<td class="border border-1">@item.Manufacturer</td>
+				<td class="border border-1">@item.Status</td>
+				<td class="border border-1">@item.Description</td>
+				<td class="border border-1">@item.RegistrationNumber</td>
+				<td class="border border-1">
+					<form asp-controller="StorableObject" asp-action="History" method="get">
+						<input type="hidden" name="storableObjectId" value="@item.Id" />
+						<button type="submit" class="btn btn-primary">История</button>
+					</form>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
+
+<script>
+	let equipmentFilterMenu = new TableFilterMenu("equipmentTable", [1, 2, 3, 4, 5, 7]);
+
+	window.onload = (event) => {
+		equipmentFilterMenu.bindButtons();
+		equipmentFilterMenu.updateRowsCount();
+	};
+
+	makeResizable(document.querySelector('table#equipmentTable'));
+</script>

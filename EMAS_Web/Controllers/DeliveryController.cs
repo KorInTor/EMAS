@@ -35,21 +35,22 @@ namespace EMAS_Web.Controllers
                 return View();
             }
 
-            var selectedIdList = selectedIds.Select(id => int.Parse(id)).ToList();
+            var selectedIdsList = selectedIds.Select(id => int.Parse(id)).ToList();
 
-            ViewBag.SelectedIds = selectedIdList;
-            List<ValueTuple<int, string>> locationsList = [];
-            foreach(var location in DataBaseClient.GetInstance().SelectNamedLocations())
+            ViewBag.SelectedObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
+
+            ViewBag.Locations = DataBaseClient.GetInstance().SelectNamedLocations();
+
+            foreach (var location in ViewBag.Locations)
             {
                 if (location.Key == departureId)
                 {
-                    ViewBag.DepartureLocation = (location.Key,location.Value);
-                    continue;
+                    ViewBag.DepartureLocation = location;
+                    ViewBag.Locations.Remove(location.Key);
+                    break;
                 }
-                locationsList.Add((location.Key, location.Value));
             }
 
-            ViewBag.Locations = locationsList;
             return View();
         }
 
@@ -62,9 +63,9 @@ namespace EMAS_Web.Controllers
                 return View();
             }
 
-            var selectedIdList = selectedIds.Select(id => int.Parse(id));
+            var selectedIdsList = selectedIds.Select(id => int.Parse(id));
 
-            var storableObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdList);
+            var storableObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
 
             var sentEvent = new SentEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Sent,dateTime, storableObjects, comment, departureId, destinationId);
 
@@ -78,14 +79,7 @@ namespace EMAS_Web.Controllers
         {
             var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventById(sentEventId, typeof(SentEvent));
 
-            List<string> shortInfos = [];
-            foreach(var item in sentEventToConfirm.ObjectsInEvent)
-            {
-                shortInfos.Add(item.ShortInfo);
-            }
-            ViewBag.ObjectsInfo = shortInfos;
-            ViewBag.SentEventId = sentEventId;
-            return View();
+            return View(sentEventToConfirm);
         }
 
         [HttpPost]
@@ -103,7 +97,7 @@ namespace EMAS_Web.Controllers
             {
                 ViewBag.Error = true;
                 ViewBag.ErrorMessage = ex.Message;
-                return View();
+                return View(sentEventToConfirm);
             }
 
             return RedirectToActionPermanent("Index","Delivery");

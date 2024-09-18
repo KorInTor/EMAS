@@ -183,6 +183,7 @@ namespace Service.Connection
                 defaultConditions.Add(ceilingCondition);
             }
 
+			//TODO Разбить на методы
             //-* Addition Event *-//
 
             List<BaseCondition> additionConditions = [];
@@ -228,10 +229,20 @@ namespace Service.Connection
 			return storableObjectDataAccess.SelectByIds(ids).ToList();
 		}
 
-		public List<ReservedEvent> GetReservationOn(int locationId)
+		public List<ReservedEvent> SelectReservationOn(int locationId, bool selectOnlyActive = true)
 		{
-			var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal, locationId);
-			return eventDataAccess.Select([condition], typeof(ReservedEvent)).OfType<ReservedEvent>().ToList();
+			List<BaseCondition> conditionsList = [];
+			var locationCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal, locationId);
+			conditionsList.Add(locationCondition);
+			if (selectOnlyActive)
+			{
+				var noEndReserveCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ReserveEndedEvent>(x => x.Id), true);
+
+				conditionsList.Add(noEndReserveCondition);
+			}
+
+
+			return eventDataAccess.Select(conditionsList, typeof(ReservedEvent)).OfType<ReservedEvent>().ToList();
 		}
 		
 		public Dictionary<string,List<string>> SelectDistinctPropertyValues(Type objectToSelectPropertyFor, IEnumerable<string>? properties = null)
