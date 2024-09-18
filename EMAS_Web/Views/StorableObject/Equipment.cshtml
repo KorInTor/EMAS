@@ -1,33 +1,29 @@
-﻿@model List<Model.Equipment>
+@model List<Model.Equipment>
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
-
-<head>
-    <style>
-        .fixed-bottom {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background-color: #f1f1f1;
-            text-align: center;
-            padding: 10px;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-        }
-    </style>
-    <script>
-        
-    </script>
-
-</head>
 
 <h2>Список оборудования</h2>
 
 @await Html.PartialAsync("EquipmentTable", Model)
 
 <script src="~/js/storableObjectScripts.js"></script>
-
+  
 <div class="fixed-bottom">
-    <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
-    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать доставку</button>
-    <button type="button" class="btn btn-primary" onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать Резерв</button>
-    <button class="btn btn-info">Изменить</button>
+    @{
+        foreach (Permission prm in ViewBag.PermissionList)
+        {
+            switch (prm.PermissionType.ToString())
+            {
+                case "EquipemntAdd":
+                    <a class="btn btn-primary" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
+                    break;
+                case "EquipmentEdit":
+                    <button type="button" class="btn btn-primary" onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать Резерв</button>
+                    break;
+                case "DeliveryAccess":
+                    <button type="button" class="btn btn-primary" onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать доставку</button>
+                    break;
+            }
+        }
+    }
+
 </div>

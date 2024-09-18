@@ -1,7 +1,20 @@
-﻿@model List<Model.MaterialPiece>
+﻿@using Model
+@model List<Model.MaterialPiece>
 
 <h2>Список материалов</h2>
 
+<style>
+    .fixed-bottom {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+        text-align: center;
+        padding: 10px;
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+
+</style>
 <table class="table">
     <thead>
         <tr>
@@ -31,4 +44,39 @@
         }
     </tbody>
 </table>
+
+<div class="fixed-bottom">
+    @{
+        foreach (Permission prm in ViewBag.PermissionList)
+        {
+
+            switch (prm.PermissionType.ToString())
+            {
+                case "MaterialsAdd":
+                    <form asp-controller="EquipmentPage" asp-action="Add">
+                        <button type="submit" class="btn btn-primary">Доабвить</button>
+                    </form>
+
+                    break;
+                case "MaterialsEdit":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">Изменить</button>
+                    </form>
+
+                    break;
+                case "DeliveryAccess":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">В доставку</button>
+                    </form>
+                    break;
+                case "MaterialsDelete":
+                    <form asp-controller="EquipmentPage" asp-action="Edit">
+                        <button type="submit" class="btn btn-primary">Удалить</button>
+                    </form>
+                    break;
+            }
+        }
+    }
+</div>
+
 

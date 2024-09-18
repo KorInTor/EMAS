@@ -1,18 +1,26 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Model;
 using Model.Event;
 using EMAS_Web.Filters;
 using Service;
 using Service.Connection;
+using Service.Connection.DataAccess.Event;
 
 namespace EMAS_Web.Controllers
 {
     public class StorableObjectController : Controller
     {
+
+
         public IActionResult Material(int locationId = 1)
         {
             List<MaterialPiece> materialList = [];
+
+            List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+                                                where  prm.LocationId == locationId
+                                                select prm).ToList();
+            
 
             foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
             {
@@ -22,6 +30,7 @@ namespace EMAS_Web.Controllers
                 }
             }
 
+            ViewBag.PermissionList = permissionsList;
             ViewBag.LocationId = locationId;
             return View(materialList);
         }
@@ -30,6 +39,11 @@ namespace EMAS_Web.Controllers
         {
             List<Equipment> equipmentList = [];
 
+            List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+                                                where prm.LocationId == locationId
+                                                select prm).ToList();
+
+
             foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
             {
                 if (item is Equipment equipment)
@@ -37,7 +51,8 @@ namespace EMAS_Web.Controllers
                     equipmentList.Add(equipment);
                 }
             }
-
+            ViewBag.PermissionList = permissionsList;
+            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             ViewBag.LocationId = locationId;
             return View(equipmentList);
         }
@@ -67,7 +82,7 @@ namespace EMAS_Web.Controllers
                 var addition = new AdditionEvent((int)userId, 0, EventType.Addition, DateTime.Now, [newEquipment], locationId);
                 DataBaseClient.GetInstance().Add(addition);
             }
-            catch(Exception excpetion)
+            catch (Exception excpetion)
             {
                 ViewBag.ErrorMessage = excpetion.Message;
                 ViewBag.NoError = false;
@@ -75,8 +90,8 @@ namespace EMAS_Web.Controllers
             }
             ViewBag.NoError = true;
             return View();
-        }
 
+        }
         public IActionResult Index(int locationId)
         {
             return View();
@@ -86,5 +101,6 @@ namespace EMAS_Web.Controllers
         {
             return View(DataBaseClient.GetInstance().SelectForStorableObjectId(storableObjectId));
         }
+
     }
 }
