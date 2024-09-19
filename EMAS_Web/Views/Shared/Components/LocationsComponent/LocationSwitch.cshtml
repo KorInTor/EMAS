@@ -45,28 +45,28 @@
 
     <ul class="navbar-nav flex-grow-1">
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Equipment" asp-route-locationId="@id">Оборудование</a>
+            <a class="nav-link text-dark locationLink" asp-controller="StorableObject" asp-action="Equipment" asp-route-locationId="@id">Оборудование</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Material" asp-route-locationId="@id">Материалы</a>
+            <a class="nav-link text-dark locationLink" asp-controller="StorableObject" asp-action="Material" asp-route-locationId="@id">Материалы</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Delivery" asp-action="Index" asp-route-locationId="@id">Доставки</a>
+            <a class="nav-link text-dark locationLink" asp-controller="Delivery" asp-action="Index" asp-route-locationId="@id">Доставки</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Reservation" asp-action="Index" asp-route-locationId="@id">Резерв</a>
+            <a class="nav-link text-dark" asp-controller="Reservation" asp-action="Index" asp-route-locationId="@id">Резерв</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EmployeeTable">Сотрудники</a>
+            <a class="nav-link text-dark" asp-controller="Admin" asp-action="EmployeeTable">Сотрудники</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EquipmentStatusEditor">Статусы Оборудования</a>
+            <a class="nav-link text-dark" asp-controller="Admin" asp-action="EquipmentStatusEditor">Статусы Оборудования</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Archive" asp-action="Index" asp-route-locationId="@id">Архив</a>
+            <a class="nav-link text-dark locationLink" asp-controller="Archive" asp-action="Index" asp-route-locationId="@id">Архив</a>
         </li>
     </ul>
 }
