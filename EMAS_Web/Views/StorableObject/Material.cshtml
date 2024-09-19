@@ -1,82 +1,26 @@
-﻿@using Model
-@model List<Model.MaterialPiece>
+﻿@model List<Model.MaterialPiece>
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
-<h2>Список материалов</h2>
+<h2>Список Материалов</h2>
 
-<style>
-    .fixed-bottom {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-        background-color: #f1f1f1;
-        text-align: center;
-        padding: 10px;
-        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-    }
+@await Html.PartialAsync("MaterialTable", Model)
 
-</style>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Id</th>
-            <th>Тип</th>
-            <th>Название</th>
-            <th></th>
-            <th>Кол-во</th>
-            <th>Инвентарный номер</th>
-            <th>Место хранения</th>
-            <th>Описание</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+<script src="~/js/storableObjectScripts.js"></script>
+
+<div class="fixed-bottom mx-auto p-3 d-flex justify-content-center bg-white">
+    @foreach (Model.Permission prm in ViewBag.PermissionList)
+    {
+        switch (prm.PermissionType.ToString())
         {
-            <tr>
-                <td>@item.Id</td>
-                <td>@item.Type</td>
-                <td>@item.Name</td>
-                <td>@item.Units</td>
-                <td>@item.Amount</td>
-                <td>@item.InventoryNumber</td>
-                <td>@item.StorageType</td>
-                <td>@item.Description</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<div class="fixed-bottom">
-    @{
-        foreach (Permission prm in ViewBag.PermissionList)
-        {
-
-            switch (prm.PermissionType.ToString())
-            {
-                case "MaterialsAdd":
-                    <form asp-controller="EquipmentPage" asp-action="Add">
-                        <button type="submit" class="btn btn-primary">Доабвить</button>
-                    </form>
-
-                    break;
-                case "MaterialsEdit":
-                    <form asp-controller="EquipmentPage" asp-action="Edit">
-                        <button type="submit" class="btn btn-primary">Изменить</button>
-                    </form>
-
-                    break;
-                case "DeliveryAccess":
-                    <form asp-controller="EquipmentPage" asp-action="Edit">
-                        <button type="submit" class="btn btn-primary">В доставку</button>
-                    </form>
-                    break;
-                case "MaterialsDelete":
-                    <form asp-controller="EquipmentPage" asp-action="Edit">
-                        <button type="submit" class="btn btn-primary">Удалить</button>
-                    </form>
-                    break;
-            }
+            case "MaterialAdd":
+                <a class="btn btn-primary m-3" asp-controller="StorableObject" asp-action="AddMaterial" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
+                break;
+            case "MaterialEdit":
+                <button type="button" class="btn btn-primary m-3" onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать Резерв</button>
+                break;
+            case "DeliveryAccess":
+                <button type="button" class="btn btn-primary m-3" onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('#equipmentTable tbody')),@(ViewBag.LocationId))">Создать доставку</button>
+                break;
         }
     }
 </div>
-
-

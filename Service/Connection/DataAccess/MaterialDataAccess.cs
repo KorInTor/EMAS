@@ -64,7 +64,7 @@ namespace Service.Connection.DataAccess
             command.Parameters.AddWithValue("@Id", ids.ToArray());
 
             using var reader = command.ExecuteReader();
-            if (reader.Read())
+            while (reader.Read())
             {
                 int id = reader.GetInt32(8);
                 string type = reader.GetString(0);
