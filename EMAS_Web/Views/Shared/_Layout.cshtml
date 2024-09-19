@@ -28,20 +28,27 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div id="location" class="navbar-collapse collapse d-sm-inline-flex justify-content-between container">
-                    
-                    @await Component.InvokeAsync("LocationsComponent");
-                  
-                    @{
-                        var userFullname = Context.Session.GetString("UserFullname");
-                        @if (userFullname != null)
-                        {
-                            <div class="nav-item position-absolute top-50 end-0 translate-middle btn btn-primary">
-                                <span class="nav-link">@userFullname</span>
-                            </div>
-                        }
+                
+                @{
+                    int? locationId = null;
+                    @if (Int32.TryParse(Context.Request.Query["locationid"].ToString(), out int id))
+                    {
+                        locationId = id;
                     }
-                </div>
+
+                }
+
+                @await Component.InvokeAsync("LocationsComponent", new { currentLocationId = locationId })
+
+                @{
+                    var userFullname = Context.Session.GetString("UserFullname");
+                    @if (userFullname != null)
+                    {
+                        <div class="nav-item ms-auto">
+                            <span class="nav-link">@userFullname</span>
+                        </div>
+                    }
+                }
             </div>
         </nav>
     </header>
