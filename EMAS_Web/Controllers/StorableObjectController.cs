@@ -12,8 +12,8 @@ namespace EMAS_Web.Controllers
     public class StorableObjectController : Controller
     {
 
-
-        public IActionResult Material(int locationId = 1)
+        [LocationFilter]
+        public IActionResult Material(int locationId)
         {
             List<MaterialPiece> materialList = [];
 
@@ -35,7 +35,8 @@ namespace EMAS_Web.Controllers
             return View(materialList);
         }
 
-        public IActionResult Equipment(int locationId = 1)
+        [LocationFilter]
+        public IActionResult Equipment(int locationId)
         {
             List<Equipment> equipmentList = [];
 
@@ -58,19 +59,20 @@ namespace EMAS_Web.Controllers
         }
 
         [AuthorizationFilter]
-        public IActionResult AddEquipment()
+        [LocationFilter]
+        public IActionResult AddEquipment(int locationId)
         {
             //TODO Доабвить server side провепрку на наличие прав
 
             ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             ViewBag.DistinctValues = DataBaseClient.GetInstance().SelectDistinctPropertyValues(typeof(Equipment));
 
-
             return View();
         }
 
         [HttpPost]
         [AuthorizationFilter]
+        [LocationFilter]
         public IActionResult AddEquipment(Equipment newEquipment, int locationId)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
@@ -92,8 +94,11 @@ namespace EMAS_Web.Controllers
             return View();
 
         }
+
+        [LocationFilter]
         public IActionResult Index(int locationId)
         {
+            //TODO Combine Equipment And Material Tables Here.
             return View();
         }
 

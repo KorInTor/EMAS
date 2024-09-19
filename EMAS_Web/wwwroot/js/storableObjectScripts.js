@@ -22,7 +22,7 @@ function submitReservationRequest(idValues, locationId) {
     // Создание строки параметров запроса
     var params = idValues.map(id => 'selectedIds=' + encodeURIComponent(id)).join('&');
 
-    params += '&locationid=' + encodeURIComponent(locationId);
+    params += '&locationId=' + encodeURIComponent(locationId);
 
     // Отправка GET-запроса
     window.location.href = '/Reservation/Create?' + params;

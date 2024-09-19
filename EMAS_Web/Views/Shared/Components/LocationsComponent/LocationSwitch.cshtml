@@ -3,18 +3,18 @@
 <script>
     function updateId(newId) {
         document.querySelectorAll('.locationLink').forEach(link => {
-            link.href = link.href.replace(/locationid=\d+/, 'locationid=' + newId);
+            link.href = link.href.replace(/locationId=\d+/, 'locationId=' + newId);
         });
     }
 
     function switchLocationIfPossible(locationId) {
         const urlParams = new URLSearchParams(window.location.search);
 
-        if (urlParams.has('locationid')) {
-            const locationIdParam = urlParams.get('locationid');
+        if (urlParams.has('locationId')) {
+            const locationIdParam = urlParams.get('locationId');
 
             if (!isNaN(locationIdParam) && Number.isInteger(Number(locationIdParam))) {
-                urlParams.set('locationid', locationId);
+                urlParams.set('locationId', locationId);
                 window.location.search = urlParams.toString();
             }
         }
@@ -48,13 +48,13 @@
             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Equipment" asp-route-locationid="@id">Оборудование</a>
+            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Equipment" asp-route-locationId="@id">Оборудование</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Material" asp-route-locationid="@id">Материалы</a>
+            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="StorableObject" asp-action="Material" asp-route-locationId="@id">Материалы</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Delivery" asp-action="Index" asp-route-locationid="@id">Доставки</a>
+            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Delivery" asp-action="Index" asp-route-locationId="@id">Доставки</a>
         </li>
         <li class="nav-item">
             <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EmployeeTable">Сотрудники</a>
@@ -63,7 +63,7 @@
             <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="EquipmentStatusEditor">Статусы Оборудования</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Archive" asp-action="Index" asp-route-locationid="@id">Архив</a>
+            <a class="nav-link text-dark locationLink" asp-area="" asp-controller="Archive" asp-action="Index" asp-route-locationId="@id">Архив</a>
         </li>
     </ul>
 }

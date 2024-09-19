@@ -9,7 +9,8 @@ namespace EMAS_Web.Controllers
     [AuthorizationFilter]
     public class DeliveryController : Controller
     {
-        public IActionResult Index(int locationId = 1, bool selectOutgoing = false)
+        [LocationFilter]
+        public IActionResult Index(int locationId, bool selectOutgoing = false)
         {
             ViewBag.Outgoing = selectOutgoing;
             ViewBag.LocationId = locationId;

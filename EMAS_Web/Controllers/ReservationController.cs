@@ -9,13 +9,15 @@ namespace EMAS_Web.Controllers
     public class ReservationController : Controller
     {
         [HttpGet]
-        public IActionResult Index(int locationid)
+        [LocationFilter]
+        public IActionResult Index(int locationId)
         {
-            return View(DataBaseClient.GetInstance().SelectReservationOn(locationid));
+            return View(DataBaseClient.GetInstance().SelectReservationOn(locationId));
         }
 
         [HttpGet]
-        public IActionResult Create(IEnumerable<string> selectedIds, int locationid)
+        [LocationFilter]
+        public IActionResult Create(IEnumerable<string> selectedIds, int locationId)
         {
             if (selectedIds == null || !selectedIds.Any())
             {
@@ -29,7 +31,7 @@ namespace EMAS_Web.Controllers
 
             foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
             {
-                if (location.Key == locationid)
+                if (location.Key == locationId)
                 {
                     ViewBag.CurrentLocation = (location.Key, location.Value);
                     continue;
@@ -40,7 +42,7 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(IEnumerable<string> selectedIds, int locationid,DateTime dateTime, string comment)
+        public IActionResult Create(IEnumerable<string> selectedIds, int locationId,DateTime dateTime, string comment)
         {
             if (selectedIds == null || !selectedIds.Any())
             {
@@ -52,7 +54,7 @@ namespace EMAS_Web.Controllers
 
             var storableObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdList);
 
-            var reservedEvent = new ReservedEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Reserved,dateTime,storableObjects,comment,locationid);
+            var reservedEvent = new ReservedEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Reserved,dateTime,storableObjects,comment,locationId);
 
             try
             {

@@ -31,7 +31,7 @@
                 
                 @{
                     int? locationId = null;
-                    @if (Int32.TryParse(Context.Request.Query["locationid"].ToString(), out int id))
+                    @if (Int32.TryParse(Context.Request.Query["locationId"].ToString(), out int id))
                     {
                         locationId = id;
                     }
