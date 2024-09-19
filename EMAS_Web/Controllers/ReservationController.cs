@@ -66,7 +66,7 @@ namespace EMAS_Web.Controllers
                 return View();
             }
 
-            return RedirectToActionPermanent("Index","Reservation");
+            return RedirectToActionPermanent("Index","Reservation", new { locationId = locationId });
         }
 
         [HttpGet]
@@ -103,7 +103,7 @@ namespace EMAS_Web.Controllers
                 return View(reservedEventToConfirm);
             }
 
-            return RedirectToActionPermanent("Index", "Reservation");
+            return RedirectToActionPermanent("Index", "Reservation", new { locationId = reservedEventToConfirm.LocationId });
         }
     }
 }

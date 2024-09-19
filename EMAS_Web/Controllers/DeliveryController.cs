@@ -72,7 +72,7 @@ namespace EMAS_Web.Controllers
 
             DataBaseClient.GetInstance().Add(sentEvent);
 
-            return RedirectToActionPermanent("Index", "Delivery");
+            return RedirectToActionPermanent("Index", "Reservation", new { locationId = departureId, selectOutgoing = true });
         }
 
         [HttpGet]
@@ -86,7 +86,7 @@ namespace EMAS_Web.Controllers
         [HttpPost]
         public IActionResult Confirm(long sentEventId, string comment, DateTime dateTime)
         {
-            var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventById(sentEventId, typeof(SentEvent));
+            var sentEventToConfirm = (SentEvent)DataBaseClient.GetInstance().SelectEventById(sentEventId, typeof(SentEvent));
 
             var arrivedEvent = new ArrivedEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Arrived,dateTime.ToUniversalTime(), sentEventToConfirm.ObjectsInEvent, comment,sentEventId);
 
@@ -101,7 +101,7 @@ namespace EMAS_Web.Controllers
                 return View(sentEventToConfirm);
             }
 
-            return RedirectToActionPermanent("Index","Delivery");
+            return RedirectToActionPermanent("Index", "Reservation", new { locationId = sentEventToConfirm.DestinationId, selectIncoming = true });
         }
     }
 }

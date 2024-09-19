@@ -91,8 +91,8 @@ namespace EMAS_Web.Controllers
                 return View();
             }
             ViewBag.NoError = true;
-            return View();
 
+            return RedirectToActionPermanent("Equipment", "StorableObject", new { locationId = locationId});
         }
 
         [LocationFilter]
