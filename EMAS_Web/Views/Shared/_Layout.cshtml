@@ -29,25 +29,21 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 
-                @{
+                @if (Context.Session.GetString("UserFullname") != null)
+                {
                     int? locationId = null;
+
                     @if (Int32.TryParse(Context.Request.Query["locationId"].ToString(), out int id))
                     {
                         locationId = id;
                     }
 
-                }
+                    @await Component.InvokeAsync("LocationsComponent", new { currentLocationId = locationId })
 
-                @await Component.InvokeAsync("LocationsComponent", new { currentLocationId = locationId })
-
-                @{
                     var userFullname = Context.Session.GetString("UserFullname");
-                    @if (userFullname != null)
-                    {
-                        <div class="nav-item ms-auto">
-                            <span class="nav-link">@userFullname</span>
-                        </div>
-                    }
+                    <div class="nav-item ms-auto">
+                        <span class="nav-link">@userFullname</span>
+                    </div>
                 }
             </div>
         </nav>
