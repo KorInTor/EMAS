@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Model.Event;
 using Service.Connection;
-using Service.Connection.DataAccess.QueryBuilder;
+
 
 namespace EMAS_Web.Controllers
 {

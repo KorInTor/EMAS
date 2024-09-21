@@ -37,7 +37,7 @@ namespace Service.Connection
             var connection = new NpgsqlConnection(ConnectionString);
             connection.Open();
             _openedConnections++;
-            Debug.WriteLine($"Открыто соединений:{_openedConnections}");
+            //Debug.WriteLine($"Открыто соединений:{_openedConnections}");
             return connection;
             lock (_connections)
             {
@@ -71,7 +71,7 @@ namespace Service.Connection
             conn.Close();
             conn.Dispose();
             _openedConnections--;
-            Debug.WriteLine($"Открыто соединений:{_openedConnections}");
+            //Debug.WriteLine($"Открыто соединений:{_openedConnections}");
             return;
             lock (_connections)
             {

@@ -16,14 +16,7 @@ namespace EMAS_Web.Controllers
             ViewBag.LocationId = locationId;
             ViewBag.LocationDictionary = DataBaseClient.GetInstance().SelectNamedLocations();
 
-            if (selectOutgoing)
-            {
-                return View(DataBaseClient.GetInstance().GetDeliverysOutOf(locationId));
-            }
-            else
-            {
-                return View(DataBaseClient.GetInstance().GetDeliverysInTo(locationId));
-            }
+			return View(DataBaseClient.GetInstance().SelectDeliveries(locationId, !selectOutgoing));
         }
 
         [HttpGet]
@@ -56,7 +49,7 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(IEnumerable<string> selectedIds, DateTime dateTime, string comment, string destinationName, int destinationId, int departureId)
+        public IActionResult Create(IEnumerable<string> selectedIds, DateTime dateTime, string comment, int destinationId, int departureId)
         {
             if (selectedIds == null || !selectedIds.Any())
             {
@@ -72,13 +65,13 @@ namespace EMAS_Web.Controllers
 
             DataBaseClient.GetInstance().Add(sentEvent);
 
-            return RedirectToActionPermanent("Index", "Reservation", new { locationId = departureId, selectOutgoing = true });
+            return RedirectToActionPermanent("Index", "Delivery", new { locationId = departureId, selectOutgoing = true });
         }
 
         [HttpGet]
         public IActionResult Confirm(long sentEventId)
         {
-            var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventById(sentEventId, typeof(SentEvent));
+            var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<SentEvent>([sentEventId]).First();
 
             return View(sentEventToConfirm);
         }
@@ -86,7 +79,7 @@ namespace EMAS_Web.Controllers
         [HttpPost]
         public IActionResult Confirm(long sentEventId, string comment, DateTime dateTime)
         {
-            var sentEventToConfirm = (SentEvent)DataBaseClient.GetInstance().SelectEventById(sentEventId, typeof(SentEvent));
+            var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<SentEvent>([sentEventId]).First();
 
             var arrivedEvent = new ArrivedEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Arrived,dateTime.ToUniversalTime(), sentEventToConfirm.ObjectsInEvent, comment,sentEventId);
 
@@ -101,7 +94,7 @@ namespace EMAS_Web.Controllers
                 return View(sentEventToConfirm);
             }
 
-            return RedirectToActionPermanent("Index", "Reservation", new { locationId = sentEventToConfirm.DestinationId, selectIncoming = true });
+            return RedirectToActionPermanent("Index", "Delivery", new { locationId = sentEventToConfirm.DestinationId, selectIncoming = true });
         }
     }
 }

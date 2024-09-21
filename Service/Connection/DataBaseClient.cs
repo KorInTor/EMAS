@@ -2,8 +2,9 @@
 using Model;
 using Model.Event;
 using Service.Connection.DataAccess;
-using Service.Connection.DataAccess.QueryBuilder;
+using Service.Connection.DataAccess.Query;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace Service.Connection
@@ -108,109 +109,84 @@ namespace Service.Connection
 			throw new NotSupportedException("Этот тип не поддерживается");
 		}
 
-		public bool IsStorableObjectsNotOccupied(IStorableObject[] storableObjects, out List<IStorableObject> occupiedObject)
+		public bool IsStorableObjectsNotOccupied(IEnumerable<IStorableObject> storableObjects, out List<IStorableObject> occupiedObject)
 		{
 			return eventDataAccess.IsStorableObjectsNotOccupied(storableObjects, out occupiedObject);
 		}
 
-		public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
+		public Dictionary<int, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
 		{
-			return eventDataAccess.SelectLastEventsForStorableObjects(storableObjects);
+			return eventDataAccess.SelectLastEventsForStorableObjects(storableObjects.Select(x => x.Id));
 		}
 
-		public StorableObjectEvent SelectEventById(long eventId, Type typeOfEvent = null)
+		public List<TEvent> SelectEventsByIds<TEvent>(IEnumerable<long> eventId) where TEvent : StorableObjectEvent
 		{
-			var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.Equal, eventId);
+			QueryBuilder queryBuilder = new();
+			queryBuilder.Init<TEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}","=",eventId);
 
-			return eventDataAccess.Select([condition], typeOfEvent).First();
+			return eventDataAccess.Select<TEvent>(queryBuilder).ToList();
 		}
 
-		public List<SentEvent> GetDeliverysOutOf(int locationId)
+		public List<SentEvent> SelectDeliveries(int locationId, bool selectIncoming, bool selectActive = true)
 		{
-            var notArrivedCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id), true);
-            var departureCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DepartureId), Comparison.Equal, locationId);
+			QueryBuilder queryBuilder = new ();
+			queryBuilder.Init<SentEvent>();
 
-            IEnumerable<SentEvent> activeDeliveries = eventDataAccess.Select([notArrivedCondition, departureCondition], typeof(SentEvent)).OfType<SentEvent>();
+			if (selectIncoming)
+				queryBuilder.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
+			else
+				queryBuilder.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId);
+
+			if (selectActive)
+				queryBuilder.AndWhere($"{nameof(ArrivedEvent)}.{nameof(ArrivedEvent.Id)}", "IS", null);
+
+			IEnumerable<SentEvent> activeDeliveries = eventDataAccess.Select<SentEvent>(queryBuilder);
 
             return activeDeliveries.ToList();
 		}
-
-        public List<SentEvent> GetDeliverysInTo(int locationId, bool selectActive = true)
-        {
-            var destinationCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DestinationId), Comparison.Equal, locationId);
-
-			List<BaseCondition> conditions = [destinationCondition];
-			if (selectActive == true)
-			{
-                var notArrivedCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ArrivedEvent>(x => x.Id), true);
-				conditions.Add(notArrivedCondition);
-            }
-
-            IEnumerable<SentEvent> activeDeliveries = eventDataAccess.Select(conditions, typeof(SentEvent)).OfType<SentEvent>();
-
-            return activeDeliveries.ToList();
-        }
 
 		public List<StorableObjectEvent> SelectLocationBoundedEvents(int locationId, DateTime? floorDateValue = null, DateTime? ceilingDateValue = null)
 		{
 			List<StorableObjectEvent> events = [];
+			Stopwatch stopwatch = new();
+			bool useNewEventAccess = false;
 
-            if (locationId == 0)
+			if (locationId == 0)
 			{
 				throw new ArgumentException("Missing Location Id");
 			}
 
-			List<BaseCondition> defaultConditions = [];
+			var queryBuilder = new QueryBuilder();
+			queryBuilder.Init<AdditionEvent>().Where($"{nameof(AdditionEvent)}.{nameof(AdditionEvent.LocationId)}", "=", locationId);
+			events.AddRange(eventDataAccess.Select<AdditionEvent>(queryBuilder));
 
-			if (floorDateValue is not null)
-			{
-				var floorCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.DateTime), Comparison.GreaterThanOrEqual, floorDateValue);
-				defaultConditions.Add(floorCondition);
-            }
+			queryBuilder = new QueryBuilder();
+			queryBuilder
+				.Init<SentEvent>()
+				.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
+				.OrWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
 
-            if (ceilingDateValue is not null)
-            {
-                var ceilingCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.DateTime), Comparison.GreaterThanOrEqual, ceilingDateValue);
-                defaultConditions.Add(ceilingCondition);
-            }
+			events.AddRange(eventDataAccess.Select<SentEvent>(queryBuilder));
 
-			//TODO Разбить на методы
-            //-* Addition Event *-//
+			queryBuilder = new QueryBuilder();
+			queryBuilder
+				.Init<ArrivedEvent>()
+				.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
+				.OrWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
 
-            List<BaseCondition> additionConditions = [];
+			events.AddRange(eventDataAccess.Select<ArrivedEvent>(queryBuilder));
 
-			additionConditions.AddRange(defaultConditions);
-			additionConditions.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<AdditionEvent>(x => x.LocationId), Comparison.Equal, locationId));
+			queryBuilder = new QueryBuilder();
+			queryBuilder
+				.Init<ReservedEvent>()
+				.Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
+			events.AddRange(eventDataAccess.Select<ReservedEvent>(queryBuilder));
 
-            events.AddRange(eventDataAccess.Select(additionConditions, typeof(AdditionEvent)));
-
-            //-* Delivery Event *-//
-
-            List<BaseCondition> deliveryConditions = [];
-			deliveryConditions.AddRange(defaultConditions);
-			deliveryConditions.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DestinationId), Comparison.Equal, locationId));
-
-            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(SentEvent)));
-            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(ArrivedEvent)));
-
-			deliveryConditions.RemoveAt(deliveryConditions.Count-1);
-            deliveryConditions.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<SentEvent>(x => x.DepartureId), Comparison.Equal, locationId));
-
-            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(SentEvent)));
-            events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(ArrivedEvent)));
-
-			//-* Reservation Event *-//
-
-			List<BaseCondition> reservationCondition = [];
-			reservationCondition.AddRange(defaultConditions);
-			reservationCondition.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal, locationId));
-
-			events.AddRange(eventDataAccess.Select(reservationCondition, typeof(ReservedEvent)));
-			events.AddRange(eventDataAccess.Select(reservationCondition, typeof(ReserveEndedEvent)));
-
-			//-* Decomission Event *-//
-
-			List<BaseCondition> decomissionCondition = [];
+			queryBuilder = new QueryBuilder();
+			queryBuilder
+				.Init<ReserveEndedEvent>()
+				.Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
+			events.AddRange(eventDataAccess.Select<ReserveEndedEvent>(queryBuilder));
 
 			return events;
 		}
@@ -227,18 +203,12 @@ namespace Service.Connection
 
 		public List<ReservedEvent> SelectReservationOn(int locationId, bool selectOnlyActive = true)
 		{
-			List<BaseCondition> conditionsList = [];
-			var locationCondition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal, locationId);
-			conditionsList.Add(locationCondition);
+			var queryBuilder = new QueryBuilder();
+			queryBuilder.Init<ReservedEvent>().Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}","=",locationId);
 			if (selectOnlyActive)
-			{
-				var noEndReserveCondition = new NullCondition(SelectQueryBuilder.GetFullPropertyName<ReserveEndedEvent>(x => x.Id), true);
+				queryBuilder.AndWhere($"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.Id)}", "IS", null);
 
-				conditionsList.Add(noEndReserveCondition);
-			}
-
-
-			return eventDataAccess.Select(conditionsList, typeof(ReservedEvent)).OfType<ReservedEvent>().ToList();
+			return eventDataAccess.Select<ReservedEvent>(queryBuilder).ToList();
 		}
 		
 		public Dictionary<string,List<string>> SelectDistinctPropertyValues(Type objectToSelectPropertyFor, IEnumerable<string>? properties = null)
@@ -276,14 +246,14 @@ namespace Service.Connection
 			return namedLocations;
 		}
 
-		public List<StorableObjectEvent> SelectForStorableObjectId(int storableObjectId)
+		public Dictionary<int, List<StorableObjectEvent>> SelectForStorableObjectsIds(IEnumerable<int> storableObjectIds)
 		{
-			return eventDataAccess.SelectEventsForStorableObject(storableObjectId).ToList();
+			return eventDataAccess.SelectEventsForStorableObjectsIds(storableObjectIds);
 		}
 
-		public IEnumerable<StorableObjectEvent> SelectEventsCustom(IEnumerable<BaseCondition> conditions, Type? typeOfEvent = null)
+		public IEnumerable<TEvent> SelectEventsCustom<TEvent>(QueryBuilder queryBuilder) where TEvent : StorableObjectEvent
 		{
-			return eventDataAccess.Select(conditions, typeOfEvent);
+			return eventDataAccess.Select<TEvent>(queryBuilder);
 		}
 
 		public Dictionary<int,string> SelectEquipmentStatuses()

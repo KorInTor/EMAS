@@ -72,7 +72,7 @@ namespace EMAS_Web.Controllers
         [HttpGet]
         public IActionResult Confirm(long reservedEventId)
         {
-            var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventById(reservedEventId, typeof(ReservedEvent));
+            var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
 
             return View(reservedEventToConfirm);
         }
@@ -80,8 +80,8 @@ namespace EMAS_Web.Controllers
         [HttpPost]
         public IActionResult Confirm(long reservedEventId, string comment, DateTime dateTime, bool isDecomissioned)
         {
-            var reservedEventToConfirm = (ReservedEvent)DataBaseClient.GetInstance().SelectEventById(reservedEventId, typeof(ReservedEvent));
-            StorableObjectEvent endEvent;
+			var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
+			StorableObjectEvent endEvent;
             if (isDecomissioned)
             {
                 endEvent = new ReserveEndedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.ReserveEnded, dateTime.ToUniversalTime(), reservedEventToConfirm.ObjectsInEvent, comment, reservedEventId);

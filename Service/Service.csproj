@@ -15,4 +15,8 @@
     <ProjectReference Include="..\Model\Model.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="TestCase\" />
+  </ItemGroup>
+
 </Project>

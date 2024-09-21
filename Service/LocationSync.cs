@@ -1,6 +1,6 @@
 ﻿using Model.Event;
 using Model;
-using Service.Connection.DataAccess.QueryBuilder;
+using Service.Connection.DataAccess.Query;
 using Service.Connection.DataAccess;
 using System;
 using System.Collections.Generic;
@@ -35,9 +35,9 @@ namespace Service
 			if (IsDataUpToDate(out long lastDataBaseEventId))
 				return;
 
-			var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.GreaterThan, LastEventId);
-
-			List<StorableObjectEvent> newStorableObjectEvents = DataBaseClient.GetInstance().SelectEventsCustom([condition]).ToList();
+			QueryBuilder queryBuilder = new();
+			queryBuilder.Init<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", ">", LastEventId);
+			List<StorableObjectEvent> newStorableObjectEvents = DataBaseClient.GetInstance().SelectEventsCustom<StorableObjectEvent>(queryBuilder).ToList();
 
 			LastEventId = lastDataBaseEventId;
 
@@ -179,9 +179,8 @@ namespace Service
 
 		private static bool IsDataUpToDate(out long lastDataBaseEventId)
 		{
-			var condition = new MaxCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id));
-
-			StorableObjectEvent? lastEvent = DataBaseClient.GetInstance().SelectEventsCustom([condition]).First();
+			throw new NotImplementedException();
+			StorableObjectEvent? lastEvent = null;
 
 			if (lastEvent is null)
 			{

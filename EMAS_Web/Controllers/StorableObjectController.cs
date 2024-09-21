@@ -105,7 +105,7 @@ namespace EMAS_Web.Controllers
 
         public IActionResult History(int storableObjectId)
         {
-            return View(DataBaseClient.GetInstance().SelectForStorableObjectId(storableObjectId));
+            return View(DataBaseClient.GetInstance().SelectEventsByIds<StorableObjectEvent>([storableObjectId]));
         }
 
     }

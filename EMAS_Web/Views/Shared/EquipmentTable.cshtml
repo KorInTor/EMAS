@@ -73,9 +73,12 @@
 						columnName = "Регистрационный номер"
 					})
 			</th>
-			<th>
-				С момента последнего изменения <div class="resizer"></div>
-			</th>
+			@if (ViewBag.LastEvents != null)
+			{
+				<th>
+					С момента последнего изменения <div class="resizer"></div>
+				</th>
+			}
 			<th>
 				История <div class="resizer"></div>
 			</th>
@@ -95,7 +98,10 @@
 				<td class="border border-1">@item.Status</td>
 				<td class="border border-1">@item.Description</td>
 				<td class="border border-1">@item.RegistrationNumber</td>
-				<td class="border border-1">@Service.ElapsedTimeFormatter.FormatTimeAgo(ViewBag.LastEvents[item].DateTime)</td>
+				@if(ViewBag.LastEvents != null)
+				{
+					<td class="border border-1">@Service.ElapsedTimeFormatter.FormatTimeAgo(ViewBag.LastEvents[item.Id].DateTime)</td>
+				}
 				<td class="border border-1">
 					<form asp-controller="StorableObject" asp-action="History" method="get">
 						<input type="hidden" name="storableObjectId" value="@item.Id" />
