@@ -1,11 +1,10 @@
 ﻿using Model;
-using Service.Connection.DataAccess.Interface;
 using Npgsql;
 using System.Diagnostics;
 
 namespace Service.Connection.DataAccess
 {
-    public class LocationDataAccess : ISimpleDataAccess<Location>
+    public class LocationDataAccess
     {
         public void Add(Location objectToAdd)
         {

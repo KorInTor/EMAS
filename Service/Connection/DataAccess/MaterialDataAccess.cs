@@ -1,11 +1,10 @@
 ﻿using Model;
-using Service.Connection.DataAccess.Interface;
 using Npgsql;
 using System.Diagnostics;
 
 namespace Service.Connection.DataAccess
 {
-    public class MaterialDataAccess : IStorableObjectDataAccess<MaterialPiece>
+    public class MaterialDataAccess
     {
         public void Add(IEnumerable<MaterialPiece> objectsToAdd)
         {

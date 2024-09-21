@@ -1,10 +1,9 @@
 ﻿using Model;
-using Service.Connection.DataAccess.Interface;
 using Npgsql;
 
 namespace Service.Connection.DataAccess
 {
-    public class EquipmentDataAccess : IStorableObjectDataAccess<Equipment>
+    public class EquipmentDataAccess
     {
         private static Dictionary<string, string> _propertyColumnNames;
 

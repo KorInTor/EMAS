@@ -1,12 +1,11 @@
 ﻿using Model;
 using Model.Enum;
 using Npgsql;
-using Service.Connection.DataAccess.Interface;
 using System.Diagnostics;
 
 namespace Service.Connection.DataAccess
 {
-    public class EmployeeDataAccess : ISimpleDataAccess<Employee>
+    public class EmployeeDataAccess
     {
         public void Add(Employee objectToAdd)
         {

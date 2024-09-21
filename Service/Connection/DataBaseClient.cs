@@ -281,10 +281,9 @@ namespace Service.Connection
 			return eventDataAccess.SelectEventsForStorableObject(storableObjectId).ToList();
 		}
 
-		public IEnumerable<StorableObjectEvent> SelectEvent(IEnumerable<BaseCondition> conditions)
+		public IEnumerable<StorableObjectEvent> SelectEventsCustom(IEnumerable<BaseCondition> conditions, Type? typeOfEvent = null)
 		{
-			return eventDataAccess.Select(conditions);
-
+			return eventDataAccess.Select(conditions, typeOfEvent);
 		}
 
 		public Dictionary<int,string> SelectEquipmentStatuses()

@@ -3,6 +3,7 @@ using Model;
 using Model.Event;
 using Service.Connection.DataAccess.Event;
 using Service.Connection.DataAccess.QueryBuilder;
+using Service.Connection.DataAccess.Query;
 using Npgsql;
 using System.Windows;
 using DocumentFormat.OpenXml.Presentation;

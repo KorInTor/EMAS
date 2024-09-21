@@ -37,7 +37,7 @@ namespace Service
 
 			var condition = new CompareCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id), Comparison.GreaterThan, LastEventId);
 
-			List<StorableObjectEvent> newStorableObjectEvents = DataBaseClient.GetInstance().SelectEvent([condition]).ToList();
+			List<StorableObjectEvent> newStorableObjectEvents = DataBaseClient.GetInstance().SelectEventsCustom([condition]).ToList();
 
 			LastEventId = lastDataBaseEventId;
 
@@ -181,7 +181,7 @@ namespace Service
 		{
 			var condition = new MaxCondition(SelectQueryBuilder.GetFullPropertyName<StorableObjectEvent>(x => x.Id));
 
-			StorableObjectEvent? lastEvent = DataBaseClient.GetInstance().SelectEvent([condition]).First();
+			StorableObjectEvent? lastEvent = DataBaseClient.GetInstance().SelectEventsCustom([condition]).First();
 
 			if (lastEvent is null)
 			{
