@@ -74,7 +74,10 @@
 					})
 			</th>
 			<th>
-				История
+				С момента последнего изменения <div class="resizer"></div>
+			</th>
+			<th>
+				История <div class="resizer"></div>
 			</th>
 		</tr>
 	</thead>
@@ -92,6 +95,7 @@
 				<td class="border border-1">@item.Status</td>
 				<td class="border border-1">@item.Description</td>
 				<td class="border border-1">@item.RegistrationNumber</td>
+				<td class="border border-1">@Service.ElapsedTimeFormatter.FormatTimeAgo(ViewBag.LastEvents[item].DateTime)</td>
 				<td class="border border-1">
 					<form asp-controller="StorableObject" asp-action="History" method="get">
 						<input type="hidden" name="storableObjectId" value="@item.Id" />

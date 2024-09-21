@@ -111,20 +111,12 @@ namespace Service.Connection
 
 		public bool IsStorableObjectsNotOccupied(IStorableObject[] storableObjects, out List<IStorableObject> occupiedObject)
 		{
-			occupiedObject = [];
+			return eventDataAccess.IsStorableObjectsNotOccupied(storableObjects, out occupiedObject);
+		}
 
-			foreach (var objectLastEventPair in eventDataAccess.SelectLastEventsForStorableObjects(storableObjects))
-			{
-				if (objectLastEventPair.Value.EventType == EventType.Sent || objectLastEventPair.Value.EventType == EventType.Reserved || objectLastEventPair.Value.EventType == EventType.Decommissioned)
-				{
-					occupiedObject.Add(objectLastEventPair.Key);
-				}
-			}
-
-			if (occupiedObject.Count == 0)
-				return true;
-			else
-				return false;
+		public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
+		{
+			return eventDataAccess.SelectLastEventsForStorableObjects(storableObjects);
 		}
 
 		public StorableObjectEvent SelectEventById(long eventId, Type typeOfEvent = null)
@@ -208,15 +200,20 @@ namespace Service.Connection
             events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(SentEvent)));
             events.AddRange(eventDataAccess.Select(deliveryConditions, typeof(ArrivedEvent)));
 
-            //-* Reservation Event *-//
+			//-* Reservation Event *-//
 
-			//TODO Реализовать
+			List<BaseCondition> reservationCondition = [];
+			reservationCondition.AddRange(defaultConditions);
+			reservationCondition.Add(new CompareCondition(SelectQueryBuilder.GetFullPropertyName<ReservedEvent>(x => x.LocationId), Comparison.Equal, locationId));
 
-            //-* Decomission Event *-//
+			events.AddRange(eventDataAccess.Select(reservationCondition, typeof(ReservedEvent)));
+			events.AddRange(eventDataAccess.Select(reservationCondition, typeof(ReserveEndedEvent)));
 
-			//TODO Реализовать
+			//-* Decomission Event *-//
 
-            return events;
+			List<BaseCondition> decomissionCondition = [];
+
+			return events;
 		}
 
         public List<IStorableObject> SelectStorableObjectOn(int locationId)

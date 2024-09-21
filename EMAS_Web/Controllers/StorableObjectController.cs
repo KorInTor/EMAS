@@ -55,7 +55,8 @@ namespace EMAS_Web.Controllers
             ViewBag.PermissionList = permissionsList;
             ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
             ViewBag.LocationId = locationId;
-            return View(equipmentList);
+            ViewBag.LastEvents = DataBaseClient.GetInstance().SelectLastEventsForStorableObjects(equipmentList);
+			return View(equipmentList);
         }
 
         [AuthorizationFilter]
