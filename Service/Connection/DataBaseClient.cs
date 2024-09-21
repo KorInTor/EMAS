@@ -2,7 +2,6 @@
 using Model;
 using Model.Event;
 using Service.Connection.DataAccess;
-using Service.Connection.DataAccess.Interface;
 using Service.Connection.DataAccess.QueryBuilder;
 using System.Collections.Generic;
 using System.Net.Http.Headers;
@@ -12,8 +11,8 @@ namespace Service.Connection
 	public class DataBaseClient
 	{
 		private StorableObjectDataAccess storableObjectDataAccess;
-		private ISimpleDataAccess<Employee> employeeDataAccess;
-		private ISimpleDataAccess<Location> locationDataAccess;
+		private EmployeeDataAccess employeeDataAccess;
+		private LocationDataAccess locationDataAccess;
 
 		private EventDataAccess eventDataAccess;
 
