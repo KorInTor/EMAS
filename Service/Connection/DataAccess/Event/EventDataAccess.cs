@@ -41,8 +41,11 @@ namespace Service.Connection.DataAccess
 
             foreach (var newEvent in newEvents)
             {
-                if (!CanInsert(newEvent))
+                if (IsCompleted(newEvent))
                     throw new EventAlreadyCompletedException();
+
+                if (!IsStorableObjectsNotOccupied(newEvent.ObjectsInEvent, out _))
+                    throw new StorableObjectIsAlreadyOccupied();
 
                 using var command = new NpgsqlCommand("INSERT INTO public.event (employee_id, event_type, date) VALUES (@emp_id,@eventTypeId,@date) RETURNING id ", connection);
                 command.Parameters.AddWithValue("@emp_id", newEvent.EmployeeId);
@@ -126,21 +129,39 @@ namespace Service.Connection.DataAccess
 
         }
 
-        public bool CanInsert(StorableObjectEvent storableObjectEvent)
+        public bool IsCompleted(StorableObjectEvent storableObjectEvent)
         {
             if (storableObjectEvent is ArrivedEvent arrivedEvent)
             {
-                return !deliveryDataAccess.IsCompleted([arrivedEvent]);
+                return deliveryDataAccess.IsCompleted([arrivedEvent]);
             }
             if (storableObjectEvent is ReserveEndedEvent reserveEndedEvent)
             {
-                return !reservationDataAccess.IsCompleted([reserveEndedEvent]);
+                return reservationDataAccess.IsCompleted([reserveEndedEvent]);
             }
 
             return true;
         }
 
-        public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
+		public bool IsStorableObjectsNotOccupied(IEnumerable<IStorableObject> storableObjects, out List<IStorableObject> occupiedObject)
+		{
+			occupiedObject = [];
+
+			foreach (var objectLastEventPair in SelectLastEventsForStorableObjects(storableObjects))
+			{
+				if (objectLastEventPair.Value.EventType == EventType.Sent || objectLastEventPair.Value.EventType == EventType.Reserved || objectLastEventPair.Value.EventType == EventType.Decommissioned)
+				{
+					occupiedObject.Add(objectLastEventPair.Key);
+				}
+			}
+
+			if (occupiedObject.Count == 0)
+				return true;
+			else
+				return false;
+		}
+
+		public Dictionary<IStorableObject, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<IStorableObject> storableObjects)
         {
             var storableObjectLastEventIdDictionary = objectEventDataAccess.SelectLastEventsIdsForStorableObjects(storableObjects);
             var storableObjectLastEvent = new Dictionary<IStorableObject, StorableObjectEvent>();
