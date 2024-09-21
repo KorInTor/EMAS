@@ -89,7 +89,6 @@ namespace Service.Connection.DataAccess
                 };
                 var mat = material;
                 foundedMaterialsList.Add(material);
-                Debug.WriteLine($"{material.Name} <-- HERE IS A NAME");
             }
 
             ConnectionPool.ReleaseConnection(connection);
