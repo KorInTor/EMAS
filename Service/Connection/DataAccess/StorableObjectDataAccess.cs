@@ -1,7 +1,5 @@
 ﻿using Model;
 using Model.Enum;
-using Model.Event;
-using Service.Connection.DataAccess.Interface;
 using Npgsql;
 
 namespace Service.Connection.DataAccess
@@ -9,7 +7,7 @@ namespace Service.Connection.DataAccess
     public class StorableObjectDataAccess
     {
         public EquipmentDataAccess equipmentDataAccess;
-        private IStorableObjectDataAccess<MaterialPiece> materialDataAccess;
+        private MaterialDataAccess materialDataAccess;
 
         public StorableObjectDataAccess()
         {
@@ -23,12 +21,12 @@ namespace Service.Connection.DataAccess
         /// <param name="objectsToAdd">Список на добавление</param>
         public void Add(IEnumerable<IStorableObject> objectsToAdd, int locationId)
         {
-            var splitedArray = SplitByTypes(objectsToAdd); //Разбиваем список по типам объектов
+            var splittedObjects = objectsToAdd.GroupByType();
 
             var connection = ConnectionPool.GetConnection();
             string query = "INSERT INTO public.storable_object (type_id, location_id) VALUES (@typeID, @location_id) returning id";
 
-            foreach (var storableObjectTypedList in splitedArray)
+            foreach (var storableObjectTypedList in splittedObjects)
             {
                 foreach(var storableObject in storableObjectTypedList.Value) //Добавляем в таблицу storable_object данные о типе объекта и возвращаем новый ID.
                 {
@@ -161,17 +159,17 @@ namespace Service.Connection.DataAccess
 
         public void Update(IEnumerable<IStorableObject> objectsToUpdate)
         {
-            var splitedArray = SplitByTypes(objectsToUpdate);
+            var splitedArray = objectsToUpdate.GroupByType();
 
-            foreach (var type in splitedArray.Keys)
+			foreach (var type in splitedArray.Keys)
             {
                 if (type == StorableObjectType.Equipment)
                 {
-                    equipmentDataAccess.Update(TryDowncastToEquipment(splitedArray[type]));
+                    equipmentDataAccess.Update(splitedArray[type].Cast<Equipment>());
                 }
                 if (type == StorableObjectType.Material)
                 {
-                    materialDataAccess.Update(TryDowncastToMaterial(splitedArray[type]));
+                    materialDataAccess.Update(splitedArray[type].Cast<MaterialPiece>());
                 }
             }
         }
@@ -205,70 +203,6 @@ namespace Service.Connection.DataAccess
             }
 
             ConnectionPool.ReleaseConnection(connection);
-        }
-
-        private Dictionary<StorableObjectType,List<IStorableObject>> SplitByTypes(IEnumerable<IStorableObject> storableObjects)
-        {
-            var SplittedArray = new Dictionary<StorableObjectType, List<IStorableObject>>();
-
-            List<IStorableObject> equipmentList = [];
-            List<IStorableObject> materialList = [];
-
-            foreach(var storableObject in storableObjects)
-            {
-                if (storableObject is Equipment equipment)
-                {
-                    equipmentList.Add(equipment);
-                    continue;
-                }
-                if (storableObject is MaterialPiece material)
-                {
-                    materialList.Add(material);
-                    continue;
-                }
-                throw new NotImplementedException("Данный тип не поддерживается");
-            }
-
-            if (equipmentList.Count != 0)
-            {
-                SplittedArray.Add(StorableObjectType.Equipment, equipmentList);
-            }
-            if (materialList.Count != 0)
-            {
-                SplittedArray.Add(StorableObjectType.Material, materialList);
-            }
-
-            return SplittedArray;
-        }
-        
-        private List<Equipment> TryDowncastToEquipment(List<IStorableObject> storableObjects)
-        {
-            List<Equipment> equipmentList = [];
-            foreach (var storableObject in storableObjects)
-            {
-                if (storableObject is Equipment equipment)
-                {
-                    equipmentList.Add(equipment);
-                }
-                else
-                    throw new ArgumentException("Cannot downcast to Equipment if not equipment");
-            }
-            return equipmentList;
-        }
-
-        private List<MaterialPiece> TryDowncastToMaterial(List<IStorableObject> storableObjects)
-        {
-            List<MaterialPiece> materialPieceList = [];
-            foreach (var storableObject in storableObjects)
-            {
-                if (storableObject is MaterialPiece materialPiece)
-                {
-                    materialPieceList.Add(materialPiece);
-                }
-                else
-                    throw new ArgumentException("Cannot downcast to Equipment if not equipment");
-            }
-            return materialPieceList;
         }
     }
 }
