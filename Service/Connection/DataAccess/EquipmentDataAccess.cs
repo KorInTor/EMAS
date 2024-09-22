@@ -1,9 +1,10 @@
 ﻿using Model;
 using Npgsql;
+using Service.Connection.DataAccess.Interface;
 
 namespace Service.Connection.DataAccess
 {
-    public class EquipmentDataAccess
+    public class EquipmentDataAccess : IStorableObjectDataAccess<Equipment>, IStorableObjectStatusDataAccess<Equipment>
     {
         private static Dictionary<string, string> _propertyColumnNames;
 
@@ -27,15 +28,6 @@ namespace Service.Connection.DataAccess
 
                 return _propertyColumnNames;
             }
-        }
-
-        public Equipment? SelectById(int id)
-        {
-            IEnumerable<Equipment> founded = SelectByIds([id]);
-            if (!founded.Any())
-                return null;
-            else
-                return founded.FirstOrDefault();
         }
 
         public Dictionary<int,string> SelectStatuses()
@@ -166,11 +158,6 @@ namespace Service.Connection.DataAccess
             ConnectionPool.ReleaseConnection(connection);
 		}
 
-        public void Update(Equipment objectToUpdate)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Delete(IEnumerable<Equipment> objectToDelete)
         {
             throw new NotImplementedException();
@@ -230,11 +217,6 @@ namespace Service.Connection.DataAccess
 
             }
             ConnectionPool.ReleaseConnection(connection);
-        }
-
-        public void Add(Equipment objectToAdd)
-        {
-            Add([objectToAdd]);
         }
 
         public IEnumerable<Equipment> SelectByIds(IEnumerable<int> ids)

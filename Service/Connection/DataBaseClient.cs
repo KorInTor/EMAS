@@ -91,9 +91,9 @@ namespace Service.Connection
 
 		public void Update(object objectToUpdate)
 		{
-			if (objectToUpdate is Equipment newEquipment)
+			if (objectToUpdate is IStorableObject newStorableObject)
 			{
-				storableObjectDataAccess.Update(newEquipment);
+				storableObjectDataAccess.Update([newStorableObject]);
 				return;
 			}
 			if (objectToUpdate is Employee newEmployee)
@@ -258,12 +258,12 @@ namespace Service.Connection
 
 		public Dictionary<int,string> SelectEquipmentStatuses()
 		{
-			return storableObjectDataAccess.equipmentDataAccess.SelectStatuses();
+			return storableObjectDataAccess.equipmentStatusDataAccess.SelectStatuses();
 		}
 
 		public void UpdateEquipmentStatuses(IEnumerable<(int,string)> statuses)
 		{
-			storableObjectDataAccess.equipmentDataAccess.UpdateStatuses(statuses);
+			storableObjectDataAccess.equipmentStatusDataAccess.UpdateStatuses(statuses);
 		}
 	}
 }

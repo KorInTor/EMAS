@@ -1,17 +1,21 @@
 ﻿using Model;
 using Model.Enum;
 using Npgsql;
+using Service.Connection.DataAccess.Interface;
 
 namespace Service.Connection.DataAccess
 {
     public class StorableObjectDataAccess
     {
-        public EquipmentDataAccess equipmentDataAccess;
-        private MaterialDataAccess materialDataAccess;
+        public IStorableObjectDataAccess<Equipment> equipmentDataAccess;
+        public IStorableObjectDataAccess<MaterialPiece> materialDataAccess;
+        public IStorableObjectStatusDataAccess<Equipment> equipmentStatusDataAccess;
 
         public StorableObjectDataAccess()
         {
             equipmentDataAccess = new EquipmentDataAccess();
+            equipmentStatusDataAccess = (IStorableObjectStatusDataAccess<Equipment>)equipmentDataAccess;
+
             materialDataAccess = new MaterialDataAccess();
         }
 
@@ -26,9 +30,10 @@ namespace Service.Connection.DataAccess
             var connection = ConnectionPool.GetConnection();
             string query = "INSERT INTO public.storable_object (type_id, location_id) VALUES (@typeID, @location_id) returning id";
 
+            //Добавляем в таблицу storable_object данные о типе объекта и возвращаем новый ID.
             foreach (var storableObjectTypedList in splittedObjects)
             {
-                foreach(var storableObject in storableObjectTypedList.Value) //Добавляем в таблицу storable_object данные о типе объекта и возвращаем новый ID.
+                foreach(var storableObject in storableObjectTypedList.Value) 
                 {
                     using var command = new NpgsqlCommand(query, connection);
                     command.Parameters.AddWithValue("@typeID", (int)storableObjectTypedList.Key);
@@ -36,49 +41,25 @@ namespace Service.Connection.DataAccess
 
                     storableObject.Id = (int)command.ExecuteScalar();
                 }
-
-                //Добавление в таблицу явного типа объекта (eg. Equipment в public.equipment)
-
-                if (storableObjectTypedList.Key == StorableObjectType.Equipment) 
-                {
-                    List<Equipment> equipmentList = new List<Equipment>();
-                    foreach (var item in storableObjectTypedList.Value)
-                    {
-                        if (item is Equipment equipment)
-                        {
-                            equipmentList.Add(equipment);
-                        }
-                    }
-
-                    equipmentDataAccess.Add(equipmentList);
-                }
-
-                if (storableObjectTypedList.Key == StorableObjectType.Material)
-                {
-                    List<MaterialPiece> materialList = new List<MaterialPiece>();
-                    foreach (var item in storableObjectTypedList.Value)
-                    {
-                        if (item is MaterialPiece material)
-                        {
-                            materialList.Add(material);
-                        }
-                    }
-
-                    materialDataAccess.Add(materialList);
-                }
             }
 
             ConnectionPool.ReleaseConnection(connection);
-        }
 
-        public void Add(IStorableObject objectToAdd, int locationId)
-        {
-            Add([objectToAdd],locationId);
-        }
-
-        public IStorableObject? SelectById(int id)
-        {
-            return SelectByIds([id]).FirstOrDefault();
+            //Добавление в таблицу явного типа объекта (eg. Equipment в public.equipment)
+            foreach (var objectTypeList in splittedObjects)
+            {
+                switch (objectTypeList.Key)
+                {
+                    case StorableObjectType.Equipment:
+                        equipmentDataAccess.Add(objectTypeList.Value.Cast<Equipment>());
+                        break;
+                    case StorableObjectType.Material:
+                        materialDataAccess.Add(objectTypeList.Value.Cast<MaterialPiece>());
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
         }
 
         public IEnumerable<IStorableObject> SelectByIds(IEnumerable<int> ids)
@@ -87,7 +68,9 @@ namespace Service.Connection.DataAccess
 
             string query = "SELECT id, type_id, location_id FROM public.storable_object WHERE id = @id;";
 
-            Dictionary<StorableObjectType, List<int>> typesIdsDictionary = new Dictionary<StorableObjectType, List<int>>();
+            var objectTypes = Enum.GetValues(typeof(StorableObjectType)).Cast<StorableObjectType>();
+
+            var typesIdsDictionary = objectTypes.ToDictionary(e => e, e => new List<int>());
 
             foreach (int id in ids)
             {
@@ -99,38 +82,26 @@ namespace Service.Connection.DataAccess
 
                 if (reader.Read())
                 {
-                    if (reader.GetInt32(1) == (int)StorableObjectType.Equipment)
-                    {
-                        if (!typesIdsDictionary.ContainsKey(StorableObjectType.Equipment))
-                        {
-                            typesIdsDictionary.Add(StorableObjectType.Equipment, new List<int>());
-                        }
-                        typesIdsDictionary[StorableObjectType.Equipment].Add(id);
-                    }
-                    if (reader.GetInt32(1) == (int)StorableObjectType.Material)
-                    {
-                        if (!typesIdsDictionary.ContainsKey(StorableObjectType.Material))
-                        {
-                            typesIdsDictionary.Add(StorableObjectType.Material, new List<int>());
-                        }
-                        typesIdsDictionary[StorableObjectType.Material].Add(id);
-                    }
+                    typesIdsDictionary[(StorableObjectType)reader.GetInt32(1)].Add(id);
                 }
             }
 
             ConnectionPool.ReleaseConnection(connection);
 
-            List<IStorableObject> foundedObjects = new List<IStorableObject>();
+            List<IStorableObject> foundedObjects = [];
 
             foreach (var type in typesIdsDictionary.Keys)
             {
-                if (type == StorableObjectType.Equipment)
+                switch (type)
                 {
-                    foundedObjects.AddRange(equipmentDataAccess.SelectByIds(typesIdsDictionary[type]));
-                }
-                if (type == StorableObjectType.Material)
-                {
-                    foundedObjects.AddRange(materialDataAccess.SelectByIds(typesIdsDictionary[type]));
+                    case StorableObjectType.Equipment:
+                        foundedObjects.AddRange(equipmentDataAccess.SelectByIds(typesIdsDictionary[type]));
+                        break;
+                    case StorableObjectType.Material:
+                        foundedObjects.AddRange(materialDataAccess.SelectByIds(typesIdsDictionary[type]));
+                        break;
+                    default:
+                        throw new NotImplementedException();
                 }
             }
 
@@ -163,46 +134,55 @@ namespace Service.Connection.DataAccess
 
 			foreach (var type in splitedArray.Keys)
             {
-                if (type == StorableObjectType.Equipment)
+                switch (type)
                 {
-                    equipmentDataAccess.Update(splitedArray[type].Cast<Equipment>());
-                }
-                if (type == StorableObjectType.Material)
-                {
-                    materialDataAccess.Update(splitedArray[type].Cast<MaterialPiece>());
+                    case StorableObjectType.Equipment:
+                        equipmentDataAccess.Update(splitedArray[type].Cast<Equipment>());
+                        break;
+                    case StorableObjectType.Material:
+                        materialDataAccess.Update(splitedArray[type].Cast<MaterialPiece>());
+                        break;
+                    default:
+                        throw new NotImplementedException();
                 }
             }
-        }
-
-        public void Update(IStorableObject objectToUpdate)
-        {
-            if (objectToUpdate is Equipment equipment)
-                equipmentDataAccess.Update(equipment);
-            else if (objectToUpdate is MaterialPiece materialPiece)
-                materialDataAccess.Update(materialPiece);
-            else
-                throw new NotImplementedException("DataAccess не реализован");
-        }
-
-        public void UpdateLocation(IStorableObject objectToUpdate, int newLocationId)
-        {
-            UpdateLocation([objectToUpdate], newLocationId);
         }
 
         public void UpdateLocation(IEnumerable<IStorableObject> objectsToUpdate, int newLocationId)
         {
             var connection = ConnectionPool.GetConnection();
 
-            foreach (var storableObject in objectsToUpdate)
-            {
-                using var command = new NpgsqlCommand("UPDATE public.storable_object SET location_id=@newLocationId WHERE id=@id ", connection);
-                command.Parameters.AddWithValue("@newLocationId", newLocationId);
-                command.Parameters.AddWithValue("@id", storableObject.Id);
+            using var command = new NpgsqlCommand();
+            command.Connection = connection;
+            command.CommandText = "UPDATE public.storable_object SET location_id = @newLocationId WHERE id = ANY(@ids)";
+            command.Parameters.AddWithValue("@newLocationId", newLocationId);
 
-                command.ExecuteNonQuery();
-            }
+            var ids = objectsToUpdate.Select(o => o.Id).ToArray();
+            command.Parameters.AddWithValue("@ids", ids);
+
+            command.ExecuteNonQuery();
 
             ConnectionPool.ReleaseConnection(connection);
         }
+
+        public Dictionary<string, List<string>> SelectDistinct<T>(IEnumerable<string>? propertyToSelect = null) where T : IStorableObject
+        {
+            return DataAccess<T>().SelectDistinct(propertyToSelect);
+        }
+
+        public IStorableObjectDataAccess<T> DataAccess<T>() where T : IStorableObject
+        {
+            if (typeof(T) == typeof(Equipment))
+            {
+                return (IStorableObjectDataAccess<T>)new EquipmentDataAccess();
+            }
+
+            if (typeof(T) == typeof(MaterialPiece))
+            {
+                return (IStorableObjectDataAccess<T>)new MaterialDataAccess();
+            }
+            throw new NotImplementedException();
+        }
+
     }
 }

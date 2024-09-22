@@ -1,10 +1,11 @@
 ﻿using Model;
 using Npgsql;
+using Service.Connection.DataAccess.Interface;
 using System.Diagnostics;
 
 namespace Service.Connection.DataAccess
 {
-    public class MaterialDataAccess
+    public class MaterialDataAccess : IStorableObjectDataAccess<MaterialPiece>
     {
         public void Add(IEnumerable<MaterialPiece> objectsToAdd)
         {
@@ -36,18 +37,9 @@ namespace Service.Connection.DataAccess
             ConnectionPool.ReleaseConnection(connection);
         }
 
-        public void Add(MaterialPiece objectToAdd)
+        public void Delete(IEnumerable<MaterialPiece> objectToDelete)
         {
-            Add([objectToAdd]);
-        }
-
-        public MaterialPiece? SelectById(int id)
-        {
-            IEnumerable<MaterialPiece> founded = SelectByIds([id]);
-            if (!founded.Any())
-                return null;
-            else
-                return founded.FirstOrDefault();
+            throw new NotImplementedException();
         }
 
         public IEnumerable<MaterialPiece> SelectByIds(IEnumerable<int> ids)
@@ -94,6 +86,11 @@ namespace Service.Connection.DataAccess
             ConnectionPool.ReleaseConnection(connection);
 
             return foundedMaterialsList;
+        }
+
+        public Dictionary<string, List<string>> SelectDistinct(IEnumerable<string>? propertyToSelect = null)
+        {
+            throw new NotImplementedException();
         }
 
         public void Update(IEnumerable<MaterialPiece> objectsToUpdate)
