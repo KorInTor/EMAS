@@ -1,4 +1,4 @@
-﻿@model List<Model.MaterialPiece>
+﻿@model IEnumerable<Model.MaterialPiece>
 @using Service.Connection
 
 <div class="fs-3 m-3">
@@ -85,6 +85,12 @@
 			<th>
 				Коментарий<div class="resizer"></div>
 			</th>
+			@if (ViewBag.LastEvents != null)
+			{
+				<th>
+					С момента последнего изменения <div class="resizer"></div>
+				</th>
+			}
 			<th>
 				История
 			</th>
@@ -106,6 +112,10 @@
 				<td class="border border-1">@item.InventoryNumber</td>
 				<td class="border border-1">@item.StorageType</td>
 				<td class="border border-1">@item.Comment</td>
+				@if (ViewBag.LastEvents != null)
+				{
+					<td class="border border-1">@Service.ElapsedTimeFormatter.FormatTimeAgo(ViewBag.LastEvents[item.Id].DateTime)</td>
+				}
 				<td class="border border-1">
 					<form asp-controller="StorableObject" asp-action="History" method="get">
 						<input type="hidden" name="storableObjectId" value="@item.Id" />
@@ -117,16 +127,13 @@
 	</tbody>
 </table>
 
-<script src="~/js/TableFilterMenu.js"></script>
-<script src="~/js/tableResizer.js"></script>
-
 <script>
 	let materialFilterMenu = new TableFilterMenu("materialTable", [1, 2, 3, 4, 5, 7]);
 
-	window.onload = (event) => {
+	window.addEventListener('load', function () {
 		materialFilterMenu.bindButtons();
 		materialFilterMenu.updateRowsCount();
-	};
+	});
 
 	makeResizable(document.querySelector('table#materialTable'));
 </script>

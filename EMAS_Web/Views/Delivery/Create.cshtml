@@ -5,20 +5,13 @@
 <p>Будет в доставке</p>
 
 @{
-    List<Model.Equipment> equipmentList = [];
-
     @foreach (Model.IStorableObject item in ViewBag.SelectedObjects)
     {
-        @if (item is Model.Equipment equipment)
-        {
-            equipmentList.Add(equipment);
-        }
-
         <input type="hidden" name="selectedIds" value="@item.Id" />
     }
-
-    @Html.Partial("EquipmentTable", @equipmentList)
 }
+
+@await Html.PartialAsync("StorableObjectsTables", (IEnumerable<Model.IStorableObject>)ViewBag.SelectedObjects)
 
 <script>
     function validateForm() {

@@ -99,8 +99,13 @@ namespace EMAS_Web.Controllers
         [LocationFilter]
         public IActionResult Index(int locationId)
         {
-            //TODO Combine Equipment And Material Tables Here.
-            return View();
+			ViewBag.PermissionList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+												where prm.LocationId == locationId
+												select prm).ToList();
+
+            var storableObjectList = DataBaseClient.GetInstance().SelectStorableObjectOn(locationId);
+			ViewBag.LastEvents = DataBaseClient.GetInstance().SelectLastEventsForStorableObjects(storableObjectList);
+			return View(storableObjectList);
         }
 
         public IActionResult History(int storableObjectId)

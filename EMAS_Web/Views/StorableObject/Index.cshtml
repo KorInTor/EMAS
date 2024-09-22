@@ -1,1 +1,3 @@
-﻿<h1>0_0 тут нет трупов 0_0</h1>
+﻿@model List<Model.IStorableObject>
+
+@await Html.PartialAsync("StorableObjectsTables", Model)

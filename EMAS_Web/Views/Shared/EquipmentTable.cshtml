@@ -1,4 +1,4 @@
-﻿@model List<Model.Equipment>
+﻿@model IEnumerable<Model.Equipment>
 @using Service.Connection
 
 <div class="fs-3 m-3">
@@ -113,16 +113,13 @@
 	</tbody>
 </table>
 
-<script src="~/js/TableFilterMenu.js"></script>
-<script src="~/js/tableResizer.js"></script>
-
 <script>
 	let equipmentFilterMenu = new TableFilterMenu("equipmentTable", [1, 2, 3, 4, 5, 7]);
-
-	window.onload = (event) => {
+	
+	window.addEventListener('load', function () {
 		equipmentFilterMenu.bindButtons();
 		equipmentFilterMenu.updateRowsCount();
-	};
+	});
 
 	makeResizable(document.querySelector('table#equipmentTable'));
 </script>

@@ -88,10 +88,7 @@
                 <td colspan="6">
                     <div class="collapse" id="@item.Id">
                         <div class="card card-body">
-                            @foreach (var storableObject in item.ObjectsInEvent)
-                            {
-                                <p>@storableObject.ShortInfo</p>
-                            }
+                            @await Html.PartialAsync("StorableObjectsTables", item.ObjectsInEvent)
                         </div>
                     </div>
                 </td>
