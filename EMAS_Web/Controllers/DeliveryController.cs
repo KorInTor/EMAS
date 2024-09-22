@@ -15,8 +15,13 @@ namespace EMAS_Web.Controllers
             ViewBag.Outgoing = selectOutgoing;
             ViewBag.LocationId = locationId;
             ViewBag.LocationDictionary = DataBaseClient.GetInstance().SelectNamedLocations();
+            ViewBag.HasPermission = DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId")))
+                .Permissions
+                .Where(x => x.LocationId == locationId)
+                .Where(x => x.PermissionType == Model.Enum.PermissionType.DeliveryAccess)
+                .Any();
 
-			return View(DataBaseClient.GetInstance().SelectDeliveries(locationId, !selectOutgoing));
+            return View(DataBaseClient.GetInstance().SelectDeliveries(locationId, !selectOutgoing));
         }
 
         [HttpGet]
@@ -29,10 +34,10 @@ namespace EMAS_Web.Controllers
                 return View();
             }
 
-            var selectedIdsList = selectedIds.Select(id => int.Parse(id)).ToList();
+            var selectedIdsList = selectedIds.Select(int.Parse).ToList();
 
             ViewBag.SelectedObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
-
+            ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
             ViewBag.Locations = DataBaseClient.GetInstance().SelectNamedLocations();
 
             foreach (var location in ViewBag.Locations)
@@ -57,7 +62,7 @@ namespace EMAS_Web.Controllers
                 return View();
             }
 
-            var selectedIdsList = selectedIds.Select(id => int.Parse(id));
+            var selectedIdsList = selectedIds.Select(int.Parse);
 
             var storableObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
 
@@ -72,6 +77,9 @@ namespace EMAS_Web.Controllers
         public IActionResult Confirm(long sentEventId)
         {
             var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<SentEvent>([sentEventId]).First();
+
+            ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
+            ViewBag.MinDateTimeString = sentEventToConfirm.DateTime.ToString("yyyy-MM-ddTHH:mm");
 
             return View(sentEventToConfirm);
         }

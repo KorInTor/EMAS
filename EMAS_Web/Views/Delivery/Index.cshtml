@@ -69,11 +69,15 @@
                 </td>
 
                 <td>
-                    <form asp-controller="Delivery" asp-action="Confirm" method="get">
-                        <input type="hidden" name="sentEventId" value="@item.Id" />
-                        <button type="submit" class="btn btn-primary">Подтвердить</button>
-                    </form>
+                    @if(!ViewBag.Outgoing && ViewBag.HasPermission)
+                    {
+                        <form asp-controller="Delivery" asp-action="Confirm" method="get">
+                            <input type="hidden" name="sentEventId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary">Подтвердить</button>
+                        </form>
+                    }
                 </td>
+
                 <td>
                     <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#@item.Id" aria-expanded="false" aria-controls="@item.Id">
                         Показать предметы в доставке
