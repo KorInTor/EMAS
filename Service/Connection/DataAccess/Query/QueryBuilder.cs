@@ -1,4 +1,5 @@
-﻿using Model.Event;
+﻿using Model;
+using Model.Event;
 using System.Collections;
 using System.Collections.Immutable;
 using System.Text;
@@ -34,6 +35,7 @@ namespace Service.Connection.DataAccess.Query
 				{ $"{nameof(ReservedEvent)}", "\"event\"" },
 				{ $"{nameof(ReserveEndedEvent)}", "\"event\"" },
 				{ $"{nameof(DecomissionedEvent)}", "\"event\"" },
+				{ $"{nameof(Employee)}", "public" },
 			}.ToImmutableDictionary();
 		}
 
@@ -52,6 +54,7 @@ namespace Service.Connection.DataAccess.Query
 				{ $"{nameof(ReservedEvent)}", "reservation" },
 				{ $"{nameof(ReserveEndedEvent)}", "reservation" },
 				{ $"{nameof(DecomissionedEvent)}", "decomission" },
+				{ $"{nameof(Employee)}", "employee" },
 			}.ToImmutableDictionary();
 		}
 
@@ -67,23 +70,34 @@ namespace Service.Connection.DataAccess.Query
 				{ $"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", $"{ClassTableName[nameof(StorableObjectEvent)]}.id" },
 				{ $"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", $"{ClassTableName[nameof(StorableObjectEvent)]}.event_type" },
 				{ $"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.DateTime)}", $"{ClassTableName[nameof(StorableObjectEvent)]}.\"date\"" },
+
 				{ $"{nameof(AdditionEvent)}.{nameof(AdditionEvent.Id)}", $"{ClassTableName[nameof(AdditionEvent)]}.event_id" },
 				{ $"{nameof(AdditionEvent)}.{nameof(AdditionEvent.LocationId)}", $"{ClassTableName[nameof(AdditionEvent)]}.location_id" },
+
 				{ $"{nameof(SentEvent)}.{nameof(SentEvent.Id)}", $"{ClassTableName[nameof(SentEvent)]}.dispatch_event_id" },
 				{ $"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", $"{ClassTableName[nameof(SentEvent)]}.departure_id" },
 				{ $"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", $"{ClassTableName[nameof(SentEvent)]}.destination_id" },
 				{ $"{nameof(SentEvent)}.{nameof(SentEvent.Comment)}", $"{ClassTableName[nameof(SentEvent)]}.dispatch_info" },
+
 				{ $"{nameof(ArrivedEvent)}.{nameof(ArrivedEvent.Id)}", $"{ClassTableName[nameof(ArrivedEvent)]}.arrival_event_id" },
 				{ $"{nameof(ArrivedEvent)}.{nameof(ArrivedEvent.Comment)}", $"{ClassTableName[nameof(ArrivedEvent)]}.arrival_info" },
 				{ $"{nameof(ArrivedEvent)}.{nameof(ArrivedEvent.SentEventId)}", $"{ClassTableName[nameof(ArrivedEvent)]}.dispatch_event_id" },
+
 				{ $"{nameof(ReservedEvent)}.{nameof(ReservedEvent.Id)}", $"{ClassTableName[nameof(ReservedEvent)]}.start_event_id" },
 				{ $"{nameof(ReservedEvent)}.{nameof(ReservedEvent.Comment)}", $"{ClassTableName[nameof(ReservedEvent)]}.reserve_start_info" },
 				{ $"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", $"{ClassTableName[nameof(ReservedEvent)]}.location_id" },
+
 				{ $"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.Id)}", $"{ClassTableName[nameof(ReserveEndedEvent)]}.end_event_id" },
 				{ $"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.Comment)}", $"{ClassTableName[nameof(ReserveEndedEvent)]}.reserve_end_info" },
 				{ $"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.ReserveEventId)}", $"{ClassTableName[nameof(ReserveEndedEvent)]}.start_event_id" },
+
 				{ $"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.Id)}", $"{ClassTableName[nameof(DecomissionedEvent)]}.event_id" },
-				{ $"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.Comment)}", $"{ClassTableName[nameof(DecomissionedEvent)]}.reason" }
+				{ $"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.Comment)}", $"{ClassTableName[nameof(DecomissionedEvent)]}.reason" },
+
+				{ $"{nameof(Employee)}.{nameof(Employee.Id)}", $"{ClassTableName[nameof(Employee)]}.id" },
+				{ $"{nameof(Employee)}.{nameof(Employee.Fullname)}", $"{ClassTableName[nameof(Employee)]}.fullname" },
+				{ $"{nameof(Employee)}.{nameof(Employee.Email)}", $"{ClassTableName[nameof(Employee)]}.email" },
+				{ $"{nameof(Employee)}.{nameof(Employee.Username)}", $"{ClassTableName[nameof(Employee)]}.username" }
 			}.ToImmutableDictionary();
 		}
 
@@ -127,7 +141,7 @@ namespace Service.Connection.DataAccess.Query
 				whereConditions.Add($"{PropertyToColumnName[propertyName]} {comparison} NULL");
                 return this;
             }
-			if (value is IEnumerable)
+			if (value is IEnumerable && value is not string)
 			{
                 whereConditions.Add($"{PropertyToColumnName[propertyName]} = ANY(@{parameters.Count})");
                 parameters.Add(value);
@@ -260,8 +274,11 @@ namespace Service.Connection.DataAccess.Query
 			return query.ToString();
 		}
 
-		public QueryBuilder Init<T>()
+		public QueryBuilder LazyInit<T>()
 		{
+			if (isInitialized)
+				return this;
+
 			var className = typeof(T).Name;
 
 			switch (className)
@@ -276,12 +293,12 @@ namespace Service.Connection.DataAccess.Query
 					From(GetFullTableName<StorableObjectEvent>());
 					break;
 				case nameof(AdditionEvent):
-					this.Init<StorableObjectEvent>();
+					this.LazyInit<StorableObjectEvent>();
 					Select([GetColumnName<AdditionEvent>(nameof(AdditionEvent.LocationId))]);
 					Join(GetFullTableName<AdditionEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<AdditionEvent>(nameof(AdditionEvent.Id))}");
 					break;
 				case nameof(SentEvent):
-					this.Init<StorableObjectEvent>();
+					this.LazyInit<StorableObjectEvent>();
 					Select([
 						GetColumnName<SentEvent>(nameof(SentEvent.Comment)),
 						GetColumnName<SentEvent>(nameof(SentEvent.DepartureId)),
@@ -290,7 +307,7 @@ namespace Service.Connection.DataAccess.Query
 					Join(GetFullTableName<SentEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<SentEvent>(nameof(SentEvent.Id))}");
 					break;
 				case nameof(ArrivedEvent):
-					this.Init<StorableObjectEvent>();
+					this.LazyInit<StorableObjectEvent>();
 					Select([
 						GetColumnName<ArrivedEvent>(nameof(ArrivedEvent.Comment)),
 						GetColumnName<SentEvent>(nameof(SentEvent.Id))
@@ -298,7 +315,7 @@ namespace Service.Connection.DataAccess.Query
 					Join(GetFullTableName<ArrivedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<ArrivedEvent>(nameof(ArrivedEvent.Id))}");
 					break;
 				case nameof(ReservedEvent):
-					this.Init<StorableObjectEvent>();
+					this.LazyInit<StorableObjectEvent>();
 					Select([
 						GetColumnName<ReservedEvent>(nameof(ReservedEvent.Comment)),
 						GetColumnName<ReservedEvent>(nameof(ReservedEvent.LocationId))
@@ -306,7 +323,7 @@ namespace Service.Connection.DataAccess.Query
 					Join(GetFullTableName<ReservedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<ReservedEvent>(nameof(ReservedEvent.Id))}");
 					break;
 				case nameof(ReserveEndedEvent):
-					this.Init<StorableObjectEvent>();
+					this.LazyInit<StorableObjectEvent>();
 					Select([
 						GetColumnName<ReserveEndedEvent>(nameof(ReserveEndedEvent.Comment)),
 						GetColumnName<ReservedEvent>(nameof(ReservedEvent.Id))
@@ -314,9 +331,19 @@ namespace Service.Connection.DataAccess.Query
 					Join(GetFullTableName<ReserveEndedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<ReserveEndedEvent>(nameof(ReserveEndedEvent.Id))}");
 					break;
 				case nameof(DecomissionedEvent):
-					this.Init<StorableObjectEvent>();
+					this.LazyInit<StorableObjectEvent>();
 					Select([GetColumnName<DecomissionedEvent>(nameof(DecomissionedEvent.Comment))]);
 					Join(GetFullTableName<DecomissionedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<DecomissionedEvent>(nameof(DecomissionedEvent.Id))}");
+					break;
+
+				case nameof(Employee):
+					Select([
+						GetColumnName<Employee>(nameof(Employee.Id)),
+						GetColumnName<Employee>(nameof(Employee.Fullname)),
+						GetColumnName<Employee>(nameof(Employee.Username)),
+						GetColumnName<Employee>(nameof(Employee.Email)),
+						]);
+					From(GetFullTableName<Employee>());
 					break;
 				default:
 					throw new NotImplementedException();
@@ -325,17 +352,17 @@ namespace Service.Connection.DataAccess.Query
 			return this;
 		}
 
-		private string GetColumnName<T>(string propertyName)
+		public string GetColumnName<T>(string propertyName)
 		{
 			return PropertyToColumnName[$"{typeof(T).Name}.{propertyName}"];
 		}
 
-		private string GetFullTableName<T>()
+		public string GetFullTableName<T>()
 		{
 			return $"{TableSchemaName[typeof(T).Name]}.{ClassTableName[typeof(T).Name]}";
 		}
 
-		public QueryBuilder Clear()
+		public QueryBuilder ClearTables()
 		{
 			selectColumns.Clear();
 			fromTable = "";

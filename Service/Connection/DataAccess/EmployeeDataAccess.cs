@@ -1,237 +1,191 @@
 ﻿using Model;
 using Model.Enum;
 using Npgsql;
+using Service.Connection.DataAccess.Query;
 using System.Diagnostics;
 
 namespace Service.Connection.DataAccess
 {
     public class EmployeeDataAccess
     {
-        public void Add(Employee objectToAdd)
+		private PermissionDataAccess permissionDataAccess = new();
+
+        public void Add(IEnumerable<Employee> objectToAdd)
         {
             throw new NotImplementedException();
         }
 
-        public void Delete(Employee objectToDelete)
+        public void Delete(IEnumerable<Employee> objectToDelete)
         {
             throw new NotImplementedException();
         }
 
-        public List<Employee> Select()
+        public IEnumerable<Employee> Select(QueryBuilder queryBuilder)
         {
-            var connection = ConnectionPool.GetConnection();
+            queryBuilder.LazyInit<Employee>();
 
-            string sql = "SELECT id, fullname, email, username FROM public.employee;";
+			var connection = ConnectionPool.GetConnection();
 
-            using var command = new NpgsqlCommand(sql, connection);
+            using var command = new NpgsqlCommand(queryBuilder.Build(), connection);
 
-            List<Employee> employeeList = [];
+			for (int i = 0; i < queryBuilder.Parameters.Count; i++)
+			{
+				command.Parameters.AddWithValue($"@{i}", queryBuilder.Parameters[i]);
+			}
+
+			List<Employee> employeeList = [];
 
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    employeeList.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(3), reader.GetString(2), GetPermissions(reader.GetInt32(0)), IsEmployeeAdmin(reader.GetInt32(0))));
+                    employeeList.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(3), reader.GetString(2), permissionDataAccess.SelectPermissions(reader.GetInt32(0)), permissionDataAccess.IsEmployeeAdmin(reader.GetInt32(0))));
                 }
             }
 
             ConnectionPool.ReleaseConnection(connection);
+
             return employeeList;
         }
 
-        public Employee SelectById(int id)
+        public void Update(IEnumerable<Employee> employeesToUpdate)
         {
             var connection = ConnectionPool.GetConnection();
 
-            string sql = "SELECT fullname, username, email FROM public.employee WHERE id=@employeeId;";
+			List<ValueTuple<int, List<Permission>>> permissionsToUpdate = [];
 
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@employeeId", id);
+			foreach(var employeeToUpdate in employeesToUpdate)
+			{
+				string query = "UPDATE public.employee SET fullname=@fullname, email=@email,";
+				if (employeeToUpdate.PasswordHash != string.Empty)
+				{
+					query += (" password_hash=@password_hash,");
+				}
+				query += ("  username=@username WHERE id=@id;");
 
-            Employee employee = null;
+				using var command = new NpgsqlCommand(query, connection);
+				command.Parameters.AddWithValue("@fullname", employeeToUpdate.Fullname);
+				command.Parameters.AddWithValue("@email", employeeToUpdate.Email);
+				if (employeeToUpdate.PasswordHash != string.Empty)
+					command.Parameters.AddWithValue("@password_hash", employeeToUpdate.PasswordHash);
+				command.Parameters.AddWithValue("@username", employeeToUpdate.Username);
+				command.Parameters.AddWithValue("@id", employeeToUpdate.Id);
 
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    employee = new Employee(id, reader.GetString(0), reader.GetString(1), reader.GetString(2), GetPermissions(id), IsEmployeeAdmin(id));
-                }
-            }
+				command.ExecuteNonQuery();
 
-            ConnectionPool.ReleaseConnection(connection);
-            return employee;
-        }
+				ConnectionPool.ReleaseConnection(connection);
 
-        public Employee SelectByUsername(string username)
-        {
-            var connection = ConnectionPool.GetConnection();
+				permissionsToUpdate.Add((employeeToUpdate.Id, employeeToUpdate.Permissions));
 
-            string sql = "SELECT id, fullname, email, username FROM public.employee WHERE username=@username;";
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@username", username);
+				Debug.WriteLine($"Успешно обновлён сотрудник: Id: {employeeToUpdate.Id}, Name: {employeeToUpdate.Fullname}");
+			}
 
-            Employee employee = null;
+			permissionsToUpdate.ForEach(x => permissionDataAccess.UpdatePermissions(x.Item1, x.Item2));
+		}
+	}
 
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    employee = new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), GetPermissions(reader.GetInt32(0)), IsEmployeeAdmin(reader.GetInt32(0)));
-                }
-            }
+    public class PermissionDataAccess
+    {
+		public void UpdatePermissions(int employeeId, IEnumerable<Permission> newPermissions)
+		{
+			var connection = ConnectionPool.GetConnection();
 
-            ConnectionPool.ReleaseConnection(connection);
-            return employee;
-        }
+			string deleteQuery = "DELETE FROM \"permission\".employee_permissions WHERE employee_id=@employeeId;";
+			using var deleteCommand = new NpgsqlCommand(deleteQuery, connection);
+			deleteCommand.Parameters.AddWithValue("@employeeId", employeeId);
+			deleteCommand.ExecuteNonQuery();
 
-        public void Update(Employee objectToUpdate)
-        {
-            var connection = ConnectionPool.GetConnection();
+			string insertQuery = "INSERT INTO \"permission\".employee_permissions (employee_id, permission_type, location_id) VALUES (@employeeId, @permissionType, @location_id);";
+			foreach (var permission in newPermissions)
+			{
+				using var insertCommand = new NpgsqlCommand(insertQuery, connection);
+				insertCommand.Parameters.AddWithValue("@employeeId", employeeId);
+				insertCommand.Parameters.AddWithValue("@location_id", permission.LocationId);
+				insertCommand.Parameters.AddWithValue("@permissionType", (int)permission.PermissionType);
+				insertCommand.ExecuteNonQuery();
+			}
 
-            string query = "UPDATE public.employee SET fullname=@fullname, email=@email,";
-            if (objectToUpdate.PasswordHash != string.Empty)
-            {
-                query += (" password_hash=@password_hash,");
-            }
-            query += ("  username=@username WHERE id=@id;");
+			ConnectionPool.ReleaseConnection(connection);
+		}
 
-            using var command = new NpgsqlCommand(query, connection);
-            command.Parameters.AddWithValue("@fullname", objectToUpdate.Fullname);
-            command.Parameters.AddWithValue("@email", objectToUpdate.Email);
-            if (objectToUpdate.PasswordHash != string.Empty)
-                command.Parameters.AddWithValue("@password_hash", objectToUpdate.PasswordHash);
-            command.Parameters.AddWithValue("@username", objectToUpdate.Username);
-            command.Parameters.AddWithValue("@id", objectToUpdate.Id);
+		public Dictionary<int, List<string>> SelectEmployeePermissions(int employeeId)
+		{
+			var connection = ConnectionPool.GetConnection();
 
-            command.ExecuteNonQuery();
+			Dictionary<int, List<string>> permissions = [];
 
-            ConnectionPool.ReleaseConnection(connection);
+			string locationIdSql = "SELECT id FROM public.\"location\";";
+			using var command1 = new NpgsqlCommand(locationIdSql, connection);
+			using (var reader = command1.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					permissions.Add(reader.GetInt32(0), []);
+				}
+			}
 
-            UpdatePermissions(objectToUpdate);
+			string sql = "SELECT \"permission\".permission_type.\"name\", location_id " +
+			"FROM \"permission\".employee_permissions JOIN \"permission\".permission_type ON permission_type.id = employee_permissions.permission_type " +
+			"WHERE employee_id = @employeeId";
 
-            Debug.WriteLine($"Успешно обновлён сотрудник: Id: {objectToUpdate.Id}, Name: {objectToUpdate.Fullname}");
+			using var command = new NpgsqlCommand(sql, connection);
+			command.Parameters.AddWithValue("@employeeId", employeeId);
 
-        }
+			using (var reader = command.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					permissions[reader.GetInt32(1)].Add(reader.GetString(0));
+				}
+			}
+			ConnectionPool.ReleaseConnection(connection);
+			return permissions;
+		}
 
-        public void UpdatePermissions(Employee objectToUpdate)
-        {
-            var connection = ConnectionPool.GetConnection();
+		public List<Permission> SelectPermissions(int employeeId)
+		{
+			var connection = ConnectionPool.GetConnection();
 
-            string deleteQuery = "DELETE FROM \"permission\".employee_permissions WHERE employee_id=@employeeId;";
-            using var deleteCommand = new NpgsqlCommand(deleteQuery, connection);
-            deleteCommand.Parameters.AddWithValue("@employeeId", objectToUpdate.Id);
-            deleteCommand.ExecuteNonQuery();
+			List<Permission> permissions = [];
 
-            string insertQuery = "INSERT INTO \"permission\".employee_permissions (employee_id, permission_type, location_id) VALUES (@employeeId, @permissionType, @location_id);";
-            foreach (var permission in objectToUpdate.Permissions)
-            {
-                using var insertCommand = new NpgsqlCommand(insertQuery, connection);
-                insertCommand.Parameters.AddWithValue("@employeeId", objectToUpdate.Id);
-                insertCommand.Parameters.AddWithValue("@location_id", permission.LocationId);
-                insertCommand.Parameters.AddWithValue("@permissionType", (int)permission.PermissionType) ;
-                insertCommand.ExecuteNonQuery();
-            }
+			string sql = "SELECT permission_type, location_id " +
+			"FROM \"permission\".employee_permissions " +
+			"WHERE employee_id = @employeeId";
 
-            ConnectionPool.ReleaseConnection(connection);
-        }
+			using var command = new NpgsqlCommand(sql, connection);
+			command.Parameters.AddWithValue("@employeeId", employeeId);
 
-        public Dictionary<int, List<string>> SelectEmployeePermissions(int employeeId)
-        {
-            var connection = ConnectionPool.GetConnection();
+			using (var reader = command.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					var permission = new Permission(reader.GetInt32(1), (PermissionType)reader.GetInt32(0));
+					permissions.Add(permission);
+				}
+			}
+			ConnectionPool.ReleaseConnection(connection);
+			return permissions;
+		}
 
-            Dictionary<int, List<string>> permissions = [];
+		public bool IsEmployeeAdmin(int employeeId)
+		{
+			var connection = ConnectionPool.GetConnection();
 
-            string locationIdSql = "SELECT id FROM public.\"location\";";
-            using var command1 = new NpgsqlCommand(locationIdSql, connection);
-            using (var reader = command1.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    permissions.Add(reader.GetInt32(0), []);
-                }
-            }
+			string sql = "SELECT COUNT(employee_id) FROM \"permission\".\"admin\" WHERE employee_id = @employeeId";
 
-            string sql = "SELECT \"permission\".permission_type.\"name\", location_id " +
-            "FROM \"permission\".employee_permissions JOIN \"permission\".permission_type ON permission_type.id = employee_permissions.permission_type " +
-            "WHERE employee_id = @employeeId";
+			using var command = new NpgsqlCommand(sql, connection);
+			command.Parameters.AddWithValue("@employeeId", employeeId);
 
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@employeeId", employeeId);
+			long count = (long)command.ExecuteScalar();
 
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    permissions[reader.GetInt32(1)].Add(reader.GetString(0));
-                }
-            }
-            ConnectionPool.ReleaseConnection(connection);
-            return permissions;
-        }
+			ConnectionPool.ReleaseConnection(connection);
+			return count > 0;
+		}
 
-        public List<Permission> SelectEmployeePermissionsList(int employeeId)
-        {
-            var connection = ConnectionPool.GetConnection();
+		public PermissionInfo GetPermissionInfo(int employeeId)
+		{
+			return new PermissionInfo(IsEmployeeAdmin(employeeId), SelectEmployeePermissions(employeeId));
+		}
 
-            List<Permission> permissions = [];
-
-            string sql = "SELECT permission_type, location_id " +
-            "FROM \"permission\".employee_permissions " +
-            "WHERE employee_id = @employeeId";
-
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@employeeId", employeeId);
-
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    var permission = new Permission(reader.GetInt32(1), (PermissionType)reader.GetInt32(0));
-                    permissions.Add(permission);
-                }
-            }
-            ConnectionPool.ReleaseConnection(connection);
-            return permissions;
-        }
-
-        public bool IsEmployeeAdmin(int employeeId)
-        {
-            var connection = ConnectionPool.GetConnection();
-
-            string sql = "SELECT COUNT(employee_id) FROM \"permission\".\"admin\" WHERE employee_id = @employeeId";
-
-            using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("@employeeId", employeeId);
-
-            long count = (long)command.ExecuteScalar();
-
-            ConnectionPool.ReleaseConnection(connection);
-            return count > 0;
-        }
-
-        public PermissionInfo GetPermissionInfo(int employeeId)
-        {
-            return new PermissionInfo(IsEmployeeAdmin(employeeId), SelectEmployeePermissions(employeeId));
-        }
-
-        public List<Permission> GetPermissions(int employeeId)
-        {
-            return SelectEmployeePermissionsList(employeeId);
-        }
-
-        public void Add(Employee[] objectToAdd)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Delete(Employee[] objectToDelete)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Update(Employee[] objectToUpdate)
-        {
-            throw new NotImplementedException();
-        }
-    }
+	}
 }
