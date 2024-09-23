@@ -1,0 +1,39 @@
+﻿@using Model.Event
+@model StorableObjectEvent
+
+@{
+	var locationIdName = Service.EventStringBuilder.locationIdNames;
+	<ul class="list-group">
+		@if(Model is AdditionEvent additionEvent)
+		{
+			<li class="list-group-item">На @(locationIdName[additionEvent.LocationId])</li>
+		}
+		@if(Model is ReservedEvent reservedEvent)
+		{
+			<li class="list-group-item">На @(locationIdName[reservedEvent.LocationId])</li>
+			<li class="list-group-item">Комментарий @(reservedEvent.Comment)</li>
+		}
+		@if(Model is ReserveEndedEvent reservEndedEvent)
+		{
+			<li class="list-group-item">Комментарий @(reservEndedEvent.Comment)</li>
+		}
+		@if(Model is SentEvent sentEvent)
+		{
+			<li class="list-group-item">@(locationIdName[sentEvent.DepartureId]) -> @(locationIdName[sentEvent.DestinationId])</li>
+			<li class="list-group-item">Комментарий @(sentEvent.Comment)</li>
+		}
+		@if (Model is ArrivedEvent arrivedEvent)
+		{
+			<li class="list-group-item">Комментарий @(arrivedEvent.Comment)</li>
+		}
+		@if(Model is DecomissionedEvent decomissionedEvent)
+		{
+			<li class="list-group-item">Комментарий @(decomissionedEvent.Comment)</li>
+		}
+		@*  @if (Model is DataChangedEvent additionEvent)
+		{
+
+		}
+		*@
+	</ul>
+}

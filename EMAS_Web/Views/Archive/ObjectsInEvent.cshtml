@@ -1,0 +1,6 @@
+﻿@model Model.Event.StorableObjectEvent
+
+<script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
+
+@await Html.PartialAsync("StorableObjectsTables", Model.ObjectsInEvent)

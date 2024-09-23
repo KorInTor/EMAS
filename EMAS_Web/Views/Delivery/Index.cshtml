@@ -1,4 +1,4 @@
-﻿@model List<Model.Event.SentEvent>
+﻿@model IEnumerable<Model.Event.SentEvent>
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 <head>
@@ -77,20 +77,11 @@
                         </form>
                     }
                 </td>
-
                 <td>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#@item.Id" aria-expanded="false" aria-controls="@item.Id">
-                        Показать предметы в доставке
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="6">
-                    <div class="collapse" id="@item.Id">
-                        <div class="card card-body">
-                            @await Html.PartialAsync("StorableObjectsTables", item.ObjectsInEvent)
-                        </div>
-                    </div>
+                    <form asp-controller="Archive" asp-action="ObjectsInEvent" method="get">
+                        <input type="hidden" name="eventId" value="@item.Id" />
+                        <input type="submit" class="btn btn-primary" value="Объекты в доставке" />
+                    </form>
                 </td>
             </tr>
         }

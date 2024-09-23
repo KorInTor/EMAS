@@ -2,10 +2,6 @@
 @using Model.Enum
 @model IEnumerable<IStorableObject>
 
-<script src="~/js/TableFilterMenu.js"></script>
-<script src="~/js/tableResizer.js"></script>
-<script src="~/js/storableObjectScripts.js"></script>
-
 <div class="form-check form-check-inline">
 	<input class="form-check-input" type="radio" name="inlineRadioOptions" id="equipment" value="equipment" onclick="setOnlyOneElementVisible(document.querySelector('div#equipmentTableContainer') , document.querySelectorAll('div.tableContainer'))">
 	<label class="form-check-label" for="equipment">Оборудование</label>
@@ -15,35 +11,37 @@
 	<label class="form-check-label" for="material">Материалы</label>
 </div>
 
-@{
-	var splitedList = Model.GroupByType();
+<div id="storableObjectsContainer">
+	@{
+		var splitedList = Model.GroupByType();
 
-	// Пытаемся получить список для оборудования
-	IEnumerable<Equipment> equipmentList;
-	if (!splitedList.TryGetValue(StorableObjectType.Equipment, out var equipmentItems))
-	{
-		equipmentList = Enumerable.Empty<Equipment>(); // Пустой список, если ключ не найден
-	}
-	else
-	{
-		equipmentList = equipmentItems.Cast<Equipment>();
-	}
+		// Пытаемся получить список для оборудования
+		IEnumerable<Equipment> equipmentList;
+		if (!splitedList.TryGetValue(StorableObjectType.Equipment, out var equipmentItems))
+		{
+			equipmentList = Enumerable.Empty<Equipment>(); // Пустой список, если ключ не найден
+		}
+		else
+		{
+			equipmentList = equipmentItems.Cast<Equipment>();
+		}
 
-	// Пытаемся получить список для материалов
-	IEnumerable<MaterialPiece> materialList;
-	if (!splitedList.TryGetValue(StorableObjectType.Material, out var materialItems))
-	{
-		materialList = Enumerable.Empty<MaterialPiece>(); // Пустой список, если ключ не найден
-	}
-	else
-	{
-		materialList = materialItems.Cast<MaterialPiece>();
-	}
+		// Пытаемся получить список для материалов
+		IEnumerable<MaterialPiece> materialList;
+		if (!splitedList.TryGetValue(StorableObjectType.Material, out var materialItems))
+		{
+			materialList = Enumerable.Empty<MaterialPiece>(); // Пустой список, если ключ не найден
+		}
+		else
+		{
+			materialList = materialItems.Cast<MaterialPiece>();
+		}
 
-	<div id="equipmentTableContainer" class="tableContainer">
-		@await Html.PartialAsync("EquipmentTable", equipmentList)
-	</div>
-	<div id="materialTableContainer" class="tableContainer">
-		@await Html.PartialAsync("MaterialTable", materialList)
-	</div>
-}
+		<div id="equipmentTableContainer" class="tableContainer">
+			@await Html.PartialAsync("EquipmentTable", equipmentList)
+		</div>
+		<div id="materialTableContainer" class="tableContainer">
+			@await Html.PartialAsync("MaterialTable", materialList)
+		</div>
+	}
+</div>

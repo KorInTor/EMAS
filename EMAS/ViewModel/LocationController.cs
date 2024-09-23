@@ -143,7 +143,7 @@ namespace ViewModel
                 if (!DataBaseClient.GetInstance().IsStorableObjectsNotOccupied(storableObjectsInEvent, out _))
                     throw new StorableObjectIsAlreadyOccupied();
 
-                DataBaseClient.GetInstance().Add(newEvent);
+                DataBaseClient.GetInstance().AddSingle(newEvent);
                 DialogueService.Close();
                 DialogueService.ShowSuccesfullMessage(succesfullMessage);
             }
@@ -171,7 +171,7 @@ namespace ViewModel
         {
             try
             {
-                DataBaseClient.GetInstance().Add(completedEvent);
+                DataBaseClient.GetInstance().AddSingle(completedEvent);
                 DialogueService.Close();
                 DialogueService.ShowSuccesfullMessage(succesfullMessage);
             }

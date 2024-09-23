@@ -1,3 +1,25 @@
-﻿@model List<Model.IStorableObject>
+﻿@model IEnumerable<Model.IStorableObject>
+
+<script src="~/js/storableObjectScripts.js"></script>
+<script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
 
 @await Html.PartialAsync("StorableObjectsTables", Model)
+
+<div class="fixed-bottom mx-auto p-3 d-flex justify-content-center bg-white">
+    @foreach (Model.Permission prm in ViewBag.PermissionList)
+    {
+        switch (prm.PermissionType.ToString())
+        {
+            case "EquipmentAdd":
+                <a class="btn btn-primary m-3" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
+                break;
+            case "EquipmentEdit":
+                <button type="button" class="btn btn-primary m-3" onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('div#storableObjectsContainer')),@(ViewBag.LocationId))">Создать Резерв</button>
+                break;
+            case "DeliveryAccess":
+                <button type="button" class="btn btn-primary m-3" onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('div#storableObjectsContainer')),@(ViewBag.LocationId))">Создать доставку</button>
+                break;
+        }
+    }
+</div>

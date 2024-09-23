@@ -6,59 +6,12 @@ using EMAS_Web.Filters;
 using Service;
 using Service.Connection;
 using Service.Connection.DataAccess.Event;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace EMAS_Web.Controllers
 {
     public class StorableObjectController : Controller
     {
-
-        [LocationFilter]
-        public IActionResult Material(int locationId)
-        {
-            List<MaterialPiece> materialList = [];
-
-            List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
-                                                where  prm.LocationId == locationId
-                                                select prm).ToList();
-            
-
-            foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
-            {
-                if (item is MaterialPiece material)
-                {
-                    materialList.Add(material);
-                }
-            }
-
-            ViewBag.PermissionList = permissionsList;
-            ViewBag.LocationId = locationId;
-            return View(materialList);
-        }
-
-        [LocationFilter]
-        public IActionResult Equipment(int locationId)
-        {
-            List<Equipment> equipmentList = [];
-
-            List<Permission> permissionsList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
-                                                where prm.LocationId == locationId
-                                                select prm).ToList();
-
-
-            foreach (var item in DataBaseClient.GetInstance().SelectStorableObjectOn(locationId))
-            {
-                if (item is Equipment equipment)
-                {
-                    equipmentList.Add(equipment);
-                }
-            }
-            ViewBag.PermissionList = permissionsList;
-            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
-            ViewBag.LocationId = locationId;
-            ViewBag.LastEvents = DataBaseClient.GetInstance().SelectLastEventsForStorableObjects(equipmentList);
-			return View(equipmentList);
-        }
-
         [AuthorizationFilter]
         [LocationFilter]
         public IActionResult AddEquipment(int locationId)
@@ -83,7 +36,7 @@ namespace EMAS_Web.Controllers
             try
             {
                 var addition = new AdditionEvent((int)userId, 0, EventType.Addition, DateTime.Now, [newEquipment], locationId);
-                DataBaseClient.GetInstance().Add(addition);
+                DataBaseClient.GetInstance().AddSingle(addition);
             }
             catch (Exception excpetion)
             {
@@ -99,18 +52,23 @@ namespace EMAS_Web.Controllers
         [LocationFilter]
         public IActionResult Index(int locationId)
         {
-			ViewBag.PermissionList = (from prm in DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId"))).Permissions
+			ViewBag.PermissionList = (from prm in DataBaseClient.GetInstance().SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First().Permissions
 												where prm.LocationId == locationId
 												select prm).ToList();
 
             var storableObjectList = DataBaseClient.GetInstance().SelectStorableObjectOn(locationId);
 			ViewBag.LastEvents = DataBaseClient.GetInstance().SelectLastEventsForStorableObjects(storableObjectList);
+            ViewBag.LocationId = locationId;
 			return View(storableObjectList);
         }
 
         public IActionResult History(int storableObjectId)
         {
-            return View(DataBaseClient.GetInstance().SelectEventsByIds<StorableObjectEvent>([storableObjectId]));
+            var events = DataBaseClient.GetInstance().SelectForStorableObjectsIds([storableObjectId])[storableObjectId];
+			var idEmployeeName = DataBaseClient.GetInstance().SelectByIds<Employee>(events.Select(x => x.EmployeeId).Distinct(), $"{nameof(Employee.Id)}").ToDictionary(x => x.Id, x => x.Fullname);
+			ViewBag.EmployeesNames = idEmployeeName;
+			ViewBag.DistinctEmployeNames = idEmployeeName.Values.Distinct();
+			return View(events);
         }
 
     }

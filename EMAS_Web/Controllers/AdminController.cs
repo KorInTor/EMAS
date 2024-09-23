@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Mvc;
 using Model;
 using Model.Enum;
 using Service.Connection;
@@ -54,7 +55,7 @@ namespace EMAS_Web.Controllers
 
         public IActionResult EmployeeTable()
         {
-            return View(DataBaseClient.GetInstance().SelectEmployee());
+            return View(DataBaseClient.GetInstance().Select<Employee>());
         }
 
         [HttpGet]
@@ -67,7 +68,7 @@ namespace EMAS_Web.Controllers
 			}
 			ViewBag.Locations = locationsList;
             
-            return View(DataBaseClient.GetInstance().SelectEmployee(employeeId));
+            return View(DataBaseClient.GetInstance().SelectByIds<Employee>([employeeId],nameof(Employee.Id)));
         }
 
         [HttpPost]
@@ -90,9 +91,9 @@ namespace EMAS_Web.Controllers
             }
             ViewBag.Locations = locationsList;
 
-            var employee = DataBaseClient.GetInstance().SelectEmployee(employeeId);
+            var employee = DataBaseClient.GetInstance().SelectByIds<Employee>([employeeId], nameof(Employee.Id)).First();
 
-            if (employee == null)
+			if (employee == null)
             {
                 return RedirectToActionPermanent("EmployeeTable","Admin");
             }
@@ -111,7 +112,7 @@ namespace EMAS_Web.Controllers
             
             try
             {
-                DataBaseClient.GetInstance().Update(employee);
+                DataBaseClient.GetInstance().UpdateSingle(employee);
                 ViewBag.Success = true;
             }
             catch(Exception ex)

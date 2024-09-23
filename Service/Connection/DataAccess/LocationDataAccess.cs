@@ -68,12 +68,7 @@ namespace Service.Connection.DataAccess
             throw new NotImplementedException();
         }
 
-        public void Update(Location objectToUpdate)
-        {
-            Update([objectToUpdate]);
-        }
-
-        public void Update(Location[] objectToUpdate)
+        public void Update(IEnumerable<Location> objectToUpdate)
         {
             foreach (var location in objectToUpdate)
             {

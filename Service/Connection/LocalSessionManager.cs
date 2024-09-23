@@ -9,6 +9,8 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+using Service.Connection.DataAccess.Query;
+using Model;
 
 namespace Service.Connection
 {
@@ -35,28 +37,16 @@ namespace Service.Connection
             CreateNewSession();
         }
 
-        public static int GetUserId(string username, string password)
-        {
-            string passwordHash = PasswordManager.Hash(password);
-            ConnectionPool.TryConnect();
-            if (!IsUsernameCorrect(username))
-            {
-                throw new InvalidUsernameException();
-            }
-            if (!IsPasswordCorrect(username, passwordHash))
-            {
-                throw new InvalidPasswordException();
-            }
-            var employeeAccess = new EmployeeDataAccess();
-            return employeeAccess.SelectByUsername(username).Id;
-        }
-
         private static void SetCurrentSessionProperties(string username)
         {
-            var employeeAccess = new EmployeeDataAccess();
-            UserId = employeeAccess.SelectByUsername(username).Id;
+            QueryBuilder queryBuilder = new QueryBuilder();
+            queryBuilder.Where($"{nameof(Employee)}.{nameof(Employee.Username)}","=",username);
 
-            PermissionInfo = employeeAccess.GetPermissionInfo(UserId);
+            var currentUser = DataBaseClient.GetInstance().Select<Employee>(queryBuilder).First();
+
+			UserId = currentUser.Id;
+
+            PermissionInfo = currentUser.PermissionInfo;
         }
 
         public static bool IsPasswordCorrect(string username,string passwordHash)

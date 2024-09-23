@@ -58,7 +58,7 @@ namespace EMAS_Web.Controllers
 
             try
             {
-                DataBaseClient.GetInstance().Add(reservedEvent);
+                DataBaseClient.GetInstance().AddSingle(reservedEvent);
             }
             catch(Exception exception)
             {
@@ -94,7 +94,7 @@ namespace EMAS_Web.Controllers
             try
             {
                 
-                DataBaseClient.GetInstance().Add(endEvent);
+                DataBaseClient.GetInstance().AddSingle(endEvent);
             }
             catch (Exception ex)
             {

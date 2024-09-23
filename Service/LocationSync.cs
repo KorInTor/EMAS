@@ -36,7 +36,7 @@ namespace Service
 				return;
 
 			QueryBuilder queryBuilder = new();
-			queryBuilder.Init<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", ">", LastEventId);
+			queryBuilder.LazyInit<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", ">", LastEventId);
 			List<StorableObjectEvent> newStorableObjectEvents = DataBaseClient.GetInstance().SelectEventsCustom<StorableObjectEvent>(queryBuilder).ToList();
 
 			LastEventId = lastDataBaseEventId;

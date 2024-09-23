@@ -188,7 +188,7 @@ internal class Program
             while (remaining != 0)
             {
                 var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randEquipmentList.Last()], locationId);
-                DataBaseClient.GetInstance().Add(addition);
+                DataBaseClient.GetInstance().AddSingle(addition);
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
@@ -200,7 +200,7 @@ internal class Program
             while (remaining != 0)
             {
                 var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randEquipmentList.Last()], namedLocations.Keys.Last());
-                DataBaseClient.GetInstance().Add(addition);
+                DataBaseClient.GetInstance().AddSingle(addition);
                 randEquipmentList.RemoveAt(randEquipmentList.Count - 1);
                 remaining -= 1;
             }
@@ -215,7 +215,7 @@ internal class Program
             while (remaining != 0)
             {
                 var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randMaterialsList.Last()], locationId);
-                DataBaseClient.GetInstance().Add(addition);
+                DataBaseClient.GetInstance().AddSingle(addition);
                 randMaterialsList.RemoveAt(randMaterialsList.Count - 1);
                 remaining -= 1;
             }
@@ -227,7 +227,7 @@ internal class Program
             while (remaining != 0)
             {
                 var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randMaterialsList.Last()], namedLocations.Keys.Last());
-                DataBaseClient.GetInstance().Add(addition);
+                DataBaseClient.GetInstance().AddSingle(addition);
                 randMaterialsList.RemoveAt(randMaterialsList.Count - 1);
                 remaining -= 1;
             }
@@ -248,7 +248,7 @@ internal class Program
             for (int i = 0; i < materialPiecesToLocationsRatio; i++)
             {
                 var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [randMaterialsList.Last()], locationId);
-                DataBaseClient.GetInstance().Add(addition);
+                DataBaseClient.GetInstance().AddSingle(addition);
                 randMaterialsList.Remove(randMaterialsList.Last());
             }
             if (randMaterialsList.Count > materialPiecesToLocationsRatio + 1)

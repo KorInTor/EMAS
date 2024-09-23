@@ -6,9 +6,9 @@ namespace Service
 {
     public static class EventStringBuilder
     {
-        private static List<Employee> employees = DataBaseClient.GetInstance().SelectEmployee();
+        private static List<Employee> employees = DataBaseClient.GetInstance().Select<Employee>().ToList();
 
-        private static Dictionary<int, string> locationIdNames = DataBaseClient.GetInstance().SelectNamedLocations();
+        public readonly static Dictionary<int, string> locationIdNames = DataBaseClient.GetInstance().SelectNamedLocations();
 
         public static string EventToString(StorableObjectEvent storableObjectEvent)
         {
@@ -89,7 +89,7 @@ namespace Service
             return info + $" Отправлен из: {locationIdNames[sentEvent.DepartureId]}. Место назначения: {locationIdNames[sentEvent.DestinationId]}. Комментарий: {sentEvent.Comment}";
         }
 
-        private static string EventTypeToString(EventType eventType)
+        public static string EventTypeToString(EventType eventType)
         {
             switch (eventType)
             {

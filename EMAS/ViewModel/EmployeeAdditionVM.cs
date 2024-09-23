@@ -38,7 +38,7 @@ namespace ViewModel
             try
             {
                 NewEmployee.PasswordHash = PasswordManager.Hash(password);
-                DataBaseClient.GetInstance().Add(NewEmployee); 
+                DataBaseClient.GetInstance().AddSingle(NewEmployee); 
                 AdditionSucceeded?.Invoke("Добавление успешно!\r\nПароль сотрудника в вашем буфере обмена.", password);
                 DialogueService.ClipboardSetText(password);
                 DialogueService.ShowSuccesfullMessage("Добавление успешно!\r\nПароль сотрудника в вашем буфере обмена.");

@@ -37,7 +37,7 @@ namespace ViewModel
         {
             try 
             {
-                DataBaseClient.GetInstance().Add(new Location(0,NewLocationName));
+                DataBaseClient.GetInstance().AddSingle(new Location(0,NewLocationName));
                 AdditionConfirmed?.Invoke("Добавление нового объекта успешно");
                 DialogueService.ShowSuccesfullMessage("Добавление нового объекта успешно");
                 UpdateLocationsList();

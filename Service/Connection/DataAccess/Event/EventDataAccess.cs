@@ -25,15 +25,6 @@ namespace Service.Connection.DataAccess
         {
         }
 
-        /// <summary>
-        /// Inserts new Event in DataBase.
-        /// </summary>
-        /// <param name="newEvent"></param>
-        public void Add(StorableObjectEvent newEvent)
-        {
-            Add([newEvent]);
-        }
-
         public void Add(IEnumerable<StorableObjectEvent> newEvents)
         {
             var connection = ConnectionPool.GetConnection();
@@ -87,7 +78,7 @@ namespace Service.Connection.DataAccess
                     StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
 
 					Query.QueryBuilder queryBuilder = new();
-					queryBuilder.Init<SentEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", arrivedEvent.SentEventId);
+					queryBuilder.LazyInit<SentEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", arrivedEvent.SentEventId);
 					var completedSentEvent = Select<SentEvent>(queryBuilder).First();
 
                     storableObjectDataAccess.UpdateLocation(arrivedEvent.ObjectsInEvent, completedSentEvent.DestinationId);
@@ -100,7 +91,7 @@ namespace Service.Connection.DataAccess
 					StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
 
 					Query.QueryBuilder queryBuilder = new();
-					queryBuilder.Init<ReservedEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", reserveEndedEvent.Id);
+					queryBuilder.LazyInit<ReservedEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", reserveEndedEvent.Id);
 					var completedReserveEvent = Select<ReservedEvent>(queryBuilder).First();
 
 					storableObjectDataAccess.UpdateLocation(reserveEndedEvent.ObjectsInEvent, completedReserveEvent.LocationId);
@@ -183,7 +174,7 @@ namespace Service.Connection.DataAccess
             foreach (var storableObjectLastEventIdPair in storableObjectLastEventIdDictionary)
             {
 				queryBuilder = new Query.QueryBuilder();
-				queryBuilder.Init<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
+				queryBuilder.LazyInit<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
                 storableObjectLastEvent.Add(storableObjectLastEventIdPair.Key, Select<StorableObjectEvent>(queryBuilder, false).FirstOrDefault());
             }
 
@@ -201,7 +192,7 @@ namespace Service.Connection.DataAccess
 			using var connection = ConnectionPool.GetConnection();
 
 			if (!queryBuilder.IsInitialized)
-				queryBuilder.Init<TEvent>();
+				queryBuilder.LazyInit<TEvent>();
 
 			using var command = new NpgsqlCommand(queryBuilder.Build(), connection);
 
@@ -278,7 +269,7 @@ namespace Service.Connection.DataAccess
 
         private IEnumerable<StorableObjectEvent> InvokeSelectForType(Query.QueryBuilder queryBuilder,EventType typeOfEvent, bool fillObjects)
         {
-            queryBuilder.Clear();
+            queryBuilder.ClearTables();
 
 			return typeOfEvent switch
 			{
@@ -302,7 +293,7 @@ namespace Service.Connection.DataAccess
 
 			foreach (var storableObjectLastEventIdPair in storableObjectEventIdDictionary)
 			{
-				queryBuilder.Init<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
+				queryBuilder.LazyInit<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
 				storableObjectEvent.Add(storableObjectLastEventIdPair.Key, Select<StorableObjectEvent>(queryBuilder).ToList());
 			}
 

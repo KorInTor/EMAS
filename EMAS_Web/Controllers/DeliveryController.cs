@@ -1,5 +1,6 @@
 ﻿using EMAS_Web.Filters;
 using Microsoft.AspNetCore.Mvc;
+using Model;
 using Model.Event;
 using Service.Connection;
 using System.Diagnostics;
@@ -15,8 +16,8 @@ namespace EMAS_Web.Controllers
             ViewBag.Outgoing = selectOutgoing;
             ViewBag.LocationId = locationId;
             ViewBag.LocationDictionary = DataBaseClient.GetInstance().SelectNamedLocations();
-            ViewBag.HasPermission = DataBaseClient.GetInstance().SelectEmployee(Convert.ToInt32(HttpContext.Session.GetInt32("UserId")))
-                .Permissions
+            ViewBag.HasPermission = DataBaseClient.GetInstance().SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First()
+				.Permissions
                 .Where(x => x.LocationId == locationId)
                 .Where(x => x.PermissionType == Model.Enum.PermissionType.DeliveryAccess)
                 .Any();
@@ -68,7 +69,7 @@ namespace EMAS_Web.Controllers
 
             var sentEvent = new SentEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Sent,dateTime, storableObjects, comment, departureId, destinationId);
 
-            DataBaseClient.GetInstance().Add(sentEvent);
+            DataBaseClient.GetInstance().AddSingle(sentEvent);
 
             return RedirectToActionPermanent("Index", "Delivery", new { locationId = departureId, selectOutgoing = true });
         }
@@ -93,7 +94,7 @@ namespace EMAS_Web.Controllers
 
             try
             {
-                DataBaseClient.GetInstance().Add(arrivedEvent);
+                DataBaseClient.GetInstance().AddSingle(arrivedEvent);
             }
             catch(Exception ex)
             {

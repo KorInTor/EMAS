@@ -1,4 +1,4 @@
-﻿@model List<Model.Event.ReservedEvent>
+﻿@model IEnumerable<Model.Event.ReservedEvent>
 
 <head>
     <style>
@@ -39,21 +39,10 @@
                     </form>
                 </td>
                 <td>
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#@item.Id" aria-expanded="false" aria-controls="@item.Id">
-                        Показать объекты в резерве
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="5">
-                    <div class="collapse" id="@item.Id">
-                        <div class="card card-body">
-                            @foreach (var storableObject in item.ObjectsInEvent)
-                            {
-                                <p>@storableObject.ShortInfo</p>
-                            }
-                        </div>
-                    </div>
+                    <form asp-controller="Archive" asp-action="ObjectsInEvent" method="get">
+                        <input type="hidden" name="eventId" value="@item.Id" />
+                        <input type="submit" class="btn btn-primary" value="Объекты в резерве" />
+                    </form>
                 </td>
             </tr>
         }

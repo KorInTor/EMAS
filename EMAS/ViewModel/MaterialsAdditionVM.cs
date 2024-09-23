@@ -46,7 +46,7 @@ namespace ViewModel
             try 
             {
                 var addition = new AdditionEvent(LocalSessionManager.UserId, 0, EventType.Addition, DateTime.Now, [NewMaterialPiece], _currentLocationId);
-                DataBaseClient.GetInstance().Add(addition);
+                DataBaseClient.GetInstance().AddSingle(addition);
                 DialogueService.ShowSuccesfullMessage("Добавленно успешно!");
                 AdditionConfirmed?.Invoke();
             }

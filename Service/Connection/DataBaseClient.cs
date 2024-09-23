@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Model;
 using Model.Event;
 using Service.Connection.DataAccess;
@@ -33,39 +34,16 @@ namespace Service.Connection
 			return instance;
 		}
 
-		public void Add(object objectToAdd)
+		public void AddSingle(object objectToAdd)
 		{
-			if (objectToAdd is Employee newEmployee)
-			{
-				employeeDataAccess.Add(newEmployee);
-				return;
-			}
-
-			if (objectToAdd is Location newLocation)
-			{
-				locationDataAccess.Add(newLocation);
-				return;
-			}
-
-			if (objectToAdd is StorableObjectEvent objectEvent)
-			{
-				eventDataAccess.Add(objectEvent);
-				return;
-			}
-
-			if (objectToAdd is IStorableObject)
-			{
-				throw new ArgumentException("Use AdditionEvent for adding new StorableObject to dataBase");
-			}
-
-			throw new NotSupportedException("Этот тип не поддерживается");
+			Add([objectToAdd]);
 		}
 
 		public void Add(IEnumerable<object> objectToAdd)
 		{
 			if (objectToAdd is IEnumerable<Employee> newEmployee)
 			{
-				employeeDataAccess.Add(newEmployee.ToArray());
+				employeeDataAccess.Add(newEmployee);
 				return;
 			}
 
@@ -75,8 +53,9 @@ namespace Service.Connection
 				return;
 			}
 
-			if (objectToAdd is IEnumerable<StorableObjectEvent> newEvents)
+			if (objectToAdd is IEnumerable<object> objects && objects.OfType<StorableObjectEvent>().Any())
 			{
+				var newEvents = objects.OfType<StorableObjectEvent>();
 				eventDataAccess.Add(newEvents);
 				return;
 			}
@@ -89,24 +68,67 @@ namespace Service.Connection
 			throw new NotSupportedException("Этот тип не поддерживается");
 		}
 
-		public void Update(object objectToUpdate)
+		public void Update(IEnumerable<object> objectToUpdate)
 		{
 			if (objectToUpdate is IStorableObject newStorableObject)
 			{
 				storableObjectDataAccess.Update([newStorableObject]);
 				return;
 			}
-			if (objectToUpdate is Employee newEmployee)
+			if (objectToUpdate is IEnumerable<Employee> newEmployees)
 			{
-				employeeDataAccess.Update(newEmployee);
+				employeeDataAccess.Update(newEmployees);
 				return;
 			}
-			if (objectToUpdate is Location newLocation)
+			if (objectToUpdate is IEnumerable<Location> newLocation)
 			{
 				locationDataAccess.Update(newLocation);
 				return;
 			}
 			throw new NotSupportedException("Этот тип не поддерживается");
+		}
+
+		public void UpdateSingle(object objectToUpdate)
+		{
+			Update([objectToUpdate]);
+		}
+
+		public IEnumerable<T> Select<T>(QueryBuilder? queryBuilder = null)
+		{
+			queryBuilder = queryBuilder ?? new QueryBuilder();
+			if (typeof(T) == typeof(Employee))
+				return (IEnumerable<T>)employeeDataAccess.Select(queryBuilder);
+
+			if (typeof(StorableObjectEvent).IsAssignableFrom(typeof(T)))
+				throw new InvalidOperationException($"For Events use SelectEventMethod");
+
+			throw new InvalidOperationException($"Select method not supported for type {typeof(T)}");
+		}
+
+		public IEnumerable<T> SelectByIds<T>(IEnumerable<int> ids, string idPropertyName)
+		{
+			QueryBuilder queryBuilder = new();
+			queryBuilder.LazyInit<T>();
+
+			queryBuilder.Where($"{typeof(T).Name}.{idPropertyName}", "=", ids.ToArray());
+
+			return Select<T>(queryBuilder);
+		}
+
+		public T? SelectSingleById<T>(int id, string idPropertyName)
+		{
+			QueryBuilder queryBuilder = new();
+			queryBuilder.LazyInit<T>();
+
+			queryBuilder.Where($"{typeof(T).Name}.{idPropertyName}", "=", id);
+
+			return Select<T>(queryBuilder).FirstOrDefault();
+		}
+
+		public IEnumerable<T> SelectEvent<T>(QueryBuilder? queryBuilder = null) where T : StorableObjectEvent
+		{
+			queryBuilder = queryBuilder ?? new QueryBuilder();
+			return eventDataAccess.Select<T>(queryBuilder);
 		}
 
 		public bool IsStorableObjectsNotOccupied(IEnumerable<IStorableObject> storableObjects, out List<IStorableObject> occupiedObject)
@@ -122,7 +144,7 @@ namespace Service.Connection
 		public List<TEvent> SelectEventsByIds<TEvent>(IEnumerable<long> eventId) where TEvent : StorableObjectEvent
 		{
 			QueryBuilder queryBuilder = new();
-			queryBuilder.Init<TEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}","=",eventId);
+			queryBuilder.LazyInit<TEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}","=",eventId);
 
 			return eventDataAccess.Select<TEvent>(queryBuilder).ToList();
 		}
@@ -130,7 +152,7 @@ namespace Service.Connection
 		public List<SentEvent> SelectDeliveries(int locationId, bool selectIncoming, bool selectActive = true)
 		{
 			QueryBuilder queryBuilder = new ();
-			queryBuilder.Init<SentEvent>();
+			queryBuilder.LazyInit<SentEvent>();
 
 			if (selectIncoming)
 				queryBuilder.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
@@ -157,12 +179,12 @@ namespace Service.Connection
 			}
 
 			var queryBuilder = new QueryBuilder();
-			queryBuilder.Init<AdditionEvent>().Where($"{nameof(AdditionEvent)}.{nameof(AdditionEvent.LocationId)}", "=", locationId);
+			queryBuilder.LazyInit<AdditionEvent>().Where($"{nameof(AdditionEvent)}.{nameof(AdditionEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<AdditionEvent>(queryBuilder));
 
 			queryBuilder = new QueryBuilder();
 			queryBuilder
-				.Init<SentEvent>()
+				.LazyInit<SentEvent>()
 				.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
 				.OrWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
 
@@ -170,7 +192,7 @@ namespace Service.Connection
 
 			queryBuilder = new QueryBuilder();
 			queryBuilder
-				.Init<ArrivedEvent>()
+				.LazyInit<ArrivedEvent>()
 				.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
 				.OrWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
 
@@ -178,13 +200,13 @@ namespace Service.Connection
 
 			queryBuilder = new QueryBuilder();
 			queryBuilder
-				.Init<ReservedEvent>()
+				.LazyInit<ReservedEvent>()
 				.Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<ReservedEvent>(queryBuilder));
 
 			queryBuilder = new QueryBuilder();
 			queryBuilder
-				.Init<ReserveEndedEvent>()
+				.LazyInit<ReserveEndedEvent>()
 				.Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<ReserveEndedEvent>(queryBuilder));
 
@@ -204,7 +226,7 @@ namespace Service.Connection
 		public List<ReservedEvent> SelectReservationOn(int locationId, bool selectOnlyActive = true)
 		{
 			var queryBuilder = new QueryBuilder();
-			queryBuilder.Init<ReservedEvent>().Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}","=",locationId);
+			queryBuilder.LazyInit<ReservedEvent>().Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}","=",locationId);
 			if (selectOnlyActive)
 				queryBuilder.AndWhere($"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.Id)}", "IS", null);
 
@@ -219,16 +241,6 @@ namespace Service.Connection
 			}
 
 			throw new NotImplementedException();
-		}
-
-		public List<Employee> SelectEmployee()
-		{
-			return employeeDataAccess.Select();
-		}
-
-		public Employee? SelectEmployee(int employeeId)
-		{
-			return employeeDataAccess.SelectById(employeeId);
 		}
 
 		public List<Location> SelectLocations()

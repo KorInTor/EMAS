@@ -1,7 +1,12 @@
 ﻿using EMAS_Web.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Model;
 using Model.Exceptions;
+using Npgsql;
 using Service.Connection;
+using Service.Connection.DataAccess.Query;
+using Service.Security;
 
 namespace EMAS_Web.Controllers
 {
@@ -24,7 +29,7 @@ namespace EMAS_Web.Controllers
             {
                 HttpContext.Session.SetInt32("UserId", dbUser.Id);
                 HttpContext.Session.SetString("Username", dbUser.Username);
-                HttpContext.Session.SetString("UserFullname", DataBaseClient.GetInstance().SelectEmployee(dbUser.Id).Fullname);
+                HttpContext.Session.SetString("UserFullname", DataBaseClient.GetInstance().SelectByIds<Employee>([dbUser.Id],nameof(Employee.Id)).First().Fullname);
 
                 return RedirectToAction("Index", "Home");
             }
@@ -35,12 +40,18 @@ namespace EMAS_Web.Controllers
             }
         }
 
-        private User? GetUserFromDatabase(string username, string password)
+        private Employee? GetUserFromDatabase(string username, string password)
         {
             try
             {
-                var User = new User { Id = LocalSessionManager.GetUserId(username, password), Username = username};
-                return User;
+                TryLogin(username, PasswordManager.Hash(password));
+
+				QueryBuilder queryBuilder = new QueryBuilder();
+				queryBuilder.Where($"{nameof(Employee)}.{nameof(Employee.Username)}", "=", username);
+
+				var currentUser = DataBaseClient.GetInstance().Select<Employee>(queryBuilder).FirstOrDefault();
+
+				return currentUser;
             }
             catch (InvalidUsernameException)
             {
@@ -51,5 +62,49 @@ namespace EMAS_Web.Controllers
                 return null;
             }
         }
-    }
+
+        private void TryLogin(string username, string passwordHash)
+        {
+			if (!IsUsernameCorrect(username))
+			{
+				throw new InvalidUsernameException();
+			}
+			if (!IsPasswordCorrect(username, passwordHash))
+			{
+				throw new InvalidPasswordException();
+			}
+		}
+
+		private bool IsPasswordCorrect(string username, string passwordHash)
+		{
+			var connection = ConnectionPool.GetConnection();
+
+			string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.password_hash = @passwordHash AND employee.username = @username) AS subquery;";
+			using var command = new NpgsqlCommand(sql, connection);
+
+			command.Parameters.AddWithValue("@username", username);
+			command.Parameters.AddWithValue("@passwordHash", passwordHash);
+
+
+			long? count = (long?)command.ExecuteScalar();
+
+			ConnectionPool.ReleaseConnection(connection);
+
+			return count == 1;
+		}
+
+		private bool IsUsernameCorrect(string username)
+		{
+			var connection = ConnectionPool.GetConnection();
+
+			string sql = "SELECT COUNT(*) FROM (SELECT * FROM public.employee WHERE employee.username = @username) AS subquery;";
+			using var command = new NpgsqlCommand(sql, connection);
+			command.Parameters.AddWithValue("@username", username);
+
+			long? count = (long?)command.ExecuteScalar();
+
+			ConnectionPool.ReleaseConnection(connection);
+			return count == 1;
+		}
+	}
 }
