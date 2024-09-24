@@ -28,12 +28,12 @@
 		}
 		@if(Model is DecomissionedEvent decomissionedEvent)
 		{
+			<li class="list-group-item">На @(locationIdName[decomissionedEvent.LocationId])</li>
 			<li class="list-group-item">Комментарий @(decomissionedEvent.Comment)</li>
 		}
-		@*  @if (Model is DataChangedEvent additionEvent)
+		@if (Model is DataChangedEvent dataChangedEvent)
 		{
-
+			<li class="list-group-item">Комментарий @(dataChangedEvent.Comment)</li>
 		}
-		*@
 	</ul>
 }

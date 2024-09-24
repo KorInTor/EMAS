@@ -65,20 +65,4 @@
             <input class="btn btn-success" type="submit" value="Создать доставку" />
         </p>
     </div>
-
-    @if (ViewBag.Error != null)
-    {
-        @if (ViewBag.Error)
-        {
-            <div class="alert alert-danger" role="alert">
-                @ViewBag.ErrorMessage
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-success" role="alert">
-                Добавление успешно
-            </div>
-        }
-    }
 </form>

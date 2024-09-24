@@ -35,7 +35,7 @@ namespace EMAS_Web.Controllers
             }
             else
             {
-                ViewBag.ErrorMessage = "Неверное имя пользователя или пароль";
+                TempData["AlertMessage"] = "Неверное имя пользователя или пароль";
                 return View();
             }
         }

@@ -9,7 +9,7 @@ class TableFilterMenu {
         this.visibleRowsCount = this.totalRows;
 
         if (!this.table) {
-            throw new Error(`Òàáëèöà ñ id "${tableId}" íå íàéäåíà.`);
+            throw new Error(`Ð¢Ð°Ð±Ð»Ð¸Ñ†Ð° Ñ id "${tableId}" Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ð°.`);
         }
 
         this.filterOptions = new Map();
@@ -18,13 +18,13 @@ class TableFilterMenu {
     }
     
     sortTable(columnIndex, orderDescending) {
-        const tbody = this.table.tBodies[0]; // Ïîëó÷àåì tbody äëÿ ñîðòèðîâêè ñòðîê
-        const rows = Array.from(tbody.rows); // Ïðåîáðàçóåì ñòðîêè â ìàññèâ äëÿ ñîðòèðîâêè
+        const tbody = this.table.tBodies[0]; // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ tbody Ð´Ð»Ñ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ¸ ÑÑ‚Ñ€Ð¾Ðº
+        const rows = Array.from(tbody.rows); // ÐŸÑ€ÐµÐ¾Ð±Ñ€Ð°Ð·ÑƒÐµÐ¼ ÑÑ‚Ñ€Ð¾ÐºÐ¸ Ð² Ð¼Ð°ÑÑÐ¸Ð² Ð´Ð»Ñ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÐ¸
 
-        // Îïðåäåëÿåì, ÷òî ñîðòèðîâàòü - ÷èñëà èëè ñòðîêè
+        // ÐžÐ¿Ñ€ÐµÐ´ÐµÐ»ÑÐµÐ¼, Ñ‡Ñ‚Ð¾ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð°Ñ‚ÑŒ - Ñ‡Ð¸ÑÐ»Ð° Ð¸Ð»Ð¸ ÑÑ‚Ñ€Ð¾ÐºÐ¸
         const isNumeric = !isNaN(rows[0].cells[columnIndex].innerText.trim());
 
-        // Ñîðòèðóåì ñòðîêè
+        // Ð¡Ð¾Ñ€Ñ‚Ð¸Ñ€ÑƒÐµÐ¼ ÑÑ‚Ñ€Ð¾ÐºÐ¸
 
         if (orderDescending) {
             rows.sort((a, b) => {
@@ -32,9 +32,9 @@ class TableFilterMenu {
                 const cellB = b.cells[columnIndex].innerText.trim();
 
                 if (isNumeric) {
-                    return parseFloat(cellB) - parseFloat(cellA); // Ïî óáûâàíèþ
+                    return parseFloat(cellB) - parseFloat(cellA); // ÐŸÐ¾ ÑƒÐ±Ñ‹Ð²Ð°Ð½Ð¸ÑŽ
                 } else {
-                    return cellB.localeCompare(cellA); // Îáðàòíûé àëôàâèòíûé ïîðÿäîê
+                    return cellB.localeCompare(cellA); // ÐžÐ±Ñ€Ð°Ñ‚Ð½Ñ‹Ð¹ Ð°Ð»Ñ„Ð°Ð²Ð¸Ñ‚Ð½Ñ‹Ð¹ Ð¿Ð¾Ñ€ÑÐ´Ð¾Ðº
                 }
             });
         }
@@ -43,17 +43,17 @@ class TableFilterMenu {
                 const cellA = a.cells[columnIndex].innerText.trim();
                 const cellB = b.cells[columnIndex].innerText.trim();
                 if (isNumeric) {
-                    return parseFloat(cellA) - parseFloat(cellB); // Äëÿ ÷èñåë
+                    return parseFloat(cellA) - parseFloat(cellB); // Ð”Ð»Ñ Ñ‡Ð¸ÑÐµÐ»
                 } else {
-                    return cellA.localeCompare(cellB); // Äëÿ ñòðîê
+                    return cellA.localeCompare(cellB); // Ð”Ð»Ñ ÑÑ‚Ñ€Ð¾Ðº
                 }
             });
         }
 
-        // Óäàëÿåì ñòàðûå ñòðîêè èç tbody
+        // Ð£Ð´Ð°Ð»ÑÐµÐ¼ ÑÑ‚Ð°Ñ€Ñ‹Ðµ ÑÑ‚Ñ€Ð¾ÐºÐ¸ Ð¸Ð· tbody
         tbody.innerHTML = "";
 
-        // Äîáàâëÿåì îòñîðòèðîâàííûå ñòðîêè îáðàòíî â òàáëèöó
+        // Ð”Ð¾Ð±Ð°Ð²Ð»ÑÐµÐ¼ Ð¾Ñ‚ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð½Ñ‹Ðµ ÑÑ‚Ñ€Ð¾ÐºÐ¸ Ð¾Ð±Ñ€Ð°Ñ‚Ð½Ð¾ Ð² Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñƒ
         rows.forEach(row => tbody.appendChild(row));
     }
 
@@ -68,7 +68,7 @@ class TableFilterMenu {
             this.setOnlyOneButtonActive(this.activeSortButton, this.table.querySelectorAll('.sort-asc, .sort-desc'));
         }
 
-        //Çàäà¸ì ñîðòèðîâêó.
+        //Ð—Ð°Ð´Ð°Ñ‘Ð¼ ÑÐ¾Ñ€Ñ‚Ð¸Ñ€Ð¾Ð²ÐºÑƒ.
         const selectedSortOrderButton = divWithElements.querySelector('button.sort-asc.active, button.sort-desc.active');
 
         if (selectedSortOrderButton) {
@@ -82,7 +82,7 @@ class TableFilterMenu {
             this.sortOrderDesc = false;
         }
 
-        //Äîïîëíÿåì ñïèñîê ôèëüòðîâ.
+        //Ð”Ð¾Ð¿Ð¾Ð»Ð½ÑÐµÐ¼ ÑÐ¿Ð¸ÑÐ¾Ðº Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ð¾Ð².
         const selectedFilterValues = Array.from(divWithElements.querySelectorAll('input[type=checkbox]:not(.d-none)'))
             .filter(el => el.style.display !== 'none' && el.checked);
         
@@ -206,7 +206,7 @@ class TableFilterMenu {
     }
 
     bindButtons() {
-        // Ïðèâÿçêà êîíòåêñòà äëÿ cancelFilterButton
+        // ÐŸÑ€Ð¸Ð²ÑÐ·ÐºÐ° ÐºÐ¾Ð½Ñ‚ÐµÐºÑÑ‚Ð° Ð´Ð»Ñ cancelFilterButton
         this.table.querySelectorAll(`button#cancelFilter_${this.table.id}`).forEach(cancelFilterButton => {
             cancelFilterButton.addEventListener('click', () => {
                 this.closeFilterDropdown();
@@ -214,7 +214,7 @@ class TableFilterMenu {
             });
         });
 
-        // Ïðèâÿçêà êîíòåêñòà äëÿ applyFilterButton
+        // ÐŸÑ€Ð¸Ð²ÑÐ·ÐºÐ° ÐºÐ¾Ð½Ñ‚ÐµÐºÑÑ‚Ð° Ð´Ð»Ñ applyFilterButton
         this.table.querySelectorAll(`button#applyFilter_${this.table.id}`).forEach(applyFilterButton => {
             applyFilterButton.addEventListener('click', () => {
                 this.filterTableWithParameters(applyFilterButton.closest('.filter-dropdown'));
@@ -222,7 +222,7 @@ class TableFilterMenu {
             });
         });
 
-        // Ïðèâÿçêà êîíòåêñòà äëÿ sortButton
+        // ÐŸÑ€Ð¸Ð²ÑÐ·ÐºÐ° ÐºÐ¾Ð½Ñ‚ÐµÐºÑÑ‚Ð° Ð´Ð»Ñ sortButton
         this.table.querySelectorAll('.sort-desc, .sort-asc').forEach(sortButton => {
             sortButton.addEventListener('click', (event) => {
                 this.setOnlyOneButtonActive(event.currentTarget, this.table.querySelectorAll('.sort-asc, .sort-desc'));

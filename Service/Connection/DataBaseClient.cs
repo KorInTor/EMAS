@@ -70,11 +70,10 @@ namespace Service.Connection
 
 		public void Update<T>(IEnumerable<T> objectToUpdate)
 		{
-			if (objectToUpdate is IEnumerable<IStorableObject> newStorableObject)
+			if (objectToUpdate is IEnumerable<IStorableObject> || objectToUpdate is IEnumerable<MaterialPiece> || objectToUpdate is IEnumerable<Equipment>)
 			{
-				storableObjectDataAccess.Update(newStorableObject);
-				return;
-			}
+                throw new NotSupportedException("Используй DataChangedEvent!");
+            }
 			if (objectToUpdate is IEnumerable<Employee> newEmployees)
 			{
 				employeeDataAccess.Update(newEmployees);
@@ -245,8 +244,12 @@ namespace Service.Connection
 			{
 				return storableObjectDataAccess.equipmentDataAccess.SelectDistinct(properties);
 			}
+            if (objectToSelectPropertyFor == typeof(MaterialPiece))
+            {
+                return storableObjectDataAccess.materialDataAccess.SelectDistinct(properties);
+            }
 
-			throw new NotImplementedException();
+            throw new NotImplementedException();
 		}
 
 		public List<Location> SelectLocations()

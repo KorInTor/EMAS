@@ -106,7 +106,7 @@ namespace Service
                 case EventType.Decommissioned:
                     return "Списание";
                 case EventType.DataChanged:
-                    return "Инофрмация изменена";
+                    return "Информация изменена";
             }
             throw new NotImplementedException("Данный тип события ещё не поддерживается.");
         }

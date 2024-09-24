@@ -31,7 +31,7 @@ namespace EMAS_Web.Controllers
 
             if (selectedIds == null || !selectedIds.Any())
             {
-                ViewBag.Message = "Не выбрано ни одного элемента.";
+                TempData["AlertMessage"] = "Не выбрано ни одного элемента.";
                 return View();
             }
 
@@ -59,7 +59,7 @@ namespace EMAS_Web.Controllers
         {
             if (selectedIds == null || !selectedIds.Any())
             {
-                ViewBag.Message = "Не выбрано ни одного элемента.";
+                TempData["AlertMessage"] = "Не выбрано ни одного элемента.";
                 return View();
             }
 
@@ -69,8 +69,16 @@ namespace EMAS_Web.Controllers
 
             var sentEvent = new SentEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Sent,dateTime, storableObjects, comment, departureId, destinationId);
 
-            DataBaseClient.GetInstance().AddSingle(sentEvent);
+            try
+            {
+                DataBaseClient.GetInstance().AddSingle(sentEvent);
+            }
+            catch (Exception ex)
+            {
+                TempData["AlertMessage"] = ex.Message;
+            }
 
+            TempData["AlertMessage"] = "Успех";
             return RedirectToActionPermanent("Index", "Delivery", new { locationId = departureId, selectOutgoing = true });
         }
 
@@ -98,11 +106,11 @@ namespace EMAS_Web.Controllers
             }
             catch(Exception ex)
             {
-                ViewBag.Error = true;
-                ViewBag.ErrorMessage = ex.Message;
+                TempData["AlertMessage"] = ex.Message;
                 return View(sentEventToConfirm);
             }
 
+            TempData["AlertMessage"] = "Успех";
             return RedirectToActionPermanent("Index", "Delivery", new { locationId = sentEventToConfirm.DestinationId, selectIncoming = true });
         }
     }

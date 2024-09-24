@@ -163,10 +163,65 @@ namespace Service.Connection.DataAccess
             throw new NotImplementedException();
         }
 
-        public void Update(IEnumerable<Equipment> objectToUpdate)
+        public void Update(IEnumerable<Equipment> objectsToUpdate)
         {
-            throw new NotImplementedException();
+            var connection = ConnectionPool.GetConnection();
+            Dictionary<int, string> statusesDictionary = SelectStatuses();
+
+            foreach (var equipment in objectsToUpdate)
+            {
+                bool isStatusValid = false;
+                int statusId = 0;
+
+                foreach (KeyValuePair<int, string> status in statusesDictionary)
+                {
+                    if (equipment.Status == status.Value)
+                    {
+                        statusId = status.Key;
+                        isStatusValid = true;
+                    }
+                }
+
+                if (!isStatusValid)
+                {
+                    throw new ArgumentException("Такого статуса нет в базе данных");
+                }
+
+                string query = @"
+        UPDATE public.equipment
+        SET 
+            name = @Name, 
+            manufacturer = @Manufacturer, 
+            type = @Type, 
+            measurment_units = @Units, 
+            accuracy_class = @AccuracyClass, 
+            measurment_limit = @Limit, 
+            serial_number = @FactoryNumber, 
+            inventory_number = @RegistrationNumber, 
+            status = @Status, 
+            description = @Description
+        WHERE id = @Id;";
+
+                using (var command = new NpgsqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@Id", equipment.Id);
+                    command.Parameters.AddWithValue("@Name", equipment.Name);
+                    command.Parameters.AddWithValue("@Manufacturer", equipment.Manufacturer);
+                    command.Parameters.AddWithValue("@Type", equipment.Type);
+                    command.Parameters.AddWithValue("@Units", equipment.Units);
+                    command.Parameters.AddWithValue("@AccuracyClass", equipment.AccuracyClass ?? (object)DBNull.Value);
+                    command.Parameters.AddWithValue("@Limit", equipment.Limit);
+                    command.Parameters.AddWithValue("@FactoryNumber", equipment.FactoryNumber);
+                    command.Parameters.AddWithValue("@RegistrationNumber", equipment.RegistrationNumber);
+                    command.Parameters.AddWithValue("@Status", statusId);
+                    command.Parameters.AddWithValue("@Description", equipment.Description);
+
+                    _ = command.ExecuteNonQuery();
+                }
+            }
+            ConnectionPool.ReleaseConnection(connection);
         }
+
 
         public void Add(IEnumerable<Equipment> objectsToAdd)
         {

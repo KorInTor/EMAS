@@ -2,11 +2,6 @@
     ViewBag.Title = "Логин";
 }
 
-@if (ViewBag.ErrorMessage != null)
-{
-    <div style="color: red;">@ViewBag.ErrorMessage</div>
-}
-
 <div class="w-50 mx-auto card p-5">
     <h2>Логин</h2>
     @using (Html.BeginForm())

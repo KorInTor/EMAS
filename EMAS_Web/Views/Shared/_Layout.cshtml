@@ -61,5 +61,15 @@
     </footer>
 
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script type="text/javascript">
+        // Выводим Alert если такой имеется
+        @if (TempData["AlertMessage"] != null)
+        {
+            <text>
+            alert('@Html.Raw(TempData["AlertMessage"])');
+            </text>
+        }
+    </script>
 </body>
 </html>

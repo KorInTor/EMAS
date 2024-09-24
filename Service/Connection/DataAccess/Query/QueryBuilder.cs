@@ -35,6 +35,7 @@ namespace Service.Connection.DataAccess.Query
 				{ $"{nameof(ReservedEvent)}", "\"event\"" },
 				{ $"{nameof(ReserveEndedEvent)}", "\"event\"" },
 				{ $"{nameof(DecomissionedEvent)}", "\"event\"" },
+				{ $"{nameof(DataChangedEvent)}", "\"event\"" },
 				{ $"{nameof(Employee)}", "public" },
 			}.ToImmutableDictionary();
 		}
@@ -54,7 +55,8 @@ namespace Service.Connection.DataAccess.Query
 				{ $"{nameof(ReservedEvent)}", "reservation" },
 				{ $"{nameof(ReserveEndedEvent)}", "reservation" },
 				{ $"{nameof(DecomissionedEvent)}", "decomission" },
-				{ $"{nameof(Employee)}", "employee" },
+                { $"{nameof(DataChangedEvent)}", "data_changed" },
+                { $"{nameof(Employee)}", "employee" },
 			}.ToImmutableDictionary();
 		}
 
@@ -95,7 +97,10 @@ namespace Service.Connection.DataAccess.Query
 				{ $"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.Comment)}", $"{ClassTableName[nameof(DecomissionedEvent)]}.reason" },
 				{ $"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.LocationId)}", $"{ClassTableName[nameof(DecomissionedEvent)]}.location_id" },
 
-				{ $"{nameof(Employee)}.{nameof(Employee.Id)}", $"{ClassTableName[nameof(Employee)]}.id" },
+                { $"{nameof(DataChangedEvent)}.{nameof(DataChangedEvent.Id)}", $"{ClassTableName[nameof(DataChangedEvent)]}.event_id" },
+                { $"{nameof(DataChangedEvent)}.{nameof(DataChangedEvent.Comment)}", $"{ClassTableName[nameof(DataChangedEvent)]}.comment" },
+
+                { $"{nameof(Employee)}.{nameof(Employee.Id)}", $"{ClassTableName[nameof(Employee)]}.id" },
 				{ $"{nameof(Employee)}.{nameof(Employee.Fullname)}", $"{ClassTableName[nameof(Employee)]}.fullname" },
 				{ $"{nameof(Employee)}.{nameof(Employee.Email)}", $"{ClassTableName[nameof(Employee)]}.email" },
 				{ $"{nameof(Employee)}.{nameof(Employee.Username)}", $"{ClassTableName[nameof(Employee)]}.username" }
@@ -133,25 +138,20 @@ namespace Service.Connection.DataAccess.Query
 			return this;
 		}
 
-		private QueryBuilder Where(string propertyName, string comparison, object? value)
+		private string GenerateWhereCondition(string propertyName, string comparison, object? value)
 		{
 			if (value == null)
 			{
-				whereConditions.Add($"{PropertyToColumnName[propertyName]} {comparison} NULL");
-                return this;
+                return $"{PropertyToColumnName[propertyName]} {comparison} NULL";
             }
 			if (value is IEnumerable && value is not string)
 			{
-                whereConditions.Add($"{PropertyToColumnName[propertyName]} = ANY(@{parameters.Count})");
-                parameters.Add(value);
+				return $"{PropertyToColumnName[propertyName]} = ANY(@{parameters.Count})";
             }
 			else
 			{
-				whereConditions.Add($"{PropertyToColumnName[propertyName]} {comparison} @{parameters.Count}");
-				parameters.Add(value);
+				return $"{PropertyToColumnName[propertyName]} {comparison} @{parameters.Count}";
 			}
-
-			return this;
 		}
 
 		public QueryBuilder AndWhere(string propertyName, string comparison, object? value)
@@ -160,10 +160,14 @@ namespace Service.Connection.DataAccess.Query
 
 			if (whereConditions.Count > 0)
 			{
-				whereConditions.Add("AND ");
+				whereConditions.Add($"AND {GenerateWhereCondition(propertyName, comparison, value)}");
+			}
+			else
+			{
+				whereConditions.Add(GenerateWhereCondition(propertyName, comparison, value));
 			}
 
-			Where(propertyName, comparison, value);
+			parameters.Add(value);
 			return this;
 		}
 
@@ -173,10 +177,14 @@ namespace Service.Connection.DataAccess.Query
 
 			if (whereConditions.Count > 0)
 			{
-				whereConditions.Add($"OR ");
+				whereConditions.Add($"OR {GenerateWhereCondition(propertyName, comparison, value)}");
+			}
+			else
+			{
+				whereConditions.Add(GenerateWhereCondition(propertyName, comparison, value));
 			}
 
-			Where(propertyName, comparison, value);
+			parameters.Add(value);
 			return this;
 		}
 
@@ -349,7 +357,16 @@ namespace Service.Connection.DataAccess.Query
 					whereConditions.RemoveAll(s => s.Contains("event_type"));
 					AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.Decommissioned);
 					break;
-				case nameof(Employee):
+                case nameof(DataChangedEvent):
+                    this.LazyInit<StorableObjectEvent>();
+                    Select([
+                        GetColumnName<DataChangedEvent>(nameof(DataChangedEvent.Comment))
+                        ]);
+                    Join(GetFullTableName<DataChangedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<DataChangedEvent>(nameof(DataChangedEvent.Id))}");
+                    whereConditions.RemoveAll(s => s.Contains("event_type"));
+                    AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.DataChanged);
+                    break;
+                case nameof(Employee):
 					Select([
 						GetColumnName<Employee>(nameof(Employee.Id)),
 						GetColumnName<Employee>(nameof(Employee.Fullname)),

@@ -1,25 +1,109 @@
-﻿@model IEnumerable<Model.IStorableObject>
+﻿@using Model.Enum
+@model IEnumerable<Model.IStorableObject>
 
 <script src="~/js/storableObjectScripts.js"></script>
 <script src="~/js/TableFilterMenu.js"></script>
 <script src="~/js/tableResizer.js"></script>
 
+@{
+    IEnumerable<Model.Permission> currentPermissions = (IEnumerable<Model.Permission>)ViewBag.PermissionList;
+    if (currentPermissions.Any(x => x.PermissionType == PermissionType.EquipmentEdit))
+    {
+        ViewBag.EquipmentEdit = true;
+    }
+    if (currentPermissions.Any(x => x.PermissionType == PermissionType.MaterialsEdit))
+    {
+        ViewBag.MaterialEdit = true;
+    }
+}
+
 @await Html.PartialAsync("StorableObjectsTables", Model)
 
-<div class="fixed-bottom mx-auto p-3 d-flex justify-content-center bg-white">
-    @foreach (Model.Permission prm in ViewBag.PermissionList)
-    {
-        switch (prm.PermissionType.ToString())
+<div id="customMenu" class="border text-nowrap" style="display:none; position:absolute; z-index:1000;">
+    <ul class="list-group dropdown-menu">
+        @foreach (Model.Permission prm in ViewBag.PermissionList)
         {
-            case "EquipmentAdd":
-                <a class="btn btn-primary m-3" asp-controller="StorableObject" asp-action="AddEquipment" asp-route-locationId="@ViewBag.LocationId">Добавить</a>
-                break;
-            case "EquipmentEdit":
-                <button type="button" class="btn btn-primary m-3" onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('div#storableObjectsContainer')),@(ViewBag.LocationId))">Создать Резерв</button>
-                break;
-            case "DeliveryAccess":
-                <button type="button" class="btn btn-primary m-3" onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('div#storableObjectsContainer')),@(ViewBag.LocationId))">Создать доставку</button>
-                break;
+            switch (prm.PermissionType)
+            {
+                case PermissionType.EquipmentAdd:
+                    <li class="list-group-item p-0">
+                        <a class="btn btn-success  my-1"
+                           asp-controller="StorableObject"
+                           asp-action="AddEquipment"
+                           asp-route-locationId="@ViewBag.LocationId">
+                            Оборудование Добавить
+                        </a>
+                    </li>
+                    break;
+                case PermissionType.MaterialsAdd:
+                    <li class="list-group-item p-0">
+                        <a class="btn btn-success  my-1"
+                           asp-controller="StorableObject"
+                           asp-action="AddMaterial"
+                           asp-route-locationId="@ViewBag.LocationId">
+                            Материал Добавить
+                        </a>
+                    </li>
+                    break;
+                case PermissionType.MaterialsEdit:
+                    <li class="list-group-item p-0">
+                        <button class="btn btn-warning  my-1"
+                                type="button"
+                                onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('table#materialTable')),@(ViewBag.LocationId))">
+                            Материал Зарезервировать
+                        </button>
+                    </li>
+                    <li class="list-group-item p-0">
+                        <button class="btn btn-danger  my-1"
+                                type="button"
+                                onclick="submitDecomissionRequest(getSelectedCheckboxValues(document.querySelector('table#materialTable')),@(ViewBag.LocationId))">
+                            Материал Реализовать\Списать
+                        </button>
+                    </li>
+                    break;
+                case PermissionType.EquipmentEdit:
+                    <li class="list-group-item p-0">
+                        <button class="btn btn-warning  my-1"
+                                type="button"
+                                onclick="submitReservationRequest(getSelectedCheckboxValues(document.querySelector('table#equipmentTable')),@(ViewBag.LocationId))">
+                            Оборудование Зарезервировать
+                        </button>
+                    </li>
+                    <li class="list-group-item p-0">
+                        <button class="btn btn-danger  my-1"
+                                type="button"
+                                onclick="submitDecomissionRequest(getSelectedCheckboxValues(document.querySelector('table#equipmentTable')),@(ViewBag.LocationId))">
+                            Оборудование Реализовать\Списать
+                        </button>
+                    </li>
+                    break;
+                case PermissionType.DeliveryAccess:
+                    <li class="list-group-item p-0">
+                        <button class="btn btn-primary  my-1"
+                                type="button"
+                                onclick="submitDeliveryRequest(getSelectedCheckboxValues(document.querySelector('div#storableObjectsContainer')),@(ViewBag.LocationId))">
+                            Доставка Создать
+                        </button>
+                    </li>
+                    break;
+            }
         }
-    }
+    </ul>
 </div>
+
+
+<script>
+    //Кастомное поведение при клике ПКМ
+    const customMenu = document.getElementById('customMenu');
+
+    document.addEventListener('contextmenu', function (event) {
+        event.preventDefault(); // Отключаем стандартное меню
+        customMenu.style.display = 'block';
+        customMenu.style.left = `${event.pageX}px`;
+        customMenu.style.top = `${event.pageY}px`;
+    });
+
+    document.addEventListener('click', function () {
+        customMenu.style.display = 'none';
+    });
+</script>

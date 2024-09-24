@@ -4,19 +4,6 @@
 <form asp-action="EmployeeEditor" method="post">
     <input type="hidden" name="employeeId" value="@Model.Id" />
 
-    @if (ViewBag.Success != null)
-    {
-        <div class="alert alert-success" role="alert">
-            Данный измененеы успешно!
-        </div>
-    }
-    @if (ViewBag.ErrorMessage != null)
-    {
-        <div class="alert alert-danger" role="alert">
-            Произошла ошибка: @ViewBag.ErrorMessage!
-        </div>
-    }
-
     <div class="mb-3">
         <label for="fullname" class="form-label">Полное Имя</label>
         <input type="text" name="fullname" value="@Model.Fullname" class="form-control" />

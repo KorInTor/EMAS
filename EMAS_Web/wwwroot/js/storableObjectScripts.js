@@ -1,29 +1,44 @@
 function submitDeliveryRequest(idValues, locationId) {
     if (idValues.length === 0) {
-        alert('œÓÊ‡ÎÛÈÒÚ‡, ‚˚·ÂËÚÂ ıÓÚˇ ·˚ Ó‰ËÌ ˝ÎÂÏÂÌÚ.');
+        alert('–ü–æ–∂–∞–ª—É–π—Å—Ç–∞, –≤—ã–±–µ—Ä–∏—Ç–µ —Ö–æ—Ç—è –±—ã –æ–¥–∏–Ω —ç–ª–µ–º–µ–Ω—Ç.');
         return;
     }
 
-    // —ÓÁ‰‡ÌËÂ ÒÚÓÍË Ô‡‡ÏÂÚÓ‚ Á‡ÔÓÒ‡
+    // –°–æ–∑–¥–∞–Ω–∏–µ —Å—Ç—Ä–æ–∫–∏ –ø–∞—Ä–∞–º–µ—Ç—Ä–æ–≤ –∑–∞–ø—Ä–æ—Å–∞
     var params = idValues.map(id => 'selectedIds=' + encodeURIComponent(id)).join('&');
 
     params += '&departureId=' + encodeURIComponent(locationId);
 
-    // ŒÚÔ‡‚Í‡ GET-Á‡ÔÓÒ‡
+    // –û—Ç–ø—Ä–∞–≤–∫–∞ GET-–∑–∞–ø—Ä–æ—Å–∞
     window.location.href = '/Delivery/Create?' + params;
 }
 
 function submitReservationRequest(idValues, locationId) {
     if (idValues.length === 0) {
-        alert('œÓÊ‡ÎÛÈÒÚ‡, ‚˚·ÂËÚÂ ıÓÚˇ ·˚ Ó‰ËÌ ˝ÎÂÏÂÌÚ.');
+        alert('–ü–æ–∂–∞–ª—É–π—Å—Ç–∞, –≤—ã–±–µ—Ä–∏—Ç–µ —Ö–æ—Ç—è –±—ã –æ–¥–∏–Ω —ç–ª–µ–º–µ–Ω—Ç.');
         return;
     }
 
-    // —ÓÁ‰‡ÌËÂ ÒÚÓÍË Ô‡‡ÏÂÚÓ‚ Á‡ÔÓÒ‡
+    // –°–æ–∑–¥–∞–Ω–∏–µ —Å—Ç—Ä–æ–∫–∏ –ø–∞—Ä–∞–º–µ—Ç—Ä–æ–≤ –∑–∞–ø—Ä–æ—Å–∞
     var params = idValues.map(id => 'selectedIds=' + encodeURIComponent(id)).join('&');
 
     params += '&locationId=' + encodeURIComponent(locationId);
 
-    // ŒÚÔ‡‚Í‡ GET-Á‡ÔÓÒ‡
+    // –û—Ç–ø—Ä–∞–≤–∫–∞ GET-–∑–∞–ø—Ä–æ—Å–∞
     window.location.href = '/Reservation/Create?' + params;
+}
+
+function submitDecomissionRequest(idValues, locationId) {
+    if (idValues.length === 0) {
+        alert('–ü–æ–∂–∞–ª—É–π—Å—Ç–∞, –≤—ã–±–µ—Ä–∏—Ç–µ —Ö–æ—Ç—è –±—ã –æ–¥–∏–Ω —ç–ª–µ–º–µ–Ω—Ç.');
+        return;
+    }
+
+    // –°–æ–∑–¥–∞–Ω–∏–µ —Å—Ç—Ä–æ–∫–∏ –ø–∞—Ä–∞–º–µ—Ç—Ä–æ–≤ –∑–∞–ø—Ä–æ—Å–∞
+    var params = idValues.map(id => 'selectedIds=' + encodeURIComponent(id)).join('&');
+
+    params += '&locationId=' + encodeURIComponent(locationId);
+
+    // –û—Ç–ø—Ä–∞–≤–∫–∞ GET-–∑–∞–ø—Ä–æ—Å–∞
+    window.location.href = '/Decomission/Create?' + params;
 }

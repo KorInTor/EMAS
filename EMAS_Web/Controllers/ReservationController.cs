@@ -21,7 +21,7 @@ namespace EMAS_Web.Controllers
         {
             if (selectedIds == null || !selectedIds.Any())
             {
-                ViewBag.Message = "Не выбрано ни одного элемента.";
+                TempData["AlertMessage"] = "Не выбрано ни одного элемента.";
                 return View();
             }
 
@@ -43,11 +43,12 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
+        [LocationFilter]
         public IActionResult Create(IEnumerable<string> selectedIds, int locationId,DateTime dateTime, string comment)
         {
             if (selectedIds == null || !selectedIds.Any())
             {
-                ViewBag.Message = "Не выбрано ни одного элемента.";
+                TempData["AlertMessage"] = "Не выбрано ни одного элемента.";
                 return View();
             }
 
@@ -66,14 +67,15 @@ namespace EMAS_Web.Controllers
             }
             catch(Exception exception)
             {
-                ViewBag.Message = exception.Message;
+                TempData["AlertMessage"] = exception.Message;
                 return View();
             }
-
+            TempData["AlertMessage"] = "Успех";
             return RedirectToActionPermanent("Index","Reservation", new { locationId = locationId });
         }
 
         [HttpGet]
+        [LocationFilter]
         public IActionResult Confirm(long reservedEventId)
         {
             var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
@@ -85,6 +87,7 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
+        [LocationFilter]
         public IActionResult Confirm(long reservedEventId, string comment, DateTime dateTime, bool isDecomissioned)
         {
 			var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
@@ -109,11 +112,10 @@ namespace EMAS_Web.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.Error = true;
-                ViewBag.ErrorMessage = ex.Message;
+                TempData["AlertMessage"] = ex.Message;
                 return View(reservedEventToConfirm);
             }
-
+            TempData["AlertMessage"] = "Успех";
             return RedirectToActionPermanent("Index", "Reservation", new { locationId = reservedEventToConfirm.LocationId });
         }
     }

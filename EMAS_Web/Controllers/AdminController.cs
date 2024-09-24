@@ -117,7 +117,7 @@ namespace EMAS_Web.Controllers
             }
             catch(Exception ex)
             {
-                ViewBag.ErrorMessage = ex.Message;
+                TempData["AlertMessage"] = ex.Message;
             }
 
             return View(employee);

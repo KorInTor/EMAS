@@ -92,7 +92,8 @@
 				</th>
 			}
 			<th>
-				История
+			</th>
+			<th>
 			</th>
 		</tr>
 	</thead>
@@ -122,6 +123,19 @@
 						<button type="submit" class="btn btn-primary">История</button>
 					</form>
 				</td>
+				@if (ViewBag.MaterialEdit != null)
+				{
+					if (ViewBag.MaterialEdit)
+					{
+						<td class="border border-1">
+							<form asp-controller="StorableObject" asp-action="EditMaterial" method="get">
+								<input type="hidden" name="objectId" value="@item.Id" />
+								<input type="hidden" name="locationId" value="@(ViewBag.LocationId)" />
+								<button type="submit" class="btn btn-warning">Изменить</button>
+							</form>
+						</td>
+					}
+				}
 			</tr>
 		}
 	</tbody>

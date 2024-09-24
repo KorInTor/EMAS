@@ -17,6 +17,7 @@ namespace Service.Connection.DataAccess
         private readonly ReservationDataAccess reservationDataAccess = new();
         private readonly AdditionDataAccess additionDataAccess = new();
         private readonly DecomissionDataAccess decomissionDataAccess = new();
+        private readonly DataChangedDataAccess dataChangedDataAccess = new();
 
         private readonly int _busyAtEventLocationId = -1;
         private readonly int _decomissionedLocationId = -2;
@@ -35,8 +36,11 @@ namespace Service.Connection.DataAccess
                 if (IsCompleted(newEvent))
                     throw new EventAlreadyCompletedException();
 
-                if (!IsStorableObjectsNotOccupied(newEvent.ObjectsInEvent, out _))
-                    throw new StorableObjectIsAlreadyOccupied();
+                if (newEvent.EventType != EventType.Arrived && newEvent.EventType != EventType.ReserveEnded && newEvent.EventType != EventType.Decommissioned)
+                {
+                    if (!IsStorableObjectsNotOccupied(newEvent.ObjectsInEvent, out _))
+                        throw new StorableObjectIsAlreadyOccupied();
+                }
 
                 using var command = new NpgsqlCommand("INSERT INTO public.event (employee_id, event_type, date) VALUES (@emp_id,@eventTypeId,@date) RETURNING id ", connection);
                 command.Parameters.AddWithValue("@emp_id", newEvent.EmployeeId);
@@ -104,7 +108,7 @@ namespace Service.Connection.DataAccess
 
                     storableObjectDataAccess.UpdateLocation(decomissionedEvent.ObjectsInEvent,_decomissionedLocationId);
 
-                    if (decomissionedEvent.StartEventId != null && decomissionedEvent.StartEventType != null)
+                    if (decomissionedEvent.StartEventId != null && decomissionedEvent.StartEventType != null && (decomissionedEvent.StartEventType == EventType.Reserved || decomissionedEvent.StartEventType == EventType.Sent))
                     {
 						if (decomissionedEvent.StartEventType == EventType.Sent)
                         {
@@ -118,6 +122,14 @@ namespace Service.Connection.DataAccess
                         }
 
                     }
+                }
+                if (newEvent is DataChangedEvent dataChangedEvent)
+                {
+                    dataChangedDataAccess.Insert(connection,dataChangedEvent);
+
+                    StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
+
+                    storableObjectDataAccess.Update(dataChangedEvent.ObjectsInEvent);
                 }
 
                 preparedEquipmentEventObjectRelation.Add(newEvent.Id, newEvent.ObjectsInEvent.ToArray());
@@ -146,14 +158,12 @@ namespace Service.Connection.DataAccess
 		{
 			occupiedObject = [];
 
-			foreach (var objectLastEventPair in SelectLastEventsForStorableObjects(storableObjects.Select(x => x.Id)))
+			foreach (var objectLastEventPair in SelectLastEventsForStorableObjects(storableObjects.Select(x => x.Id),true))
 			{
 				if (objectLastEventPair.Value.EventType == EventType.Sent || objectLastEventPair.Value.EventType == EventType.Reserved || objectLastEventPair.Value.EventType == EventType.Decommissioned)
 				{
 					occupiedObject.AddRange(objectLastEventPair.Value.ObjectsInEvent
-	                .Where(x => x.Id == objectLastEventPair.Key)
-	                .Select(x => x));
-
+	                .Where(x => x.Id == objectLastEventPair.Key));
 				}
 			}
 
@@ -163,7 +173,7 @@ namespace Service.Connection.DataAccess
 				return false;
 		}
 
-		public Dictionary<int, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<int> storableObjectsIds)
+		public Dictionary<int, StorableObjectEvent> SelectLastEventsForStorableObjects(IEnumerable<int> storableObjectsIds, bool fillObjects = false)
         {
             var storableObjectLastEventIdDictionary = objectEventDataAccess.SelectLastEventsIdsForStorableObjects(storableObjectsIds);
             var storableObjectLastEvent = new Dictionary<int, StorableObjectEvent>();
@@ -175,7 +185,7 @@ namespace Service.Connection.DataAccess
             {
 				queryBuilder = new Query.QueryBuilder();
 				queryBuilder.LazyInit<StorableObjectEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
-                storableObjectLastEvent.Add(storableObjectLastEventIdPair.Key, Select<StorableObjectEvent>(queryBuilder, false).FirstOrDefault());
+                storableObjectLastEvent.Add(storableObjectLastEventIdPair.Key, Select<StorableObjectEvent>(queryBuilder, fillObjects).FirstOrDefault());
             }
 
             return storableObjectLastEvent;
@@ -263,7 +273,8 @@ namespace Service.Connection.DataAccess
 				EventType.Reserved => new ReservedEvent(baseEvent, reader.GetString(4), reader.GetInt32(5)),
 				EventType.ReserveEnded => new ReserveEndedEvent(baseEvent, reader.GetString(4), reader.GetInt64(5)),
 				EventType.Decommissioned => new DecomissionedEvent(baseEvent, reader.GetString(4), reader.GetInt32(5)),
-				_ => throw new NotImplementedException($"EventType {baseEvent.EventType} не поддерживается.")
+                EventType.DataChanged => new DataChangedEvent(baseEvent, reader.GetString(4)),
+                _ => throw new NotImplementedException($"EventType {baseEvent.EventType} не поддерживается.")
 			};
 		}
 
@@ -279,8 +290,8 @@ namespace Service.Connection.DataAccess
 				EventType.Reserved => Select<ReservedEvent>(queryBuilder, fillObjects),
 				EventType.ReserveEnded => Select<ReserveEndedEvent>(queryBuilder, fillObjects),
 				EventType.Decommissioned => Select<DecomissionedEvent>(queryBuilder, fillObjects),
-				EventType.DataChanged => throw new NotImplementedException(),
-				_ => throw new NotImplementedException(),
+				EventType.DataChanged => Select<DataChangedEvent>(queryBuilder, fillObjects),
+                _ => throw new NotImplementedException(),
 			};
 		}
 

@@ -7,6 +7,28 @@ namespace Service.Connection.DataAccess
 {
     public class MaterialDataAccess : IStorableObjectDataAccess<MaterialPiece>
     {
+        private static Dictionary<string, string> _propertyColumnNames;
+
+        public static Dictionary<string, string> PropertyColumnNames
+        {
+            get
+            {
+                if (_propertyColumnNames != null)
+                    return _propertyColumnNames;
+
+                _propertyColumnNames = [];
+
+                _propertyColumnNames.Add(nameof(MaterialPiece.Name), "\"name\"");
+                _propertyColumnNames.Add(nameof(MaterialPiece.StorageType), "storage_place");
+                _propertyColumnNames.Add(nameof(MaterialPiece.Type), "type");
+                _propertyColumnNames.Add(nameof(MaterialPiece.Units), "unit");
+                //_propertyColumnNames.Add(nameof(MaterialPiece.FactoryNumber), "serial_number");
+                //_propertyColumnNames.Add(nameof(MaterialPiece.RegistrationNumber), "inventory_number");
+
+                return _propertyColumnNames;
+            }
+        }
+
         public void Add(IEnumerable<MaterialPiece> objectsToAdd)
         {
             var connection = ConnectionPool.GetConnection();
@@ -90,18 +112,75 @@ namespace Service.Connection.DataAccess
 
         public Dictionary<string, List<string>> SelectDistinct(IEnumerable<string>? propertyToSelect = null)
         {
-            throw new NotImplementedException();
+            Dictionary<string, List<string>> distinctPropertyValues = [];
+
+            IEnumerable<string> properties;
+            if (propertyToSelect != null)
+            {
+                properties = propertyToSelect;
+            }
+            else
+            {
+                properties = PropertyColumnNames.Keys;
+            }
+
+            string distinctQueryBlank = "SELECT distinct - FROM public.material;";
+
+            var connection = ConnectionPool.GetConnection();
+            foreach (string property in properties)
+            {
+                string distinctQuery = distinctQueryBlank.Replace("-", PropertyColumnNames[property]);
+
+                var command = new NpgsqlCommand(distinctQuery, connection);
+                var reader = command.ExecuteReader();
+                distinctPropertyValues.Add(property, []);
+                while (reader.Read())
+                {
+                    distinctPropertyValues[property].Add(reader.GetString(0));
+                }
+                reader.Close();
+                command.Dispose();
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+
+            return distinctPropertyValues;
         }
 
         public void Update(IEnumerable<MaterialPiece> objectsToUpdate)
         {
-            throw new NotImplementedException();
-        }
+            var connection = ConnectionPool.GetConnection();
+            foreach (var materialPiece in objectsToUpdate)
+            {
+                string query = @"
+        UPDATE public.material
+        SET 
+            ""type"" = @Type, 
+            ""name"" = @Name, 
+            unit = @Units, 
+            quantity = @Amount, 
+            additional_info = @Extras, 
+            inventory_number = @Inventory_Number, 
+            storage_place = @Storage_Type, 
+            description = @Description
+        WHERE id = @id;";
 
-        public void Update(MaterialPiece objectToUpdate)
-        {
-            throw new NotImplementedException();
-        }
+                using (var command = new NpgsqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@id", materialPiece.Id);
+                    command.Parameters.AddWithValue("@Type", materialPiece.Type);
+                    command.Parameters.AddWithValue("@Name", materialPiece.Name);
+                    command.Parameters.AddWithValue("@Units", materialPiece.Units);
+                    command.Parameters.AddWithValue("@Amount", materialPiece.Amount);
+                    command.Parameters.AddWithValue("@Extras", materialPiece.Extras);
+                    command.Parameters.AddWithValue("@Inventory_Number", materialPiece.InventoryNumber);
+                    command.Parameters.AddWithValue("@Storage_Type", materialPiece.StorageType);
+                    command.Parameters.AddWithValue("@Description", materialPiece.Description);
 
+                    _ = command.ExecuteNonQuery();
+                }
+            }
+            ConnectionPool.ReleaseConnection(connection);
+        }
     }
 }

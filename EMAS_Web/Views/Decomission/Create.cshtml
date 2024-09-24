@@ -1,4 +1,4 @@
-﻿<h1>Создаём резерв на @ViewBag.CurrentLocation.Item2</h1>
+﻿<h1>Создаём Списание на @ViewBag.CurrentLocation.Item2</h1>
 
 <input type="hidden" name="locationId" value="@ViewBag.CurrentLocation.Item1" />
 
@@ -36,16 +36,15 @@
 <form method="post" onsubmit="return validateForm()">
     <div>
         <p>
-            <label for="Comment">Причина Списания</label><br />
+            <label for="Comment">Комментарий</label><br />
             <input type="text" name="comment" />
         </p>
         <p>
-            <label for="DateTime">Дата и Время</label><br />
+            <label for="DateTime">Дата начала резерва</label><br />
             <input type="datetime-local" name="dateTime" max="@(ViewBag.MaxDateTimeString)" />
         </p>
         <p>
             <input class="btn btn-success" type="submit" value="Создать резерв" />
         </p>
     </div>
-
 </form>

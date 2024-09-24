@@ -1,22 +1,27 @@
-﻿@model Model.Equipment
+﻿@model Model.MaterialPiece
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @using Model
 
 @*TODO: Hideous trash, rework this. *@
 <style>
     .dropdown-menu {
-        max-height: 200px;/
-        overflow-y: auto;
+        max-height: 200px;
+        / overflow-y: auto;
     }
 </style>
 
 <form method="post" class="container mt-4">
+    @if (Model != null)
+    {
+        <input type="hidden" asp-for="Id" value="@(Model.Id)"/>
+    }
+
     <div class="form-group mb-3">
         <label for="Type">Тип</label>
         <div class="dropdown">
             <input type="text" class="form-control dropdown-toggle" id="Type" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" oninput="filterOptions(this)" asp-for="Type">
             <div class="dropdown-menu overflow-auto" aria-labelledby="combobox">
-                @foreach (string name in ViewBag.DistinctValues[nameof(Equipment.Type)])
+                @foreach (string name in ViewBag.DistinctValues[nameof(MaterialPiece.Type)])
                 {
                     <a class="dropdown-item" href="#">@name</a>
                 }
@@ -28,7 +33,7 @@
         <div class="dropdown">
             <input type="text" class="form-control dropdown-toggle" id="combobox" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" oninput="filterOptions(this)" asp-for="Name">
             <div class="dropdown-menu overflow-auto" aria-labelledby="combobox">
-                @foreach (string name in ViewBag.DistinctValues[nameof(Equipment.Name)])
+                @foreach (string name in ViewBag.DistinctValues[nameof(MaterialPiece.Name)])
                 {
                     <a class="dropdown-item" href="#">@name</a>
                 }
@@ -36,11 +41,11 @@
         </div>
     </div>
     <div class="form-group mb-3">
-        <label for="Units">Единицы Измерения</label>
+        <label for="Units">Единицы</label>
         <div class="dropdown">
             <input type="text" class="form-control dropdown-toggle" id="Units" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" oninput="filterOptions(this)" asp-for="Units">
             <div class="dropdown-menu overflow-auto" aria-labelledby="combobox">
-                @foreach (string name in ViewBag.DistinctValues[nameof(Equipment.Units)])
+                @foreach (string name in ViewBag.DistinctValues[nameof(MaterialPiece.Units)])
                 {
                     <a class="dropdown-item" href="#">@name</a>
                 }
@@ -48,21 +53,21 @@
         </div>
     </div>
     <div class="form-group mb-3">
-        <label asp-for="AccuracyClass">Класс Точности</label>
-        <input type="text" class="form-control" asp-for="AccuracyClass" />
-        <span asp-validation-for="AccuracyClass" class="text-danger" />
+        <label asp-for="Amount">Количество</label>
+        <input type="number" class="form-control" asp-for="Amount" />
+        <span asp-validation-for="Amount" class="text-danger" />
     </div>
     <div class="form-group mb-3">
-        <label asp-for="Limit">Пределы измерения</label>
-        <input type="text" class="form-control" asp-for="Limit" />
-        <span asp-validation-for="Limit" class="text-danger" />
+        <label asp-for="Extras">Доп характеристика</label>
+        <input type="text" class="form-control" asp-for="Extras" />
+        <span asp-validation-for="Extras" class="text-danger" />
     </div>
     <div class="form-group mb-3">
-        <label for="manufacturer">Производитель</label>
+        <label for="StorageType">Производитель</label>
         <div class="dropdown">
-            <input type="text" class="form-control dropdown-toggle" id="manufacturer" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" oninput="filterOptions(this)" asp-for="Manufacturer">
+            <input type="text" class="form-control dropdown-toggle" id="StorageType" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" oninput="filterOptions(this)" asp-for="StorageType">
             <div class="dropdown-menu overflow-auto" aria-labelledby="combobox">
-                @foreach (string name in ViewBag.DistinctValues[nameof(Equipment.Manufacturer)])
+                @foreach (string name in ViewBag.DistinctValues[nameof(MaterialPiece.StorageType)])
                 {
                     <a class="dropdown-item" href="#">@name</a>
                 }
@@ -70,52 +75,39 @@
         </div>
     </div>
     <div class="form-group mb-3">
-        <label asp-for="FactoryNumber">Заводской Номер</label>
-        <input type="text" class="form-control" asp-for="FactoryNumber" />
-        <span asp-validation-for="FactoryNumber" class="text-danger" />
-    </div>
-    <div class="form-group mb-3">
-        <label asp-for="RegistrationNumber">Инвентарный Номер</label>
-        <input type="text" class="form-control" asp-for="RegistrationNumber" />
-        <span asp-validation-for="RegistrationNumber" class="text-danger" />
-    </div>
-    <div class="form-group mb-3">
-        <label asp-for="Status">Статус</label>
-        <select class="form-control" asp-for="Status">
-            @foreach (KeyValuePair<int, string> status in ViewBag.Statuses)
-            {
-                <option value="@status.Value">@status.Value</option>
-            }
-        </select>
+        <label asp-for="InventoryNumber">Инвентарный Номер</label>
+        <input type="text" class="form-control" asp-for="InventoryNumber" />
+        <span asp-validation-for="InventoryNumber" class="text-danger" />
     </div>
     <div class="form-group mb-3">
         <label asp-for="Description">Описание</label>
         <input type="text" class="form-control" asp-for="Description" />
         <span asp-validation-for="Description" class="text-danger" />
     </div>
-    <div class="form-group mb-3">
-        <button type="submit" class="btn btn-success form-control">Создать новое оборудование</button>
-    </div>
-    @if (ViewBag.NoError != null)
+    @if (Model != null)
     {
-        @if (!ViewBag.NoError)
-        {
-            <div class="alert alert-danger mt-3" role="alert">
-                @ViewBag.ErrorMessage
-            </div>
-        }
-        else if (ViewBag.NoError)
-        {
-            <div class="alert alert-success mt-3" role="alert">
-                Добавление успешно
-            </div>
-        }
+        <div class="form-group mb-3">
+            <label for="comment">Опишиет причину обновления данных</label>
+            <input type="text" class="form-control" name="comment" />
+        </div>
     }
+    <div class="form-group mb-3">
+        <button type="submit" class="btn btn-success form-control">
+            @if (Model != null) // Или другой условие, чтобы определить режим
+            {
+                <text>Обновить материал</text>
+            }
+            else
+            {
+                <text>Создать новый материал</text>
+            }
+        </button>
+    </div>
 </form>
 
 @section Scripts
 {
-    
+
     <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.5.1.min.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.17.0/jquery.validate.min.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.10/jquery.validate.unobtrusive.min.js"></script>
@@ -154,3 +146,4 @@
         });
     </script>
 }
+

@@ -22,19 +22,26 @@ function makeResizable(table) {
             startWidthLeft = leftCol.offsetWidth;
             startWidthRight = rightCol.offsetWidth;
 
-            // Добавляем обработчики событий для движения мыши и отпускания
+            // Р”РѕР±Р°РІР»СЏРµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№ РґР»СЏ РґРІРёР¶РµРЅРёСЏ РјС‹С€Рё Рё РѕС‚РїСѓСЃРєР°РЅРёСЏ
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp, { once: true });
         });
 
         function onMouseMove(e) {
             const deltaX = e.pageX - startX;
-            leftCol.style.width = (startWidthLeft + deltaX) + 'px';
-            rightCol.style.width = (startWidthRight - deltaX) + 'px';
+
+            // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РјРёРЅРёРјР°Р»СЊРЅСѓСЋ С€РёСЂРёРЅСѓ
+            const newWidthLeft = startWidthLeft + deltaX;
+            const newWidthRight = startWidthRight - deltaX;
+
+            if (newWidthLeft > 50 && newWidthRight > 50) { // РњРёРЅРёРјР°Р»СЊРЅР°СЏ С€РёСЂРёРЅР° СЃС‚РѕР»Р±С†Р° 50px
+                leftCol.style.width = newWidthLeft + 'px';
+                rightCol.style.width = newWidthRight + 'px';
+            }
         }
 
         function onMouseUp() {
-            // Убираем обработчики событий после отпускания мыши
+            // РЈР±РёСЂР°РµРј РѕР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№ РїРѕСЃР»Рµ РѕС‚РїСѓСЃРєР°РЅРёСЏ РјС‹С€Рё
             document.removeEventListener('mousemove', onMouseMove);
         }
     });
