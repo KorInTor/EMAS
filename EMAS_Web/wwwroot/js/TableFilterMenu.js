@@ -248,7 +248,7 @@ function filterList(filterValue, elementWithList) {
 
     listItems.forEach(listItem => {
         const checkBox = listItem.querySelector('input[type=checkbox]');
-        setDisplayNone(listItem, !checkBox.value.includes(filterValue.toLowerCase()));
+        setDisplayNone(listItem, !checkBox.value.toLowerCase().includes(filterValue.toLowerCase()));
     });
 
 }
