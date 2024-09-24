@@ -1,5 +1,8 @@
 ﻿@model Model.Event.SentEvent
 
+<script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
+
 @await Html.PartialAsync("StorableObjectsTables",Model.ObjectsInEvent)
 
 <form method="post">
@@ -13,7 +16,7 @@
         </p>
         <p>
             <label for="DateTime">Дата прибытия</label><br />
-            <input type="datetime-local" name="dateTime" min="@(ViewBag.MinDateTimeString)" />
+            <input type="datetime-local" name="dateTime" min="@(ViewBag.MinDateTimeString)" max="@(ViewBag.MaxDateTimeString)" />
         </p>
         <p>
             <input class="btn btn-success" type="submit" value="Завершить доставку" />

@@ -64,7 +64,7 @@ namespace EMAS_Web.Controllers
 
         public IActionResult History(int storableObjectId)
         {
-            var events = DataBaseClient.GetInstance().SelectForStorableObjectsIds([storableObjectId])[storableObjectId];
+            var events = DataBaseClient.GetInstance().SelectForStorableObjectsIds([storableObjectId])[storableObjectId].OrderByDescending(x => x.DateTime);
 			var idEmployeeName = DataBaseClient.GetInstance().SelectByIds<Employee>(events.Select(x => x.EmployeeId).Distinct(), $"{nameof(Employee.Id)}").ToDictionary(x => x.Id, x => x.Fullname);
 			ViewBag.EmployeesNames = idEmployeeName;
 			ViewBag.DistinctEmployeNames = idEmployeeName.Values.Distinct();

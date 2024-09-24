@@ -68,7 +68,7 @@ namespace EMAS_Web.Controllers
 			}
 			ViewBag.Locations = locationsList;
             
-            return View(DataBaseClient.GetInstance().SelectByIds<Employee>([employeeId],nameof(Employee.Id)));
+            return View(DataBaseClient.GetInstance().SelectSingleById<Employee>(employeeId,nameof(Employee.Id)));
         }
 
         [HttpPost]
@@ -91,7 +91,7 @@ namespace EMAS_Web.Controllers
             }
             ViewBag.Locations = locationsList;
 
-            var employee = DataBaseClient.GetInstance().SelectByIds<Employee>([employeeId], nameof(Employee.Id)).First();
+            var employee = DataBaseClient.GetInstance().SelectSingleById<Employee>(employeeId, nameof(Employee.Id));
 
 			if (employee == null)
             {
@@ -112,7 +112,7 @@ namespace EMAS_Web.Controllers
             
             try
             {
-                DataBaseClient.GetInstance().UpdateSingle(employee);
+                DataBaseClient.GetInstance().UpdateSingle<Employee>(employee);
                 ViewBag.Success = true;
             }
             catch(Exception ex)

@@ -1,6 +1,14 @@
-﻿@model Model.Event.StorableObjectEvent
+﻿@using Service
+@model Model.Event.StorableObjectEvent
 
 <script src="~/js/TableFilterMenu.js"></script>
 <script src="~/js/tableResizer.js"></script>
+
+<h1>Объекты в cобытии:</h1>
+@{
+	ViewBag.Filtration = false;
+}
+
+@await Html.PartialAsync("EventTable", new[] { Model})
 
 @await Html.PartialAsync("StorableObjectsTables", Model.ObjectsInEvent)

@@ -10,6 +10,8 @@
         <input type="hidden" name="selectedIds" value="@item.Id" />
     }
 }
+<script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
 
 @await Html.PartialAsync("StorableObjectsTables", (IEnumerable<Model.IStorableObject>)ViewBag.SelectedObjects)
 

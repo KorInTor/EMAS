@@ -1,3 +1,7 @@
 ﻿@model IEnumerable<Model.Event.StorableObjectEvent>
 
+@{
+	ViewBag.Filtration = true;
+}
+
 @await Html.PartialAsync("EventTable", Model);

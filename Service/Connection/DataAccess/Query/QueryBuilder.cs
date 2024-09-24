@@ -132,10 +132,8 @@ namespace Service.Connection.DataAccess.Query
 			return this;
 		}
 
-		public QueryBuilder Where(string propertyName, string comparison, object? value)
+		private QueryBuilder Where(string propertyName, string comparison, object? value)
 		{
-			CheckConditionCorrectnes(propertyName, comparison, value);
-
 			if (value == null)
 			{
 				whereConditions.Add($"{PropertyToColumnName[propertyName]} {comparison} NULL");
@@ -296,6 +294,7 @@ namespace Service.Connection.DataAccess.Query
 					this.LazyInit<StorableObjectEvent>();
 					Select([GetColumnName<AdditionEvent>(nameof(AdditionEvent.LocationId))]);
 					Join(GetFullTableName<AdditionEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<AdditionEvent>(nameof(AdditionEvent.Id))}");
+					//AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.Addition);
 					break;
 				case nameof(SentEvent):
 					this.LazyInit<StorableObjectEvent>();
@@ -305,6 +304,7 @@ namespace Service.Connection.DataAccess.Query
 						GetColumnName<SentEvent>(nameof(SentEvent.DestinationId))
 						]);
 					Join(GetFullTableName<SentEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<SentEvent>(nameof(SentEvent.Id))}");
+					//AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.Sent);
 					break;
 				case nameof(ArrivedEvent):
 					this.LazyInit<StorableObjectEvent>();
@@ -313,6 +313,7 @@ namespace Service.Connection.DataAccess.Query
 						GetColumnName<SentEvent>(nameof(SentEvent.Id))
 						]);
 					Join(GetFullTableName<ArrivedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<ArrivedEvent>(nameof(ArrivedEvent.Id))}");
+					//AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.Arrived);
 					break;
 				case nameof(ReservedEvent):
 					this.LazyInit<StorableObjectEvent>();
@@ -321,6 +322,7 @@ namespace Service.Connection.DataAccess.Query
 						GetColumnName<ReservedEvent>(nameof(ReservedEvent.LocationId))
 						]);
 					Join(GetFullTableName<ReservedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<ReservedEvent>(nameof(ReservedEvent.Id))}");
+					//AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.Reserved);
 					break;
 				case nameof(ReserveEndedEvent):
 					this.LazyInit<StorableObjectEvent>();
@@ -329,13 +331,14 @@ namespace Service.Connection.DataAccess.Query
 						GetColumnName<ReservedEvent>(nameof(ReservedEvent.Id))
 						]);
 					Join(GetFullTableName<ReserveEndedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<ReserveEndedEvent>(nameof(ReserveEndedEvent.Id))}");
+					//AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.ReserveEnded);
 					break;
 				case nameof(DecomissionedEvent):
 					this.LazyInit<StorableObjectEvent>();
 					Select([GetColumnName<DecomissionedEvent>(nameof(DecomissionedEvent.Comment))]);
 					Join(GetFullTableName<DecomissionedEvent>(), $"{GetColumnName<StorableObjectEvent>(nameof(StorableObjectEvent.Id))} = {GetColumnName<DecomissionedEvent>(nameof(DecomissionedEvent.Id))}");
+					//AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EventType)}", "=", (int)EventType.Decommissioned);
 					break;
-
 				case nameof(Employee):
 					Select([
 						GetColumnName<Employee>(nameof(Employee.Id)),

@@ -47,7 +47,7 @@ namespace EMAS_Web.Controllers
                 TryLogin(username, PasswordManager.Hash(password));
 
 				QueryBuilder queryBuilder = new QueryBuilder();
-				queryBuilder.Where($"{nameof(Employee)}.{nameof(Employee.Username)}", "=", username);
+				queryBuilder.AndWhere($"{nameof(Employee)}.{nameof(Employee.Username)}", "=", username);
 
 				var currentUser = DataBaseClient.GetInstance().Select<Employee>(queryBuilder).FirstOrDefault();
 

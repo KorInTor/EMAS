@@ -39,7 +39,7 @@ namespace Service.Connection.DataAccess
             {
                 while (reader.Read())
                 {
-                    employeeList.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(3), reader.GetString(2), permissionDataAccess.SelectPermissions(reader.GetInt32(0)), permissionDataAccess.IsEmployeeAdmin(reader.GetInt32(0))));
+                    employeeList.Add(new Employee(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), permissionDataAccess.SelectPermissions(reader.GetInt32(0)), permissionDataAccess.IsEmployeeAdmin(reader.GetInt32(0))));
                 }
             }
 
