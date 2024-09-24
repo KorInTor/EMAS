@@ -262,7 +262,7 @@ namespace Service.Connection.DataAccess
 				EventType.Sent => new SentEvent(baseEvent, reader.GetString(4), reader.GetInt32(5), reader.GetInt32(6)),
 				EventType.Reserved => new ReservedEvent(baseEvent, reader.GetString(4), reader.GetInt32(5)),
 				EventType.ReserveEnded => new ReserveEndedEvent(baseEvent, reader.GetString(4), reader.GetInt64(5)),
-				EventType.Decommissioned => new DecomissionedEvent(baseEvent, reader.GetString(4)),
+				EventType.Decommissioned => new DecomissionedEvent(baseEvent, reader.GetString(4), reader.GetInt32(5)),
 				_ => throw new NotImplementedException($"EventType {baseEvent.EventType} не поддерживается.")
 			};
 		}

@@ -11,9 +11,10 @@ namespace Service.Connection.DataAccess.Event
 
         public void Insert(NpgsqlConnection connection, DecomissionedEvent decomissionedEvent)
         {
-            using var command = new NpgsqlCommand("INSERT INTO "+FullTableName+" (event_id, reason) VALUES(@id, @reason); ", connection);
+            using var command = new NpgsqlCommand("INSERT INTO "+FullTableName+" (event_id, reason, location_id) VALUES(@id, @reason, @locationid); ", connection);
             command.Parameters.AddWithValue("@id", decomissionedEvent.Id);
             command.Parameters.AddWithValue("@reason", decomissionedEvent.Comment);
+            command.Parameters.AddWithValue("@locationid", decomissionedEvent.LocationId);
             command.ExecuteScalar();
             command.Dispose();
         }

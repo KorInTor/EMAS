@@ -1,9 +1,9 @@
 ﻿@model Model.Event.ReservedEvent
 
-@foreach (Model.IStorableObject item in Model.ObjectsInEvent)
-{
-    <p>@item.ShortInfo</p>
-}
+<script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
+
+@await Html.PartialAsync("StorableObjectsTables", Model.ObjectsInEvent)
 
 <form method="post">
     <div>
@@ -14,7 +14,7 @@
         </p>
         <p>
             <label for="DateTime">Дата и время</label><br />
-            <input type="datetime-local" name="dateTime" />
+            <input type="datetime-local" name="dateTime" min="@(ViewBag.MinDateTimeString)" max="@(ViewBag.MaxDateTimeString)" />
         </p>
         <p>
             <label for="isDecomissioned">Завершить как реализованный?</label><br />

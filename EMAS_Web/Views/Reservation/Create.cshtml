@@ -2,11 +2,15 @@
 
 <input type="hidden" name="locationId" value="@ViewBag.CurrentLocation.Item1" />
 
-@foreach (int item in ViewBag.SelectedIds)
+@foreach (Model.IStorableObject item in ViewBag.SelectedObjects)
 {
-    <input type="hidden" name="selectedIds" value="@item" />
-    <p>@item</p>
+    <input type="hidden" name="selectedIds" value="@item.Id" />
 }
+
+<script src="~/js/TableFilterMenu.js"></script>
+<script src="~/js/tableResizer.js"></script>
+
+@await Html.PartialAsync("StorableObjectsTables", (IEnumerable<Model.IStorableObject>)ViewBag.SelectedObjects)
 
 <script>
     function validateForm() {
@@ -37,7 +41,7 @@
         </p>
         <p>
             <label for="DateTime">Дата начала резерва</label><br />
-            <input type="datetime-local" name="dateTime" />
+            <input type="datetime-local" name="dateTime" max="@(ViewBag.MaxDateTimeString)" />
         </p>
         <p>
             <input class="btn btn-success" type="submit" value="Создать резерв" />

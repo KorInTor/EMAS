@@ -210,6 +210,12 @@ namespace Service.Connection
 				.AndWhere($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<ReserveEndedEvent>(queryBuilder));
 
+			queryBuilder = new QueryBuilder();
+			queryBuilder
+				.LazyInit<DecomissionedEvent>()
+				.AndWhere($"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.LocationId)}", "=", locationId);
+			events.AddRange(eventDataAccess.Select<DecomissionedEvent>(queryBuilder));
+
 			return events;
 		}
 

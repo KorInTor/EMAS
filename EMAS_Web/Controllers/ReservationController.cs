@@ -25,9 +25,10 @@ namespace EMAS_Web.Controllers
                 return View();
             }
 
-            var selectedIdList = selectedIds.Select(id => int.Parse(id)).ToList();
+            var selectedIdsList = selectedIds.Select(int.Parse);
 
-            ViewBag.SelectedIds = selectedIdList;
+            ViewBag.SelectedObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
+            ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
 
             foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
             {
@@ -56,7 +57,10 @@ namespace EMAS_Web.Controllers
 
             var reservedEvent = new ReservedEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Reserved,dateTime,storableObjects,comment,locationId);
 
-            try
+			ViewBag.SelectedObjects = storableObjects;
+			ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
+
+			try
             {
                 DataBaseClient.GetInstance().AddSingle(reservedEvent);
             }
@@ -74,6 +78,9 @@ namespace EMAS_Web.Controllers
         {
             var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
 
+            ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
+            ViewBag.MinDateTimeString = reservedEventToConfirm.DateTime.ToString("yyyy-MM-ddTHH:mm");
+
             return View(reservedEventToConfirm);
         }
 
@@ -81,14 +88,18 @@ namespace EMAS_Web.Controllers
         public IActionResult Confirm(long reservedEventId, string comment, DateTime dateTime, bool isDecomissioned)
         {
 			var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
-			StorableObjectEvent endEvent;
+
+            ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
+            ViewBag.MinDateTimeString = reservedEventToConfirm.DateTime.ToString("yyyy-MM-ddTHH:mm");
+
+            StorableObjectEvent endEvent;
             if (isDecomissioned)
             {
                 endEvent = new ReserveEndedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.ReserveEnded, dateTime.ToUniversalTime(), reservedEventToConfirm.ObjectsInEvent, comment, reservedEventId);
             }
             else
             {
-                endEvent = new DecomissionedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.Decommissioned, dateTime.ToUniversalTime(), reservedEventToConfirm.ObjectsInEvent, comment, EventType.Reserved, reservedEventId);
+                endEvent = new DecomissionedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.Decommissioned, dateTime.ToUniversalTime(), reservedEventToConfirm.ObjectsInEvent, comment, EventType.Reserved, reservedEventId, reservedEventToConfirm.LocationId);
             }
 
             try

@@ -11,6 +11,10 @@
 	<label class="form-check-label" for="material">Материалы</label>
 </div>
 
+<div class="fs-3 m-3">
+	Общее количество найденных позиций = <span id="storableObjects_visibleRowsCount" class="fs-3"></span>
+</div>
+
 <div id="storableObjectsContainer">
 	@{
 		var splitedList = Model.GroupByType();
@@ -45,3 +49,25 @@
 		</div>
 	}
 </div>
+
+<script>
+	function calculateSum() {
+		const span1 = document.getElementById('equipmentTable_visibleRowsCount').textContent;
+		const span2 = document.getElementById('materialTable_visibleRowsCount').textContent;
+		const sum = Number(span1) + Number(span2);
+		document.getElementById('storableObjects_visibleRowsCount').textContent = sum;
+	}
+
+	const observerConfig = { childList: true, subtree: true, characterData: true };
+
+	function observeChanges(spanId) {
+		const span = document.getElementById(spanId);
+		const observer = new MutationObserver(() => {
+			calculateSum();
+		});
+		observer.observe(span, observerConfig);
+	}
+
+	observeChanges('equipmentTable_visibleRowsCount');
+	observeChanges('materialTable_visibleRowsCount');
+</script>

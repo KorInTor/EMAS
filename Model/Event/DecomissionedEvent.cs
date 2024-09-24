@@ -11,23 +11,27 @@ namespace Model.Event
         public long? StartEventId;
         public EventType? StartEventType;
 
+        public int LocationId;
         public string Comment;
 
-        public DecomissionedEvent(StorableObjectEvent storableObjectEvent, string comment) : base(storableObjectEvent)
+        public DecomissionedEvent(StorableObjectEvent storableObjectEvent, string comment, int locationId) : base(storableObjectEvent)
         {
             Comment = comment;
+            LocationId = locationId;
         }
 
-        public DecomissionedEvent(int employeeId, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, string comment) : base(employeeId, id, eventType, dateTime, storableObjects)
+        public DecomissionedEvent(int employeeId, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, string comment, int locationId) : base(employeeId, id, eventType, dateTime, storableObjects)
         {
             Comment = comment;
-        }
+			LocationId = locationId;
+		}
 
-        public DecomissionedEvent(int employeeId, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, string comment, EventType startEventType, long startEventId) : base(employeeId, id, eventType, dateTime, storableObjects)
+        public DecomissionedEvent(int employeeId, long id, EventType eventType, DateTime dateTime, List<IStorableObject> storableObjects, string comment, EventType startEventType, long startEventId, int locationId) : base(employeeId, id, eventType, dateTime, storableObjects)
         {
             StartEventId = startEventId;
             StartEventType = startEventType;
             Comment = comment;
-        }
+			LocationId = locationId;
+		}
     }
 }
