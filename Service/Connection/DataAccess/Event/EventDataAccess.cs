@@ -304,7 +304,7 @@ namespace Service.Connection.DataAccess
 
 			foreach (var storableObjectLastEventIdPair in storableObjectEventIdDictionary)
 			{
-				queryBuilder.LazyInit<StorableObjectEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
+				queryBuilder.LazyInit<StorableObjectEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value.ToArray());
 				storableObjectEvent.Add(storableObjectLastEventIdPair.Key, Select<StorableObjectEvent>(queryBuilder).ToList());
 			}
 
