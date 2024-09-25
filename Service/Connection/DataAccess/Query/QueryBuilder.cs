@@ -140,24 +140,32 @@ namespace Service.Connection.DataAccess.Query
 
 		private string GenerateWhereCondition(string propertyName, string comparison, object? value)
 		{
+			CheckConditionCorrectnes(propertyName, comparison, value);
+
 			if (value == null)
 			{
                 return $"{PropertyToColumnName[propertyName]} {comparison} NULL";
             }
-			if (value is IEnumerable && value is not string)
+			else
+			if (value is IEnumerable enumerableValue && value is not string)
 			{
-				return $"{PropertyToColumnName[propertyName]} = ANY(@{parameters.Count})";
-            }
+				if (!value.GetType().IsArray)
+				{
+					throw new ArgumentException("Use Array as parametr in query");
+				}
+				parameters.Add(enumerableValue);
+				return $"{PropertyToColumnName[propertyName]} = ANY(@{parameters.Count - 1})";
+			}
 			else
 			{
-				return $"{PropertyToColumnName[propertyName]} {comparison} @{parameters.Count}";
+				parameters.Add(value);
+				return $"{PropertyToColumnName[propertyName]} {comparison} @{parameters.Count - 1}";
 			}
 		}
 
 		public QueryBuilder AndWhere(string propertyName, string comparison, object? value)
 		{
-			CheckConditionCorrectnes(propertyName, comparison, value);
-
+			
 			if (whereConditions.Count > 0)
 			{
 				whereConditions.Add($"AND {GenerateWhereCondition(propertyName, comparison, value)}");
@@ -167,14 +175,11 @@ namespace Service.Connection.DataAccess.Query
 				whereConditions.Add(GenerateWhereCondition(propertyName, comparison, value));
 			}
 
-			parameters.Add(value);
 			return this;
 		}
 
 		public QueryBuilder OrWhere(string propertyName, string comparison, object? value)
 		{
-			CheckConditionCorrectnes(propertyName, comparison, value);
-
 			if (whereConditions.Count > 0)
 			{
 				whereConditions.Add($"OR {GenerateWhereCondition(propertyName, comparison, value)}");
@@ -184,7 +189,6 @@ namespace Service.Connection.DataAccess.Query
 				whereConditions.Add(GenerateWhereCondition(propertyName, comparison, value));
 			}
 
-			parameters.Add(value);
 			return this;
 		}
 
@@ -195,7 +199,7 @@ namespace Service.Connection.DataAccess.Query
 				throw new ArgumentException("Invalid comparison operator", nameof(comparison));
 			}
 
-			if ((comparison != "=" && comparison != "ANY") && value is IEnumerable)
+			if ((comparison != "=") && value is IEnumerable)
 			{
                 throw new ArgumentException("If value is collection use ANY or =", nameof(value));
             }
