@@ -8,10 +8,12 @@
             <th>E-Mail</th>
             <th>Имя пользователя</th>
             <th></th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td colspan="5"> <a asp-action="AddEmployee" class="btn btn-success">Добавить сотрудника</a></td>
+        </tr>
         @foreach (Model.Employee employee in Model)
         {
             <tr>

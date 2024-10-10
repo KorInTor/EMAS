@@ -11,10 +11,10 @@ using Microsoft.AspNetCore.Http.Extensions;
 namespace EMAS_Web.Controllers
 {
     [AuthorizationFilter]
+    [LocationFilter]
     public class StorableObjectController : Controller
     {
         [HttpGet]
-        [LocationFilter]
         public IActionResult AddEquipment(int locationId)
         {
             //TODO Доабвить server side провепрку на наличие прав
@@ -26,7 +26,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
-        [LocationFilter]
         public IActionResult AddEquipment(Equipment newEquipment, int locationId)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
@@ -48,7 +47,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpGet]
-        [LocationFilter]
         public IActionResult AddMaterial(int locationId)
         {
             //TODO Доабвить server side провепрку на наличие прав
@@ -59,7 +57,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
-        [LocationFilter]
         public IActionResult AddMaterial(MaterialPiece newMaterial, int locationId)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
@@ -80,7 +77,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpGet]
-        [LocationFilter]
         public IActionResult EditEquipment(int objectId, int locationId)
         {
             //TODO Доабвить server side провепрку на наличие прав
@@ -99,7 +95,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
-        [LocationFilter]
         public IActionResult EditEquipment(Equipment updatedEquipment, int locationId, string comment)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
@@ -127,7 +122,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpGet]
-        [LocationFilter]
         public IActionResult EditMaterial(int objectId,int locationId)
         {
             //TODO Доабвить server side провепрку на наличие прав
@@ -145,7 +139,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
-        [LocationFilter]
         public IActionResult EditMaterial(MaterialPiece updatedMaterial, int locationId, string comment)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
@@ -174,26 +167,30 @@ namespace EMAS_Web.Controllers
             return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
         }
 
-        [LocationFilter]
+        [AllowSpecialLocationId]
         public IActionResult Index(int locationId)
         {
 			ViewBag.PermissionList = (from prm in DataBaseClient.GetInstance().SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First().Permissions
 												where prm.LocationId == locationId
 												select prm).OrderBy(x => (int)x.PermissionType);
 
-            var storableObjectList = DataBaseClient.GetInstance().SelectStorableObjectOn(locationId);
+            List<IStorableObject> storableObjectList = [];
+
+            if(locationId == LocationFilter.AllLocationCase)
+            {
+                foreach(var location in DataBaseClient.GetInstance().SelectNamedLocations())
+                {
+                    storableObjectList.AddRange(DataBaseClient.GetInstance().SelectStorableObjectOn(location.Key));
+                }
+            }
+            else
+            {
+                storableObjectList = DataBaseClient.GetInstance().SelectStorableObjectOn(locationId);
+            }
+            
 			ViewBag.LastEvents = DataBaseClient.GetInstance().SelectLastEventsForStorableObjects(storableObjectList);
             ViewBag.LocationId = locationId;
             return View(storableObjectList);
-        }
-
-        public IActionResult History(int storableObjectId)
-        {
-            var events = DataBaseClient.GetInstance().SelectForStorableObjectsIds([storableObjectId])[storableObjectId].OrderByDescending(x => x.DateTime);
-			var idEmployeeName = DataBaseClient.GetInstance().SelectByIds<Employee>(events.Select(x => x.EmployeeId).Distinct(), $"{nameof(Employee.Id)}").ToDictionary(x => x.Id, x => x.Fullname);
-			ViewBag.EmployeesNames = idEmployeeName;
-			ViewBag.DistinctEmployeNames = idEmployeeName.Values.Distinct();
-			return View(events);
         }
 
     }

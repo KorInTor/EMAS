@@ -59,20 +59,15 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult EmployeeEditor(int employeeId)
+        public IActionResult AddEmployee()
         {
-			List<ValueTuple<int, string>> locationsList = [];
-			foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
-			{
-				locationsList.Add((location.Key, location.Value));
-			}
-			ViewBag.Locations = locationsList;
-            
-            return View(DataBaseClient.GetInstance().SelectSingleById<Employee>(employeeId,nameof(Employee.Id)));
+            ViewBag.Locations = DataBaseClient.GetInstance().SelectNamedLocations();
+
+            return View("EmployeeEditor", null);
         }
 
         [HttpPost]
-        public IActionResult EmployeeEditor(IEnumerable<string> checkedPermissions, int employeeId, string fullname, string email,string username,string? changePassword = null)
+        public IActionResult AddEmployee(IEnumerable<string> checkedPermissions, Employee newEmployee, string? makeAdmin = null)
         {
             var permissions = checkedPermissions.Select(cp =>
             {
@@ -84,43 +79,76 @@ namespace EMAS_Web.Controllers
                 };
             }).ToList();
 
-            List<(int, string)> locationsList = [];
-            foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
+            newEmployee.Permissions = permissions;
+            newEmployee.IsAdmin = makeAdmin != null;
+
+            string newPassword = PasswordManager.Generate(10);
+            newEmployee.PasswordHash = PasswordManager.Hash(newPassword);
+            ViewBag.NewPassword = newPassword;
+
+            try
             {
-                locationsList.Add((location.Key, location.Value));
+                DataBaseClient.GetInstance().AddSingle<Employee>(newEmployee);
             }
-            ViewBag.Locations = locationsList;
-
-            var employee = DataBaseClient.GetInstance().SelectSingleById<Employee>(employeeId, nameof(Employee.Id));
-
-			if (employee == null)
+            catch (Exception ex)
             {
+                TempData["AlertMessage"] = ex.Message;
+                return RedirectToActionPermanent("EmployeeTable", "Admin");
+            }
+
+            TempData["AlertMessage"] = $"Пароль для сотрудника: {newPassword}";
+            return RedirectToActionPermanent("EmployeeTable", "Admin");
+        }
+
+
+        [HttpGet]
+        public IActionResult EmployeeEditor(int employeeId)
+        {
+            ViewBag.Locations = DataBaseClient.GetInstance().SelectNamedLocations();
+
+            return View(DataBaseClient.GetInstance().SelectSingleById<Employee>(employeeId, nameof(Employee.Id)));
+        }
+
+        [HttpPost]
+        public IActionResult EmployeeEditor(IEnumerable<string> checkedPermissions, Employee updatedEmployee, string? changePassword = null)
+        {
+            updatedEmployee.Permissions = checkedPermissions.Select(cp =>
+            {
+                var parts = cp.Split('-');
+                return new Permission
+                {
+                    LocationId = int.Parse(parts[0]),
+                    PermissionType = (PermissionType)Enum.Parse(typeof(PermissionType), parts[1])
+                };
+            }).ToList();
+            
+            ViewBag.Locations = DataBaseClient.GetInstance().SelectNamedLocations();
+
+			if (DataBaseClient.GetInstance().SelectSingleById<Employee>(updatedEmployee.Id, nameof(Employee.Id)) == null)
+            {
+                TempData["AlertMessage"] = "Такого сотрудника не существует";
                 return RedirectToActionPermanent("EmployeeTable","Admin");
             }
-
-            employee.Fullname = fullname;
-            employee.Email = email;
-            employee.Username = username;
-            employee.Permissions = permissions;
 
             if (changePassword != null)
             {
                 string newPassword = PasswordManager.Generate(10);
-                employee.PasswordHash = PasswordManager.Hash(newPassword);
-                ViewBag.NewPassword = newPassword;
+                updatedEmployee.PasswordHash = PasswordManager.Hash(newPassword);
+                TempData["AlertMessage"] = $"Пароль для сотрудника: {newPassword}";
             }
             
             try
             {
-                DataBaseClient.GetInstance().UpdateSingle<Employee>(employee);
-                ViewBag.Success = true;
+                DataBaseClient.GetInstance().UpdateSingle(updatedEmployee);
             }
             catch(Exception ex)
             {
                 TempData["AlertMessage"] = ex.Message;
+                return RedirectToActionPermanent("EmployeeTable", "Admin");
             }
 
-            return View(employee);
+            TempData["AlertMessage"] = "Данные изменены успешно";
+            return RedirectToActionPermanent("EmployeeTable", "Admin");
         }
     }
 }

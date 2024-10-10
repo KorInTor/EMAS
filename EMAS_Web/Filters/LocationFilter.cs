@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Service.Connection;
 
@@ -6,6 +7,8 @@ namespace EMAS_Web.Filters
 {
     public class LocationFilter : Attribute, IResourceFilter
     {
+        public static readonly int AllLocationCase = -1;
+
         public void OnResourceExecuting(ResourceExecutingContext context)
         {
             var locationIdString = context.HttpContext.Request.Query["locationId"].ToString();
@@ -27,7 +30,11 @@ namespace EMAS_Web.Filters
                 return;
             }
 
-            if (!IsValidLocationId(locationId))
+            var actionDescriptor = context.ActionDescriptor as ControllerActionDescriptor;
+
+            bool isAllCaseAllowed = actionDescriptor?.MethodInfo.GetCustomAttributes(typeof(AllowSpecialLocationIdAttribute), false).Any() ?? false;
+
+            if (!IsValidLocationId(locationId, isAllCaseAllowed))
             {
                 context.Result = new ViewResult
                 {
@@ -37,15 +44,23 @@ namespace EMAS_Web.Filters
             }
         }
 
-        private bool IsValidLocationId(int locationId)
+        private bool IsValidLocationId(int locationId, bool IsAllCaseAllowed)
         {
+            if (IsAllCaseAllowed && locationId == AllLocationCase)
+                return true;
+
             var locations = DataBaseClient.GetInstance().SelectNamedLocations();
             return locations.ContainsKey(locationId);
         }
 
         public void OnResourceExecuted(ResourceExecutedContext context)
         {
-            
+
         }
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public class AllowSpecialLocationIdAttribute : Attribute
+    {
     }
 }

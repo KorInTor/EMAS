@@ -1,41 +1,53 @@
 ﻿@model Model.Employee
 @using Model.Enum
 
-<form asp-action="EmployeeEditor" method="post">
-    <input type="hidden" name="employeeId" value="@Model.Id" />
+<form method="post">
+    @if(Model != null)
+    {
+        <input type="hidden" asp-for="Id" />
+    }
 
     <div class="mb-3">
         <label for="fullname" class="form-label">Полное Имя</label>
-        <input type="text" name="fullname" value="@Model.Fullname" class="form-control" />
+        <input type="text" class="form-control" asp-for="Fullname"/>
     </div>
     <div class="mb-3">
         <label for="email" class="form-label">Адресс E-Mail</label>
-        <input type="text" name="email" value="@Model.Email" class="form-control" />
+        <input type="text" class="form-control" asp-for="Email" />
     </div>
     <div class="mb-3">
         <label for="username" class="form-label">Имя Пользователя для Входа в систему</label>
-        <input type="text" name="username" value="@Model.Username" class="form-control" />
+        <input type="text" class="form-control" asp-for="Username" />
     </div>
 
-    <input class="form-check-input me-1" type="checkbox" name="changePassword" value="1" id="changePasswordCheckBox">
-    <label class="form-check-label" for="changePasswordCheckBox">Поменять пароль</label>
-
-    @if (ViewBag.NewPassword != null)
+    @if (Model != null)
     {
-        <div class="alert alert-primary" role="alert">
-            Новый пароль для пользователя = @ViewBag.NewPassword
-        </div>
+        <input class="form-check-input me-1" type="checkbox" name="changePassword" value="1" id="changePasswordCheckBox">
+        <label class="form-check-label" for="changePasswordCheckBox">Поменять пароль</label>
+    }
+    else
+    {
+        <input class="form-check-input me-1" type="checkbox" name="makeAdmin" value="1" id="makeAdmin">
+        <label class="form-check-label" for="makeAdmin">Сделать Админом?</label>
     }
 
-    @foreach (var location in ViewBag.Locations as List<(int, string)>)
+    @foreach (var location in ViewBag.Locations as Dictionary<int, string>)
     {
-        <div id="@location.Item1" class="list-group">
-            <h1>Права для @location.Item2</h1>
+        <div id="@location.Key" class="list-group">
+            <h1>Права для @location.Value</h1>
             @foreach (Model.Enum.PermissionType permissionType in Enum.GetValues(typeof(Model.Enum.PermissionType)))
             {
-                bool isChecked = Model.Permissions.Any(permission => permission.PermissionType == permissionType && permission.LocationId == location.Item1);
+                bool isChecked;
+                if (Model != null)
+                {
+                    isChecked = Model.Permissions.Any(permission => permission.PermissionType == permissionType && permission.LocationId == location.Key);
+                }
+                else
+                {
+                    isChecked = false;
+                }
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="checkedPermissions" value="@location.Item1-@permissionType" id="flexCheckDefault" @(isChecked ? "checked" : "")>
+                    <input class="form-check-input" type="checkbox" name="checkedPermissions" value="@location.Key-@permissionType" id="flexCheckDefault" @(isChecked ? "checked" : "")>
                     <label class="form-check-label" for="flexCheckDefault">
                         @permissionType.RuLocalString()
                     </label>
@@ -43,5 +55,13 @@
             }
         </div>
     }
-    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    @if (Model != null)
+    {
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-primary">Добавить Сотрудника</button>
+    }
+
 </form>

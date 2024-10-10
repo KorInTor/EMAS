@@ -12,13 +12,45 @@ namespace EMAS_Web.Controllers
 	{
 		[HttpGet]
 		[LocationFilter]
-		public IActionResult Index(int locationId, DateTime? floorValue = null, DateTime? ceilingValue = null)
+        [AllowSpecialLocationId]
+        public IActionResult Index(int locationId, DateTime? floorValue = null, DateTime? ceilingValue = null)
 		{
-			var events = DataBaseClient.GetInstance().SelectLocationBoundedEvents(locationId, floorValue, ceilingValue).OrderByDescending(x => x.DateTime);
-			var idEmployeeName = DataBaseClient.GetInstance().SelectByIds<Employee>(events.Select(x => x.EmployeeId).Distinct(), $"{nameof(Employee.Id)}").ToDictionary(x => x.Id, x => $"{x.Fullname}\n{x.Email}");
+
+			List<StorableObjectEvent> events = []; 
+			
+            if (locationId == LocationFilter.AllLocationCase)
+			{
+                foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
+				{
+					events.AddRange(DataBaseClient.GetInstance().SelectLocationBoundedEvents(location.Key, floorValue, ceilingValue));
+                }
+            }
+			else
+			{
+				events = DataBaseClient.GetInstance().SelectLocationBoundedEvents(locationId, floorValue, ceilingValue);
+            }
+
+			var allEmployes = DataBaseClient.GetInstance().Select<Employee>();
+			ViewBag.AllEmployeesNames = allEmployes.ToDictionary(x => x.Id, x => $"{x.Fullname}\n{x.Email}");
+            var idEmployeeName = allEmployes.Where(x => events.Select(x => x.EmployeeId).Distinct().Contains(x.Id)).ToDictionary(x => x.Id, x => $"{x.Fullname}\n{x.Email}");
 			ViewBag.EmployeesNames = idEmployeeName;
 			ViewBag.DistinctEmployeNames = idEmployeeName.Values.Distinct();
-			return View(events);
+			return View(events.OrderByDescending(x => x.DateTime));
+		}
+
+		public IActionResult EmployeeHistory(int employeeId)
+		{
+			QueryBuilder queryBuilder = new();
+			queryBuilder.LazyInit<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.EmployeeId)}","=",employeeId);
+
+			var allEmployes = DataBaseClient.GetInstance().Select<Employee>();
+			ViewBag.AllEmployeesNames = allEmployes.ToDictionary(x => x.Id, x => $"{x.Fullname}\n{x.Email}");
+			ViewBag.SelectedEmloyee = employeeId;
+            var idEmployeeName = allEmployes.Where(x => x.Id == employeeId).ToDictionary(x => x.Id, x => $"{x.Fullname}\n{x.Email}");
+			ViewBag.EmployeesNames = idEmployeeName;
+			ViewBag.DistinctEmployeNames = idEmployeeName.Values.Distinct();
+
+            return View("Index", DataBaseClient.GetInstance().SelectEventsCustom<StorableObjectEvent>(queryBuilder));
 		}
 
 		public IActionResult ObjectsInEvent(int eventId)
@@ -39,5 +71,14 @@ namespace EMAS_Web.Controllers
 
 			return View(currentEvent);
 		}
-	}
+
+        public IActionResult History(int storableObjectId)
+        {
+            var events = DataBaseClient.GetInstance().SelectForStorableObjectsIds([storableObjectId])[storableObjectId].OrderByDescending(x => x.DateTime);
+            var idEmployeeName = DataBaseClient.GetInstance().SelectByIds<Employee>(events.Select(x => x.EmployeeId).Distinct(), $"{nameof(Employee.Id)}").ToDictionary(x => x.Id, x => x.Fullname);
+            ViewBag.EmployeesNames = idEmployeeName;
+            ViewBag.DistinctEmployeNames = idEmployeeName.Values.Distinct();
+            return View(events);
+        }
+    }
 }

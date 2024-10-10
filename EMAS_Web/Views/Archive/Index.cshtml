@@ -3,5 +3,37 @@
 @{
 	ViewBag.Filtration = true;
 }
+@if (ViewBag.SelectedEmloyee != null)
+{
+    <h2>История от имени: @(ViewBag.AllEmployeesNames[ViewBag.SelectedEmloyee])</h2>
+}
+<form asp-action="EmployeeHistory">
+    <div class="mb-3">
+        <label for="employeeSelect" class="form-label">Выберите сотрудника</label>
+    </div>
+    <div class="mb-3">
+        <select class="form-select" id="employeeSelect" name="employeeId">
+            @foreach (var employee in ViewBag.AllEmployeesNames)
+            {
+                @if (ViewBag.SelectedEmloyee == null)
+                {
+                    <option value="@(employee.Key)">@(employee.Value)</option>
+                    continue;
+                }
+                @if (employee.Key == ViewBag.SelectedEmloyee)
+                {
+                    <option value="@(employee.Key)" selected>@(employee.Value)</option>
+                }
+                else
+                {
+                    <option value="@(employee.Key)">@(employee.Value)</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary">Найти события от имени сотрудника 🔍</button>
+    </div>
+</form>
 
 @await Html.PartialAsync("EventTable", Model);

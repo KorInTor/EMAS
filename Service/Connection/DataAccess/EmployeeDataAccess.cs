@@ -12,7 +12,34 @@ namespace Service.Connection.DataAccess
 
         public void Add(IEnumerable<Employee> objectToAdd)
         {
-            throw new NotImplementedException();
+			List<ValueTuple<int, List<Permission>>> permissionsToAdd = [];
+			List<int> makeAdmins = [];
+
+            var connection = ConnectionPool.GetConnection();
+
+			string query = "INSERT INTO public.employee (fullname, email, username, password_hash) VALUES(@fullname, @email, @username, @password_hash);";
+
+			foreach (var employee in objectToAdd) 
+			{
+                using var command = new NpgsqlCommand(query, connection);
+                command.Parameters.AddWithValue("@fullname", employee.Fullname);
+                command.Parameters.AddWithValue("@email", employee.Email);
+                command.Parameters.AddWithValue("@password_hash", employee.PasswordHash);
+                command.Parameters.AddWithValue("@username", employee.Username);
+
+                command.ExecuteNonQuery();
+
+				if (employee.IsAdmin)
+				{
+					makeAdmins.Add(employee.Id);
+                }
+				permissionsToAdd.Add((employee.Id,employee.Permissions));
+            }
+
+            ConnectionPool.ReleaseConnection(connection);
+
+            permissionsToAdd.ForEach(x => permissionDataAccess.UpdatePermissions(x.Item1, x.Item2));
+			makeAdmins.ForEach(id => permissionDataAccess.SetAdmin(id,true));
         }
 
         public void Delete(IEnumerable<Employee> objectToDelete)
@@ -181,6 +208,29 @@ namespace Service.Connection.DataAccess
 			ConnectionPool.ReleaseConnection(connection);
 			return count > 0;
 		}
+
+		public void SetAdmin(int employeeId, bool isAdmin)
+		{
+            var connection = ConnectionPool.GetConnection();
+
+			string deleteQuery = "DELETE FROM \"permission\".\"admin\" WHERE employee_id=@employeeId";
+            using var deleteCommand = new NpgsqlCommand(deleteQuery, connection);
+            deleteCommand.Parameters.AddWithValue("@employeeId", employeeId);
+            deleteCommand.Dispose();
+
+			if (isAdmin == false)
+			{
+                ConnectionPool.ReleaseConnection(connection);
+                return;
+			}
+
+			string insertQuery = "INSERT INTO \"permission\".\"admin\" (employee_id) VALUES(@employeeId);";
+            using var insertCommand = new NpgsqlCommand(deleteQuery, connection);
+            insertCommand.Parameters.AddWithValue("@employeeId", employeeId);
+            insertCommand.Dispose();
+
+            ConnectionPool.ReleaseConnection(connection);
+        }
 
 		public PermissionInfo GetPermissionInfo(int employeeId)
 		{

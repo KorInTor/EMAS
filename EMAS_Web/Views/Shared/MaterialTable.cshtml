@@ -124,7 +124,7 @@
 					<td class="border border-1">@Service.ElapsedTimeFormatter.FormatTimeAgo(ViewBag.LastEvents[item.Id].DateTime)</td>
 				}
 				<td class="border border-1">
-					<form asp-controller="StorableObject" asp-action="History" method="get">
+					<form asp-controller="Archive" asp-action="History" method="get">
 						<input type="hidden" name="storableObjectId" value="@item.Id" />
 						<button type="submit" class="btn btn-primary">История</button>
 					</form>

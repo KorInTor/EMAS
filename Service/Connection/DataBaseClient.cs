@@ -34,39 +34,39 @@ namespace Service.Connection
 			return instance;
 		}
 
-		public void AddSingle(object objectToAdd)
+		public void AddSingle<T>(T objectToAdd)
 		{
-			Add([objectToAdd]);
+			Add<T>([objectToAdd]);
 		}
 
-		public void Add(IEnumerable<object> objectToAdd)
+		public void Add<T>(IEnumerable<T> objectToAdd)
 		{
-			if (objectToAdd is IEnumerable<Employee> newEmployee)
-			{
-				employeeDataAccess.Add(newEmployee);
-				return;
-			}
+            if (objectToAdd is IEnumerable<Employee> newEmployee)
+            {
+                employeeDataAccess.Add(newEmployee);
+                return;
+            }
 
-			if (objectToAdd is IEnumerable<Location> newLocation)
-			{
-				locationDataAccess.Add(newLocation.ToArray());
-				return;
-			}
+            if (objectToAdd is IEnumerable<Location> newLocation)
+            {
+                locationDataAccess.Add(newLocation.ToArray());
+                return;
+            }
 
-			if (objectToAdd is IEnumerable<object> objects && objects.OfType<StorableObjectEvent>().Any())
-			{
-				var newEvents = objects.OfType<StorableObjectEvent>();
-				eventDataAccess.Add(newEvents);
-				return;
-			}
+            if (objectToAdd is IEnumerable<StorableObjectEvent> objects && objects.OfType<StorableObjectEvent>().Any())
+            {
+                var newEvents = objects.OfType<StorableObjectEvent>();
+                eventDataAccess.Add(newEvents);
+                return;
+            }
 
-			if (objectToAdd is IEnumerable<IStorableObject>)
-			{
-				throw new ArgumentException("Use AdditionEvent for adding new StorableObject to dataBase");
-			}
+            if (objectToAdd is IEnumerable<IStorableObject>)
+            {
+                throw new ArgumentException("Use AdditionEvent for adding new StorableObject to dataBase");
+            }
 
-			throw new NotSupportedException("Этот тип не поддерживается");
-		}
+            throw new NotSupportedException("Этот тип не поддерживается");
+        }
 
 		public void Update<T>(IEnumerable<T> objectToUpdate)
 		{

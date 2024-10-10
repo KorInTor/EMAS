@@ -40,7 +40,9 @@ namespace Model
 
         private bool _isAdmin = false;
 
-        private List<Permission> _permissions;
+        public bool IsAdmin { get => _isAdmin; set => _isAdmin = value; }
+
+        private List<Permission> _permissions = [];
 
         public Employee(int id, string fullname, string username, string email, List<Permission> permissions, bool isAdmin)
         {
@@ -49,7 +51,7 @@ namespace Model
             Username = username;
             Email = email;
             _permissions = permissions;
-            _isAdmin = isAdmin;
+            IsAdmin = isAdmin;
         }
 
         public Employee(string fullname, string email, string username)
@@ -126,14 +128,14 @@ namespace Model
                     permissionsDictionary[permission.LocationId].Add(permission.ToString());
                 }
 
-                var permissionInfo = new PermissionInfo(_isAdmin, permissionsDictionary);
+                var permissionInfo = new PermissionInfo(IsAdmin, permissionsDictionary);
 
                 return permissionInfo;
             }
 
             set
             {
-                _isAdmin = value.IsCurrentEmployeeAdmin;
+                IsAdmin = value.IsCurrentEmployeeAdmin;
                 _permissions.Clear();
                 foreach(var key in value.Permissions.Keys)
                 {
@@ -151,5 +153,6 @@ namespace Model
                 }
             }
         }
+
     }
 }
