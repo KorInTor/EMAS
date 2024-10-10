@@ -24,7 +24,7 @@ namespace EMAS_Web.Controllers
 		public IActionResult ObjectsInEvent(int eventId)
 		{
 			QueryBuilder queryBuilder = new();
-			queryBuilder.AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", eventId);
+			queryBuilder.Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", eventId);
 
             var currentEvent = DataBaseClient.GetInstance().SelectEvent<StorableObjectEvent>(queryBuilder).FirstOrDefault();
 

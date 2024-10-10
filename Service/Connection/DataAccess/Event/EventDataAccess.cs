@@ -82,7 +82,7 @@ namespace Service.Connection.DataAccess
                     StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
 
 					Query.QueryBuilder queryBuilder = new();
-					queryBuilder.LazyInit<SentEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", arrivedEvent.SentEventId);
+					queryBuilder.LazyInit<SentEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", arrivedEvent.SentEventId);
 					var completedSentEvent = Select<SentEvent>(queryBuilder).First();
 
                     storableObjectDataAccess.UpdateLocation(arrivedEvent.ObjectsInEvent, completedSentEvent.DestinationId);
@@ -95,7 +95,7 @@ namespace Service.Connection.DataAccess
 					StorableObjectDataAccess storableObjectDataAccess = new StorableObjectDataAccess();
 
 					Query.QueryBuilder queryBuilder = new();
-					queryBuilder.LazyInit<ReservedEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", reserveEndedEvent.Id);
+					queryBuilder.LazyInit<ReservedEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", reserveEndedEvent.Id);
 					var completedReserveEvent = Select<ReservedEvent>(queryBuilder).First();
 
 					storableObjectDataAccess.UpdateLocation(reserveEndedEvent.ObjectsInEvent, completedReserveEvent.LocationId);
@@ -184,7 +184,7 @@ namespace Service.Connection.DataAccess
             foreach (var storableObjectLastEventIdPair in storableObjectLastEventIdDictionary)
             {
 				queryBuilder = new Query.QueryBuilder();
-				queryBuilder.LazyInit<StorableObjectEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
+				queryBuilder.LazyInit<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value);
                 storableObjectLastEvent.Add(storableObjectLastEventIdPair.Key, Select<StorableObjectEvent>(queryBuilder, fillObjects).FirstOrDefault());
             }
 
@@ -304,7 +304,7 @@ namespace Service.Connection.DataAccess
 
 			foreach (var storableObjectLastEventIdPair in storableObjectEventIdDictionary)
 			{
-				queryBuilder.LazyInit<StorableObjectEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value.ToArray());
+				queryBuilder.LazyInit<StorableObjectEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}", "=", storableObjectLastEventIdPair.Value.ToArray());
 				storableObjectEvent.Add(storableObjectLastEventIdPair.Key, Select<StorableObjectEvent>(queryBuilder).ToList());
 			}
 

@@ -109,7 +109,7 @@ namespace Service.Connection
 			QueryBuilder queryBuilder = new();
 			queryBuilder.LazyInit<T>();
 
-			queryBuilder.AndWhere($"{typeof(T).Name}.{idPropertyName}", "=", ids.ToArray());
+			queryBuilder.Where($"{typeof(T).Name}.{idPropertyName}", "=", ids.ToArray());
 
 			return Select<T>(queryBuilder);
 		}
@@ -119,7 +119,7 @@ namespace Service.Connection
 			QueryBuilder queryBuilder = new();
 			queryBuilder.LazyInit<T>();
 
-			queryBuilder.AndWhere($"{typeof(T).Name}.{idPropertyName}", "=", id);
+			queryBuilder.Where($"{typeof(T).Name}.{idPropertyName}", "=", id);
 
 			return Select<T>(queryBuilder).FirstOrDefault();
 		}
@@ -143,7 +143,7 @@ namespace Service.Connection
 		public List<TEvent> SelectEventsByIds<TEvent>(IEnumerable<long> eventId) where TEvent : StorableObjectEvent
 		{
 			QueryBuilder queryBuilder = new();
-			queryBuilder.LazyInit<TEvent>().AndWhere($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}","=",eventId);
+			queryBuilder.LazyInit<TEvent>().Where($"{nameof(StorableObjectEvent)}.{nameof(StorableObjectEvent.Id)}","=",eventId.ToArray());
 
 			return eventDataAccess.Select<TEvent>(queryBuilder).ToList();
 		}
@@ -154,12 +154,12 @@ namespace Service.Connection
 			queryBuilder.LazyInit<SentEvent>();
 
 			if (selectIncoming)
-				queryBuilder.AndWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
+				queryBuilder.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
 			else
-				queryBuilder.AndWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId);
+				queryBuilder.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId);
 
 			if (selectActive)
-				queryBuilder.AndWhere($"{nameof(ArrivedEvent)}.{nameof(ArrivedEvent.Id)}", "IS", null);
+				queryBuilder.Where($"{nameof(ArrivedEvent)}.{nameof(ArrivedEvent.Id)}", "IS", null);
 
 			IEnumerable<SentEvent> activeDeliveries = eventDataAccess.Select<SentEvent>(queryBuilder);
 
@@ -178,13 +178,13 @@ namespace Service.Connection
 			}
 
 			var queryBuilder = new QueryBuilder();
-			queryBuilder.LazyInit<AdditionEvent>().AndWhere($"{nameof(AdditionEvent)}.{nameof(AdditionEvent.LocationId)}", "=", locationId);
+			queryBuilder.LazyInit<AdditionEvent>().Where($"{nameof(AdditionEvent)}.{nameof(AdditionEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<AdditionEvent>(queryBuilder));
 
 			queryBuilder = new QueryBuilder();
 			queryBuilder
 				.LazyInit<SentEvent>()
-				.AndWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
+				.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
 				.OrWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
 
 			events.AddRange(eventDataAccess.Select<SentEvent>(queryBuilder));
@@ -192,7 +192,7 @@ namespace Service.Connection
 			queryBuilder = new QueryBuilder();
 			queryBuilder
 				.LazyInit<ArrivedEvent>()
-				.AndWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
+				.Where($"{nameof(SentEvent)}.{nameof(SentEvent.DepartureId)}", "=", locationId)
 				.OrWhere($"{nameof(SentEvent)}.{nameof(SentEvent.DestinationId)}", "=", locationId);
 
 			events.AddRange(eventDataAccess.Select<ArrivedEvent>(queryBuilder));
@@ -200,19 +200,19 @@ namespace Service.Connection
 			queryBuilder = new QueryBuilder();
 			queryBuilder
 				.LazyInit<ReservedEvent>()
-				.AndWhere($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
+				.Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<ReservedEvent>(queryBuilder));
 
 			queryBuilder = new QueryBuilder();
 			queryBuilder
 				.LazyInit<ReserveEndedEvent>()
-				.AndWhere($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
+				.Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<ReserveEndedEvent>(queryBuilder));
 
 			queryBuilder = new QueryBuilder();
 			queryBuilder
 				.LazyInit<DecomissionedEvent>()
-				.AndWhere($"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.LocationId)}", "=", locationId);
+				.Where($"{nameof(DecomissionedEvent)}.{nameof(DecomissionedEvent.LocationId)}", "=", locationId);
 			events.AddRange(eventDataAccess.Select<DecomissionedEvent>(queryBuilder));
 
 			return events;
@@ -231,9 +231,9 @@ namespace Service.Connection
 		public List<ReservedEvent> SelectReservationOn(int locationId, bool selectOnlyActive = true)
 		{
 			var queryBuilder = new QueryBuilder();
-			queryBuilder.LazyInit<ReservedEvent>().AndWhere($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}","=",locationId);
+			queryBuilder.LazyInit<ReservedEvent>().Where($"{nameof(ReservedEvent)}.{nameof(ReservedEvent.LocationId)}","=",locationId);
 			if (selectOnlyActive)
-				queryBuilder.AndWhere($"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.Id)}", "IS", null);
+				queryBuilder.Where($"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.Id)}", "IS", null);
 
 			return eventDataAccess.Select<ReservedEvent>(queryBuilder).ToList();
 		}

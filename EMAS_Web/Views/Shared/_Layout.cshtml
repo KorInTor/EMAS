@@ -40,9 +40,21 @@
 
                     @await Component.InvokeAsync("LocationsComponent", new { currentLocationId = locationId })
 
-                    var userFullname = Context.Session.GetString("UserFullname");
-                    <div class="nav-item ms-auto">
-                        <span class="nav-link">@userFullname</span>
+                    @if (Context.Session.GetInt32("Admin") == 1)
+                    {
+                        <div class="dropdown-center d-inline">
+                            <button class="btn btn-outline-secondary p-0 " type="button" data-bs-toggle="dropdown" data-bs-target="#adminlist" aria-expanded="false">
+                                ⚙
+                            </button>
+                            <ul class="dropdown-menu" id="adminlist">
+                                <li><a class="dropdown-item" asp-controller="Admin" asp-action="EmployeeTable">Сотрудники</a></li>
+                                <li><a class="dropdown-item" asp-controller="Admin" asp-action="EquipmentStatusEditor">Статусы Оборудования</a></li>
+                            </ul>
+                        </div>
+                    }
+
+                    <div class="nav-item d-inline">
+                        <span class="nav-link d-inline">@Context.Session.GetString("UserFullname")</span>
                     </div>
                 }
             </div>

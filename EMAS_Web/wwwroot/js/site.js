@@ -9,3 +9,10 @@ function setOnlyOneElementVisible(elemntToSetVisible, elementsToHide) {
     });
     elemntToSetVisible.style.setProperty('display', '', 'important');
 }
+
+function setDisplayNone(element, isNone) {
+    for (let child of element.children) {
+        setDisplayNone(child, isNone);
+    }
+    element.style.setProperty('display', isNone ? 'none' : '', 'important');
+}

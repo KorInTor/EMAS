@@ -40,7 +40,7 @@ namespace Service.Connection
         private static void SetCurrentSessionProperties(string username)
         {
             QueryBuilder queryBuilder = new QueryBuilder();
-            queryBuilder.AndWhere($"{nameof(Employee)}.{nameof(Employee.Username)}","=",username);
+            queryBuilder.Where($"{nameof(Employee)}.{nameof(Employee.Username)}","=",username);
 
             var currentUser = DataBaseClient.GetInstance().Select<Employee>(queryBuilder).First();
 

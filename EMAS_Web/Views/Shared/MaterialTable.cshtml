@@ -93,8 +93,14 @@
 			}
 			<th>
 			</th>
-			<th>
-			</th>
+			@if (ViewBag.MaterialEdit != null)
+			{
+				if (ViewBag.MaterialEdit)
+				{
+					<th>
+					</th>
+				}
+			}
 		</tr>
 	</thead>
 	<tbody class="table w-100 table-group-divider">

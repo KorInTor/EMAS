@@ -3,6 +3,10 @@
 @model IEnumerable<IStorableObject>
 
 <div class="form-check form-check-inline">
+	<input class="form-check-input" type="radio" name="inlineRadioOptions" id="both" value="both" onclick="setDisplayNone(document.querySelector('div#equipmentTableContainer') , false); setDisplayNone(document.querySelector('div#materialTableContainer') , false);" checked>
+	<label class="form-check-label" for="both">Все таблицы</label>
+</div>
+<div class="form-check form-check-inline">
 	<input class="form-check-input" type="radio" name="inlineRadioOptions" id="equipment" value="equipment" onclick="setOnlyOneElementVisible(document.querySelector('div#equipmentTableContainer') , document.querySelectorAll('div.tableContainer'))">
 	<label class="form-check-label" for="equipment">Оборудование</label>
 </div>

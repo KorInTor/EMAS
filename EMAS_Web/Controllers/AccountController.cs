@@ -28,6 +28,7 @@ namespace EMAS_Web.Controllers
             if (dbUser != null)
             {
                 HttpContext.Session.SetInt32("UserId", dbUser.Id);
+                HttpContext.Session.SetInt32("Admin", dbUser.PermissionInfo.IsCurrentEmployeeAdmin ? 1 : 0);
                 HttpContext.Session.SetString("Username", dbUser.Username);
                 HttpContext.Session.SetString("UserFullname", dbUser.Fullname);
 
@@ -47,7 +48,7 @@ namespace EMAS_Web.Controllers
                 TryLogin(username, PasswordManager.Hash(password));
 
 				QueryBuilder queryBuilder = new QueryBuilder();
-				queryBuilder.AndWhere($"{nameof(Employee)}.{nameof(Employee.Username)}", "=", username);
+				queryBuilder.Where($"{nameof(Employee)}.{nameof(Employee.Username)}", "=", username);
 
 				var currentUser = DataBaseClient.GetInstance().Select<Employee>(queryBuilder).FirstOrDefault();
 

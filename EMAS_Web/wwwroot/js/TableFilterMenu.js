@@ -85,7 +85,7 @@ class TableFilterMenu {
         //Дополняем список фильтров.
         const selectedFilterValues = Array.from(divWithElements.querySelectorAll('input[type=checkbox]:not(.d-none)'))
             .filter(el => el.style.display !== 'none' && el.checked);
-        
+
         this.filterOptions.get(parseInt(divWithElements.dataset.columnIndex)).length = 0;
 
         selectedFilterValues.forEach(selectedFilterValue => { this.filterOptions.get(parseInt(divWithElements.dataset.columnIndex)).push(selectedFilterValue.value) });
@@ -251,13 +251,6 @@ function filterList(filterValue, elementWithList) {
         setDisplayNone(listItem, !checkBox.value.toLowerCase().includes(filterValue.toLowerCase()));
     });
 
-}
-
-function setDisplayNone(element, isNone) {
-    for (let child of element.children) {
-        setDisplayNone(child, isNone);
-    }
-    element.style.setProperty('display', isNone ? 'none' : '', 'important');
 }
 
 function getSelectedCheckboxValues(checkBoxContainer) {
