@@ -29,7 +29,6 @@ body {
     height: 100%;
     cursor: col-resize;
     user-select: none;
-    background-color: black;
 }
 
 table {

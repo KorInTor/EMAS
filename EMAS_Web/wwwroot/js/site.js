@@ -16,3 +16,7 @@ function setDisplayNone(element, isNone) {
     }
     element.style.setProperty('display', isNone ? 'none' : '', 'important');
 }
+
+function setDisplayNoneSingle(element, isNone) {
+    element.style.setProperty('display', isNone ? 'none' : '', 'important');
+}
