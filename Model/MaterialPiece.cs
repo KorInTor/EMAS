@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Model.Enum;
 
 namespace Model
 {
@@ -81,7 +82,7 @@ namespace Model
             set => SetProperty(ref comment, value);
         }
 
-        public string ShortInfo => $"Материал Id = {this.Id}";
+        public StorableObjectType StorableObjectType => StorableObjectType.Material;
 
         public bool Equals(MaterialPiece? other)
         {

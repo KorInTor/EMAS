@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Model.Enum;
 using System.ComponentModel.DataAnnotations;
 
 namespace Model
@@ -197,9 +198,9 @@ namespace Model
 			set => SetProperty(ref _factoryNumber, value);
 		}
 
-		public string ShortInfo => $"Оборуование: Id = {this.Id}";
+        public StorableObjectType StorableObjectType => StorableObjectType.Equipment;
 
-		public bool Equals(Equipment? other)
+        public bool Equals(Equipment? other)
 		{
 			if (other == null || GetType() != other.GetType())
 			{

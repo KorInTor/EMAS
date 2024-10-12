@@ -10,7 +10,7 @@ namespace Model
     public interface IStorableObject
     {
         public int Id { get; set; }
-        public string ShortInfo { get; }
+		public StorableObjectType StorableObjectType { get;}
     }
 
 	public static class StorableObjectExtensions
