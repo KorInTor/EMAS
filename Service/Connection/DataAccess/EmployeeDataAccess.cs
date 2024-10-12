@@ -103,8 +103,6 @@ namespace Service.Connection.DataAccess
 				ConnectionPool.ReleaseConnection(connection);
 
 				permissionsToUpdate.Add((employeeToUpdate.Id, employeeToUpdate.Permissions));
-
-				Debug.WriteLine($"Успешно обновлён сотрудник: Id: {employeeToUpdate.Id}, Name: {employeeToUpdate.Fullname}");
 			}
 
 			permissionsToUpdate.ForEach(x => permissionDataAccess.UpdatePermissions(x.Item1, x.Item2));

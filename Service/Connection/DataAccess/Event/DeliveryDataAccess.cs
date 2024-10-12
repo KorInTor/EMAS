@@ -32,8 +32,6 @@ namespace Service.Connection.DataAccess.Event
                 command.ExecuteNonQuery();
             }
 
-            Debug.WriteLine("Успешно добавлено отправление");
-
             ConnectionPool.ReleaseConnection(connection);
         }
 

@@ -51,12 +51,6 @@ namespace Service.Connection.DataAccess
                 {
                     list.Add(new Location(reader.GetInt32(0), reader.GetString(1)));
                 }
-
-                foreach (var data in list)
-                {
-                    Debug.WriteLine($"Получена локация:{data.Id}-{data.Name}");
-                }
-
             }
 
             ConnectionPool.ReleaseConnection(connection);
