@@ -6,17 +6,48 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - EMAS_Web</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 
     @* Bootstrap *@
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap-5.3.3-dist/css/bootstrap.min.css" asp-append-version="true" />
+    <script src="~/lib/bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+
+    @* SignalR *@
+    <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <link rel="stylesheet" href="~/EMAS_Web.styles.css" asp-append-version="true" />
 
+    @* Обработчик событий *@
+    @if (Context.Session.GetString("UserFullname") != null)
+    {
+        <script type="text/javascript">
+            const hubConnection = new signalR.HubConnectionBuilder().withUrl("/events").build();
+
+            hubConnection.on("ReceiveNewEvent", function (newEventString) {
+                let newEventJSON = JSON.parse(newEventString);
+                try {
+                    console.log('Received event:', newEventJSON);
+                    addEventToast(newEventJSON);
+                } catch (error) {
+                    console.error("Error processing event:", error);
+                }
+            });
+
+            hubConnection.onclose(function () {
+                console.log('Connection closed. Attempting to reconnect...');
+                setTimeout(function () {
+                    startConnection();
+                }, 5000);
+            });
+
+            hubConnection.start()
+                .catch(function (err) {
+                    return console.error(err.toString());
+                });
+        </script>
+    }
 </head>
 
 <body>
@@ -83,5 +114,8 @@
             </text>
         }
     </script>
+    <div class="toast-container position-static position-fixed bottom-0 end-0">
+        
+    </div>
 </body>
 </html>
