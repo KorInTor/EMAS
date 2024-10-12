@@ -1,12 +1,8 @@
+using EMAS_Web.Filters;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Model;
 using Model.Event;
-using EMAS_Web.Filters;
-using Service;
 using Service.Connection;
-using Service.Connection.DataAccess.Event;
-using Microsoft.AspNetCore.Http.Extensions;
 
 namespace EMAS_Web.Controllers
 {
@@ -14,13 +10,20 @@ namespace EMAS_Web.Controllers
     [LocationFilter]
     public class StorableObjectController : Controller
     {
+        private readonly DataBaseClient _dataBaseClient;
+
+        public StorableObjectController(DataBaseClient dataBaseClient)
+        {
+            _dataBaseClient = dataBaseClient;
+        }
+
         [HttpGet]
         public IActionResult AddEquipment(int locationId)
         {
             //TODO Доабвить server side провепрку на наличие прав
 
-            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
-            ViewBag.DistinctValues = DataBaseClient.GetInstance().SelectDistinctPropertyValues(typeof(Equipment));
+            ViewBag.Statuses = _dataBaseClient.SelectEquipmentStatuses();
+            ViewBag.DistinctValues = _dataBaseClient.SelectDistinctPropertyValues(typeof(Equipment));
 
             return View("SingleEquipment");
         }
@@ -30,12 +33,12 @@ namespace EMAS_Web.Controllers
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
 
-            ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
+            ViewBag.Statuses = _dataBaseClient.SelectEquipmentStatuses();
+            var addition = new AdditionEvent((int)userId, 0, EventType.Addition, DateTime.Now, [newEquipment], locationId);
 
             try
             {
-                var addition = new AdditionEvent((int)userId, 0, EventType.Addition, DateTime.Now, [newEquipment], locationId);
-                DataBaseClient.GetInstance().AddSingle(addition);
+                _dataBaseClient.AddSingle(addition);
             }
             catch (Exception excpetion)
             {
@@ -43,7 +46,8 @@ namespace EMAS_Web.Controllers
                 return View("SingleEquipment");
             }
             TempData["AlertMessage"] = "Успех";
-            return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId});
+
+            return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
         }
 
         [HttpGet]
@@ -51,7 +55,7 @@ namespace EMAS_Web.Controllers
         {
             //TODO Доабвить server side провепрку на наличие прав
 
-            ViewBag.DistinctValues = DataBaseClient.GetInstance().SelectDistinctPropertyValues(typeof(MaterialPiece));
+            ViewBag.DistinctValues = _dataBaseClient.SelectDistinctPropertyValues(typeof(MaterialPiece));
 
             return View("SingleMaterial");
         }
@@ -64,7 +68,7 @@ namespace EMAS_Web.Controllers
             try
             {
                 var addition = new AdditionEvent((int)userId, 0, EventType.Addition, DateTime.Now, [newMaterial], locationId);
-                DataBaseClient.GetInstance().AddSingle(addition);
+                _dataBaseClient.AddSingle(addition);
             }
             catch (Exception excpetion)
             {
@@ -81,15 +85,15 @@ namespace EMAS_Web.Controllers
         {
             //TODO Доабвить server side провепрку на наличие прав
 
-            Equipment? oldEquipment = (Equipment?)DataBaseClient.GetInstance().SelectStorableObjectsByIds([objectId]).FirstOrDefault();
-			ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
-			if (oldEquipment == null)
+            Equipment? oldEquipment = (Equipment?)_dataBaseClient.SelectStorableObjectsByIds([objectId]).FirstOrDefault();
+            ViewBag.Statuses = _dataBaseClient.SelectEquipmentStatuses();
+            if (oldEquipment == null)
             {
                 TempData["AlertMessage"] = "Такого оборудования нет в Базе данных";
                 return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
             }
 
-            ViewBag.DistinctValues = DataBaseClient.GetInstance().SelectDistinctPropertyValues(typeof(Equipment));
+            ViewBag.DistinctValues = _dataBaseClient.SelectDistinctPropertyValues(typeof(Equipment));
 
             return View("SingleEquipment", oldEquipment);
         }
@@ -98,19 +102,19 @@ namespace EMAS_Web.Controllers
         public IActionResult EditEquipment(Equipment updatedEquipment, int locationId, string comment)
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
-			ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
-			Equipment? oldEquipment = (Equipment?)DataBaseClient.GetInstance().SelectStorableObjectsByIds([updatedEquipment.Id]).FirstOrDefault();
-			if (oldEquipment == null)
-			{
-				TempData["AlertMessage"] = "Такого оборудования нет в Базе данных";
-				return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
-			}
+            ViewBag.Statuses = _dataBaseClient.SelectEquipmentStatuses();
+            Equipment? oldEquipment = (Equipment?)_dataBaseClient.SelectStorableObjectsByIds([updatedEquipment.Id]).FirstOrDefault();
+            if (oldEquipment == null)
+            {
+                TempData["AlertMessage"] = "Такого оборудования нет в Базе данных";
+                return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
+            }
 
-			ViewBag.Statuses = DataBaseClient.GetInstance().SelectEquipmentStatuses();
+            ViewBag.Statuses = _dataBaseClient.SelectEquipmentStatuses();
             var dataChangedEvent = new DataChangedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.DataChanged, DateTime.UtcNow, [updatedEquipment], comment);
             try
             {
-                DataBaseClient.GetInstance().AddSingle(dataChangedEvent);
+                _dataBaseClient.AddSingle(dataChangedEvent);
             }
             catch (Exception excpetion)
             {
@@ -122,18 +126,18 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult EditMaterial(int objectId,int locationId)
+        public IActionResult EditMaterial(int objectId, int locationId)
         {
             //TODO Доабвить server side провепрку на наличие прав
-            MaterialPiece? oldMaterial = (MaterialPiece?)DataBaseClient.GetInstance().SelectStorableObjectsByIds([objectId]).FirstOrDefault();
+            MaterialPiece? oldMaterial = (MaterialPiece?)_dataBaseClient.SelectStorableObjectsByIds([objectId]).FirstOrDefault();
 
-			if (oldMaterial == null)
-			{
-				TempData["AlertMessage"] = "Такого материала нет в Базе данных";
-				return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
-			}
+            if (oldMaterial == null)
+            {
+                TempData["AlertMessage"] = "Такого материала нет в Базе данных";
+                return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
+            }
 
-			ViewBag.DistinctValues = DataBaseClient.GetInstance().SelectDistinctPropertyValues(typeof(MaterialPiece));
+            ViewBag.DistinctValues = _dataBaseClient.SelectDistinctPropertyValues(typeof(MaterialPiece));
 
             return View("SingleMaterial", oldMaterial);
         }
@@ -143,19 +147,19 @@ namespace EMAS_Web.Controllers
         {
             int? userId = HttpContext.Session.GetInt32("UserId");
 
-            MaterialPiece? oldMaterial = (MaterialPiece?)DataBaseClient.GetInstance().SelectStorableObjectsByIds([updatedMaterial.Id]).FirstOrDefault();
+            MaterialPiece? oldMaterial = (MaterialPiece?)_dataBaseClient.SelectStorableObjectsByIds([updatedMaterial.Id]).FirstOrDefault();
 
-			if (oldMaterial == null)
+            if (oldMaterial == null)
             {
                 TempData["AlertMessage"] = "Такого материала нет в Базе данных";
                 return RedirectToActionPermanent("Index", "StorableObject", new { locationId = locationId });
             }
 
-            var dataChangedEvent = new DataChangedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.DataChanged, DateTime.UtcNow, [updatedMaterial],comment);
+            var dataChangedEvent = new DataChangedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.DataChanged, DateTime.UtcNow, [updatedMaterial], comment);
 
             try
             {
-                DataBaseClient.GetInstance().AddSingle(dataChangedEvent);
+                _dataBaseClient.AddSingle(dataChangedEvent);
             }
             catch (Exception excpetion)
             {
@@ -170,25 +174,25 @@ namespace EMAS_Web.Controllers
         [AllowSpecialLocationId]
         public IActionResult Index(int locationId)
         {
-			ViewBag.PermissionList = (from prm in DataBaseClient.GetInstance().SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First().Permissions
-												where prm.LocationId == locationId
-												select prm).OrderBy(x => (int)x.PermissionType);
+            ViewBag.PermissionList = (from prm in _dataBaseClient.SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First().Permissions
+                                      where prm.LocationId == locationId
+                                      select prm).OrderBy(x => (int)x.PermissionType);
 
             List<IStorableObject> storableObjectList = [];
 
-            if(locationId == LocationFilter.AllLocationCase)
+            if (locationId == LocationFilter.AllLocationCase)
             {
-                foreach(var location in DataBaseClient.GetInstance().SelectNamedLocations())
+                foreach (var location in _dataBaseClient.SelectNamedLocations())
                 {
-                    storableObjectList.AddRange(DataBaseClient.GetInstance().SelectStorableObjectOn(location.Key));
+                    storableObjectList.AddRange(_dataBaseClient.SelectStorableObjectOn(location.Key));
                 }
             }
             else
             {
-                storableObjectList = DataBaseClient.GetInstance().SelectStorableObjectOn(locationId);
+                storableObjectList = _dataBaseClient.SelectStorableObjectOn(locationId);
             }
-            
-			ViewBag.LastEvents = DataBaseClient.GetInstance().SelectLastEventsForStorableObjects(storableObjectList);
+
+            ViewBag.LastEvents = _dataBaseClient.SelectLastEventsForStorableObjects(storableObjectList);
             ViewBag.LocationId = locationId;
             return View(storableObjectList);
         }

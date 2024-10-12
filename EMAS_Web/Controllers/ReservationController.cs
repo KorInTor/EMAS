@@ -8,11 +8,18 @@ namespace EMAS_Web.Controllers
     [AuthorizationFilter]
     public class ReservationController : Controller
     {
+        private readonly DataBaseClient _dataBaseClient;
+
+        public ReservationController(DataBaseClient dataBaseClient)
+        {
+            _dataBaseClient = dataBaseClient;
+        }
+
         [HttpGet]
         [LocationFilter]
         public IActionResult Index(int locationId)
         {
-            return View(DataBaseClient.GetInstance().SelectReservationOn(locationId));
+            return View(_dataBaseClient.SelectReservationOn(locationId));
         }
 
         [HttpGet]
@@ -27,10 +34,10 @@ namespace EMAS_Web.Controllers
 
             var selectedIdsList = selectedIds.Select(int.Parse);
 
-            ViewBag.SelectedObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
+            ViewBag.SelectedObjects = _dataBaseClient.SelectStorableObjectsByIds(selectedIdsList);
             ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
 
-            foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
+            foreach (var location in _dataBaseClient.SelectNamedLocations())
             {
                 if (location.Key == locationId)
                 {
@@ -54,7 +61,7 @@ namespace EMAS_Web.Controllers
 
             var selectedIdList = selectedIds.Select(id => int.Parse(id));
 
-            var storableObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdList);
+            var storableObjects = _dataBaseClient.SelectStorableObjectsByIds(selectedIdList);
 
             var reservedEvent = new ReservedEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Reserved,dateTime,storableObjects,comment,locationId);
 
@@ -63,7 +70,7 @@ namespace EMAS_Web.Controllers
 
 			try
             {
-                DataBaseClient.GetInstance().AddSingle(reservedEvent);
+                _dataBaseClient.AddSingle(reservedEvent);
             }
             catch(Exception exception)
             {
@@ -78,7 +85,7 @@ namespace EMAS_Web.Controllers
         [LocationFilter]
         public IActionResult Confirm(long reservedEventId)
         {
-            var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
+            var reservedEventToConfirm = _dataBaseClient.SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
 
             ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
             ViewBag.MinDateTimeString = reservedEventToConfirm.DateTime.ToString("yyyy-MM-ddTHH:mm");
@@ -90,7 +97,7 @@ namespace EMAS_Web.Controllers
         [LocationFilter]
         public IActionResult Confirm(long reservedEventId, string comment, DateTime dateTime, bool isDecomissioned)
         {
-			var reservedEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
+			var reservedEventToConfirm = _dataBaseClient.SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
 
             ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
             ViewBag.MinDateTimeString = reservedEventToConfirm.DateTime.ToString("yyyy-MM-ddTHH:mm");
@@ -108,7 +115,7 @@ namespace EMAS_Web.Controllers
             try
             {
                 
-                DataBaseClient.GetInstance().AddSingle(endEvent);
+                _dataBaseClient.AddSingle(endEvent);
             }
             catch (Exception ex)
             {

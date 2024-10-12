@@ -8,6 +8,12 @@ namespace EMAS_Web.Controllers
     [AuthorizationFilter]
     public class DecomissionController : Controller
     {
+        private readonly DataBaseClient _dataBaseClient;
+
+        public DecomissionController (DataBaseClient dataBaseClient)
+        {
+            _dataBaseClient = dataBaseClient;
+        }
         [HttpGet]
         [LocationFilter]
         public IActionResult Create(IEnumerable<string> selectedIds, int locationId)
@@ -19,10 +25,10 @@ namespace EMAS_Web.Controllers
             }
             var selectedIdsList = selectedIds.Select(int.Parse);
 
-            ViewBag.SelectedObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
+            ViewBag.SelectedObjects = _dataBaseClient.SelectStorableObjectsByIds(selectedIdsList);
             ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
 
-            foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
+            foreach (var location in _dataBaseClient.SelectNamedLocations())
             {
                 if (location.Key == locationId)
                 {
@@ -46,7 +52,7 @@ namespace EMAS_Web.Controllers
 
             var selectedIdList = selectedIds.Select(int.Parse);
 
-            var storableObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdList);
+            var storableObjects = _dataBaseClient.SelectStorableObjectsByIds(selectedIdList);
 
             var decomissionedEvent = new DecomissionedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.Decommissioned, dateTime, storableObjects, comment, locationId);
 
@@ -55,7 +61,7 @@ namespace EMAS_Web.Controllers
 
             try
             {
-                DataBaseClient.GetInstance().AddSingle(decomissionedEvent);
+                _dataBaseClient.AddSingle(decomissionedEvent);
             }
             catch (Exception exception)
             {

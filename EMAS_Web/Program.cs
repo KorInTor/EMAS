@@ -1,3 +1,10 @@
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
+using Model.Event;
+using Service.Connection;
+using Service;
+
 namespace EMAS_Web
 {
     public class Program
@@ -10,6 +17,9 @@ namespace EMAS_Web
             builder.Services.AddControllersWithViews();
             builder.Services.AddDistributedMemoryCache();// добавляем IDistributedMemoryCache
             builder.Services.AddSession();  // добавляем сервисы сессии
+            builder.Services.AddSignalR();
+            builder.Services.AddSingleton<DataBaseClient>();
+            builder.Services.AddHostedService<NewEventNotifier>();
 
             var app = builder.Build();
 
@@ -29,6 +39,8 @@ namespace EMAS_Web
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.MapHub<EventsHub>("/events");
 
             app.MapControllerRoute(
                 name: "default",

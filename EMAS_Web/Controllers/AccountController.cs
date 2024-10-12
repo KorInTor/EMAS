@@ -24,6 +24,12 @@ namespace EMAS_Web.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                TempData["AlertMessage"] = "Если ты ещё раз отправишь пустое поле, я солью твои данные в сеть";
+                return View();
+            }
+
             var dbUser = GetUserFromDatabase(username, password);
             if (dbUser != null)
             {

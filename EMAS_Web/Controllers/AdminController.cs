@@ -36,12 +36,6 @@ namespace EMAS_Web.Controllers
                 return Json(new { message = "Список статусов пуст или невалиден." });
             }
 
-            Debug.WriteLine("Полученные статусы");
-            foreach (var status in statuses)
-            {
-                Debug.WriteLine(status);
-            }
-
             List<(int, string)> statusTuples = [];
             foreach(var status in statuses)
             {
@@ -130,11 +124,12 @@ namespace EMAS_Web.Controllers
                 return RedirectToActionPermanent("EmployeeTable","Admin");
             }
 
+            string passwordChanged = "";
             if (changePassword != null)
             {
                 string newPassword = PasswordManager.Generate(10);
                 updatedEmployee.PasswordHash = PasswordManager.Hash(newPassword);
-                TempData["AlertMessage"] = $"Пароль для сотрудника: {newPassword}";
+                passwordChanged = $"Пароль для сотрудника: {newPassword}";
             }
             
             try
@@ -147,7 +142,7 @@ namespace EMAS_Web.Controllers
                 return RedirectToActionPermanent("EmployeeTable", "Admin");
             }
 
-            TempData["AlertMessage"] = "Данные изменены успешно";
+            TempData["AlertMessage"] = $"Данные изменены успешно" + passwordChanged;
             return RedirectToActionPermanent("EmployeeTable", "Admin");
         }
     }

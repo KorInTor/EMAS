@@ -3,26 +3,31 @@ using Microsoft.AspNetCore.Mvc;
 using Model;
 using Model.Event;
 using Service.Connection;
-using System.Diagnostics;
 
 namespace EMAS_Web.Controllers
 {
     [AuthorizationFilter]
     public class DeliveryController : Controller
     {
+        private readonly DataBaseClient _dataBaseClient;
+
+        public DeliveryController(DataBaseClient dataBaseClient)
+        {
+            _dataBaseClient = dataBaseClient;
+        }
         [LocationFilter]
         public IActionResult Index(int locationId, bool selectOutgoing = false)
         {
             ViewBag.Outgoing = selectOutgoing;
             ViewBag.LocationId = locationId;
-            ViewBag.LocationDictionary = DataBaseClient.GetInstance().SelectNamedLocations();
-            ViewBag.HasPermission = DataBaseClient.GetInstance().SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First()
-				.Permissions
+            ViewBag.LocationDictionary = _dataBaseClient.SelectNamedLocations();
+            ViewBag.HasPermission = _dataBaseClient.SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First()
+                .Permissions
                 .Where(x => x.LocationId == locationId)
                 .Where(x => x.PermissionType == Model.Enum.PermissionType.DeliveryAccess)
                 .Any();
 
-            return View(DataBaseClient.GetInstance().SelectDeliveries(locationId, !selectOutgoing));
+            return View(_dataBaseClient.SelectDeliveries(locationId, !selectOutgoing));
         }
 
         [HttpGet]
@@ -37,9 +42,9 @@ namespace EMAS_Web.Controllers
 
             var selectedIdsList = selectedIds.Select(int.Parse).ToList();
 
-            ViewBag.SelectedObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
+            ViewBag.SelectedObjects = _dataBaseClient.SelectStorableObjectsByIds(selectedIdsList);
             ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
-            ViewBag.Locations = DataBaseClient.GetInstance().SelectNamedLocations();
+            ViewBag.Locations = _dataBaseClient.SelectNamedLocations();
 
             foreach (var location in ViewBag.Locations)
             {
@@ -65,13 +70,13 @@ namespace EMAS_Web.Controllers
 
             var selectedIdsList = selectedIds.Select(int.Parse);
 
-            var storableObjects = DataBaseClient.GetInstance().SelectStorableObjectsByIds(selectedIdsList);
+            var storableObjects = _dataBaseClient.SelectStorableObjectsByIds(selectedIdsList);
 
-            var sentEvent = new SentEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Sent,dateTime, storableObjects, comment, departureId, destinationId);
+            var sentEvent = new SentEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.Sent, dateTime, storableObjects, comment, departureId, destinationId);
 
             try
             {
-                DataBaseClient.GetInstance().AddSingle(sentEvent);
+                _dataBaseClient.AddSingle(sentEvent);
             }
             catch (Exception ex)
             {
@@ -85,7 +90,7 @@ namespace EMAS_Web.Controllers
         [HttpGet]
         public IActionResult Confirm(long sentEventId)
         {
-            var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<SentEvent>([sentEventId]).First();
+            var sentEventToConfirm = _dataBaseClient.SelectEventsByIds<SentEvent>([sentEventId]).First();
 
             ViewBag.MaxDateTimeString = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm");
             ViewBag.MinDateTimeString = sentEventToConfirm.DateTime.ToString("yyyy-MM-ddTHH:mm");
@@ -96,15 +101,15 @@ namespace EMAS_Web.Controllers
         [HttpPost]
         public IActionResult Confirm(long sentEventId, string comment, DateTime dateTime)
         {
-            var sentEventToConfirm = DataBaseClient.GetInstance().SelectEventsByIds<SentEvent>([sentEventId]).First();
+            var sentEventToConfirm = _dataBaseClient.SelectEventsByIds<SentEvent>([sentEventId]).First();
 
-            var arrivedEvent = new ArrivedEvent((int)HttpContext.Session.GetInt32("UserId"),0,EventType.Arrived,dateTime.ToUniversalTime(), sentEventToConfirm.ObjectsInEvent, comment,sentEventId);
+            var arrivedEvent = new ArrivedEvent((int)HttpContext.Session.GetInt32("UserId"), 0, EventType.Arrived, dateTime.ToUniversalTime(), sentEventToConfirm.ObjectsInEvent, comment, sentEventId);
 
             try
             {
-                DataBaseClient.GetInstance().AddSingle(arrivedEvent);
+                _dataBaseClient.AddSingle(arrivedEvent);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 TempData["AlertMessage"] = ex.Message;
                 return View(sentEventToConfirm);
