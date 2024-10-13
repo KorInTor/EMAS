@@ -14,6 +14,7 @@
     @* SignalR *@
     <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
 
+    <script src="~/js/timeSpan.min.js"></script>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -25,8 +26,15 @@
         <script type="text/javascript">
             const hubConnection = new signalR.HubConnectionBuilder().withUrl("/events").build();
 
-            hubConnection.on("ReceiveNewEvent", function (newEventString) {
-                let newEventJSON = JSON.parse(newEventString);
+            let newEventJSON = null;
+            const eventHandlers = [];
+
+            function addHandler(handler) {
+                eventHandlers.push(handler);
+            }
+
+            addHandler(function (newEventString) {
+                newEventJSON = JSON.parse(newEventString);
                 try {
                     console.log('Received event:', newEventJSON);
                     addEventToast(newEventJSON);
@@ -35,17 +43,6 @@
                 }
             });
 
-            hubConnection.onclose(function () {
-                console.log('Connection closed. Attempting to reconnect...');
-                setTimeout(function () {
-                    startConnection();
-                }, 5000);
-            });
-
-            hubConnection.start()
-                .catch(function (err) {
-                    return console.error(err.toString());
-                });
         </script>
     }
 </head>
@@ -114,6 +111,28 @@
             </text>
         }
     </script>
+
+    <script type="text/javascript">
+
+
+        hubConnection.on("ReceiveNewEvent", function (newEventString) {
+            eventHandlers.forEach(handler => handler(newEventString));
+        });
+
+        hubConnection.onclose(function () {
+                console.log('Connection closed. Attempting to reconnect...');
+                setTimeout(function () {
+                    startConnection();
+                }, 5000);
+            });
+
+        hubConnection.start()
+            .catch(function (err) {
+                return console.error(err.toString());
+            });
+
+    </script>
+
     <div class="toast-container position-static position-fixed bottom-0 end-0">
         
     </div>

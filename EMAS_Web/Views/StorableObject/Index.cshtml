@@ -7,14 +7,9 @@
 
 @{
     IEnumerable<Model.Permission> currentPermissions = (IEnumerable<Model.Permission>)ViewBag.PermissionList;
-    if (currentPermissions.Any(x => x.PermissionType == PermissionType.EquipmentEdit))
-    {
-        ViewBag.EquipmentEdit = true;
-    }
-    if (currentPermissions.Any(x => x.PermissionType == PermissionType.MaterialsEdit))
-    {
-        ViewBag.MaterialEdit = true;
-    }
+    ViewBag.EquipmentEdit = currentPermissions.Any(x => x.PermissionType == PermissionType.EquipmentEdit);
+    ViewBag.MaterialEdit = currentPermissions.Any(x => x.PermissionType == PermissionType.MaterialsEdit);
+    
 }
 
 @await Html.PartialAsync("StorableObjectsTables", Model)
@@ -107,5 +102,41 @@
 
     document.addEventListener('click', function () {
         customMenu.style.display = 'none';
+    });
+</script>
+
+<script>
+    addHandler(function (newEventString) {
+        if (newEventJSON.EventType != 6){
+            return;
+        }
+        @if (ViewBag.LocationId != -1)
+        {
+            <text>
+            if(newEventJSON.LocationId != @(ViewBag.LocationId)) {
+                return;
+            }
+            </text>
+        }
+        try {
+            newEventJSON.ObjectsInEvent.forEach(storableObject => {
+                let canChange = false;
+                let tableId = "";
+                if (storableObject.StorableObjectType === 1) {
+                    canChange = @(ViewBag.EquipmentEdit ? "true" : "false");
+                    tableId = "equipmentTable";
+                };
+                if (storableObject.StorableObjectType === 2) {
+                    canChange = @(ViewBag.MaterialEdit ? "true" : "false");
+                    tableId = "materialTable";
+                };
+
+                const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+                tableBody.appendChild(buildRowForStorableObject(storableObject, canChange,new Date(newEventJSON.DateTime)));
+
+            });
+        } catch (error) {
+            console.error("Error processing event:", error);
+        }
     });
 </script>
