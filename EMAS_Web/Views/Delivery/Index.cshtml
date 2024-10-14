@@ -1,43 +1,35 @@
 ﻿@model IEnumerable<Model.Event.SentEvent>
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
-<head>
-    <style>
-        .fixed-bottom {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background-color: #f1f1f1;
-            text-align: center;
-            padding: 10px;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
+@{
+    ViewBag.CanConfirm = ViewBag.Incoming && ViewBag.HasPermission;
+}
 
-
-<div class="btn-group" role="group">
-    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        @if (ViewBag.Outgoing)
-        {
-            <span>Исходящие</span>
-        }
-        @if (!ViewBag.Outgoing)
-        {
-            <span>Входящие</span>
-        }
-    </button>
-    <ul class="dropdown-menu">
-        @if (!ViewBag.Outgoing)
-        {
-            <li><a asp-controller="Delivery" asp-action="Index" asp-route-selectOutgoing="true" asp-route-locationId="@ViewBag.LocationId" class="btn btn-primary">Выбрать Исходящие</a></li>
-        }
-        @if (ViewBag.Outgoing)
-        {
-            <li><a asp-controller="Delivery" asp-action="Index" asp-route-selectOutgoing="false" asp-route-locationId="@ViewBag.LocationId" class="btn btn-primary">Выбрать Входящие</a></li>
-        }
-    </ul>
-</div>
+@if (ViewBag.LocationId != EMAS_Web.Filters.LocationFilter.SpecialLocationId)
+{
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (ViewBag.Outgoing)
+            {
+                <span>Исходящие</span>
+            }
+            @if (ViewBag.Incoming)
+            {
+                <span>Входящие</span>
+            }
+        </button>
+        <ul class="dropdown-menu">
+            @if (ViewBag.Incoming)
+            {
+                <li><a asp-controller="Delivery" asp-action="Index" asp-route-selectOutgoing="true" asp-route-locationId="@ViewBag.LocationId" class="btn btn-primary">Выбрать Исходящие</a></li>
+            }
+            @if (ViewBag.Outgoing)
+            {
+                <li><a asp-controller="Delivery" asp-action="Index" asp-route-selectOutgoing="false" asp-route-locationId="@ViewBag.LocationId" class="btn btn-primary">Выбрать Входящие</a></li>
+            }
+        </ul>
+    </div>
+}
 
 <table id="deliveryTable" class="table">
     <thead>
@@ -45,8 +37,18 @@
             <th>Id</th>
             <th>Дата отправки</th>
             <th>Комментарий</th>
-            <th>@(ViewBag.Outgoing ? "Место Назначения" : "Отправлено Из")</th>
-            <th></th>
+            @if (ViewBag.Outgoing)
+            {
+                <th>Место Назначения</th>
+            }
+            @if (ViewBag.Incoming)
+            {
+                <th>Отправлено Из</th>
+            }
+            @if (ViewBag.CanConfirm)
+            {
+                <th></th>
+            }
             <th></th>
         </tr>
     </thead>
@@ -57,26 +59,28 @@
                 <td>@item.Id</td>
                 <td>@item.DateTime</td>
                 <td>@item.Comment</td>
-                <td>
-                    @if (ViewBag.Outgoing)
-                    {
+                @if (ViewBag.Outgoing)
+                {
+                    <td>
                         @ViewBag.LocationDictionary[item.DestinationId]
-                    }
-                    @if (!ViewBag.Outgoing)
-                    {
+                    </td>
+                }
+                @if (ViewBag.Incoming)
+                {
+                    <td>
                         @ViewBag.LocationDictionary[item.DepartureId]
-                    }
-                </td>
+                    </td>
+                }
+                @if (ViewBag.CanConfirm)
+                {
+                    <td>
 
-                <td>
-                    @if(!ViewBag.Outgoing && ViewBag.HasPermission)
-                    {
                         <form asp-controller="Delivery" asp-action="Confirm" method="get">
                             <input type="hidden" name="sentEventId" value="@item.Id" />
                             <button type="submit" class="btn btn-primary">Подтвердить</button>
                         </form>
-                    }
-                </td>
+                    </td>
+                }
                 <td>
                     <form asp-controller="Archive" asp-action="ObjectsInEvent" method="get">
                         <input type="hidden" name="eventId" value="@item.Id" />

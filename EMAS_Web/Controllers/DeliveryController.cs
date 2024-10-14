@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Model;
 using Model.Event;
 using Service.Connection;
+using Service.Connection.DataAccess.Query;
 
 namespace EMAS_Web.Controllers
 {
@@ -15,19 +16,36 @@ namespace EMAS_Web.Controllers
         {
             _dataBaseClient = dataBaseClient;
         }
+
         [LocationFilter]
+        [AllowSpecialLocationId]
         public IActionResult Index(int locationId, bool selectOutgoing = false)
         {
             ViewBag.Outgoing = selectOutgoing;
+            ViewBag.Incoming = !selectOutgoing;
             ViewBag.LocationId = locationId;
             ViewBag.LocationDictionary = _dataBaseClient.SelectNamedLocations();
-            ViewBag.HasPermission = _dataBaseClient.SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First()
-                .Permissions
+            IEnumerable<SentEvent> deliveries;
+
+            if (locationId == LocationFilter.SpecialLocationId)
+            {
+                ViewBag.Outgoing = true;
+                ViewBag.Incoming = true;
+                QueryBuilder queryBuilder = new();
+                queryBuilder.LazyInit<SentEvent>().Where($"{nameof(ArrivedEvent)}.{nameof(ArrivedEvent.Id)}","IS",null);
+                deliveries = _dataBaseClient.SelectEvent<SentEvent>(queryBuilder);
+                ViewBag.HasPermission = false;
+            }
+            else
+            {
+                deliveries = _dataBaseClient.SelectDeliveries(locationId, !selectOutgoing);
+                ViewBag.HasPermission = _dataBaseClient.SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First().Permissions
                 .Where(x => x.LocationId == locationId)
                 .Where(x => x.PermissionType == Model.Enum.PermissionType.DeliveryAccess)
                 .Any();
+            }
 
-            return View(_dataBaseClient.SelectDeliveries(locationId, !selectOutgoing));
+            return View(deliveries);
         }
 
         [HttpGet]

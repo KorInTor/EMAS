@@ -180,7 +180,7 @@ namespace EMAS_Web.Controllers
 
             List<IStorableObject> storableObjectList = [];
 
-            if (locationId == LocationFilter.AllLocationCase)
+            if (locationId == LocationFilter.SpecialLocationId)
             {
                 foreach (var location in _dataBaseClient.SelectNamedLocations())
                 {

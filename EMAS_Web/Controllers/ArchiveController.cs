@@ -18,7 +18,7 @@ namespace EMAS_Web.Controllers
 
 			List<StorableObjectEvent> events = []; 
 			
-            if (locationId == LocationFilter.AllLocationCase)
+            if (locationId == LocationFilter.SpecialLocationId)
 			{
                 foreach (var location in DataBaseClient.GetInstance().SelectNamedLocations())
 				{

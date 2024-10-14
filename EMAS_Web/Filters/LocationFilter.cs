@@ -7,7 +7,7 @@ namespace EMAS_Web.Filters
 {
     public class LocationFilter : Attribute, IResourceFilter
     {
-        public static readonly int AllLocationCase = -1;
+        public static readonly int SpecialLocationId = -1;
 
         public void OnResourceExecuting(ResourceExecutingContext context)
         {
@@ -46,7 +46,7 @@ namespace EMAS_Web.Filters
 
         private bool IsValidLocationId(int locationId, bool IsAllCaseAllowed)
         {
-            if (IsAllCaseAllowed && locationId == AllLocationCase)
+            if (IsAllCaseAllowed && locationId == SpecialLocationId)
                 return true;
 
             var locations = DataBaseClient.GetInstance().SelectNamedLocations();
