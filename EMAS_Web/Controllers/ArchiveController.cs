@@ -38,6 +38,7 @@ namespace EMAS_Web.Controllers
 			return View(events.OrderByDescending(x => x.DateTime));
 		}
 
+		[HttpGet]
 		public IActionResult EmployeeHistory(int employeeId)
 		{
 			QueryBuilder queryBuilder = new();
