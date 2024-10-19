@@ -1,12 +1,16 @@
 ﻿@using Model.Event
 @using Service
+@using System.Diagnostics
 @model IEnumerable<StorableObjectEvent>
 
 <script src="~/js/tableResizer.js"></script>
 
 @if(ViewBag.Filtration == true)
 {
-	<script src="~/js/TableFilterMenu.js"></script>
+	<script src="~/js/dynamicTableFilter.js"></script>
+	<script>
+		const eventTableFilter = new TableFilter("eventTable");
+	</script>
 	<div class="fs-3 m-3">
 		Количество найденных событий = <span id="eventTable_visibleRowsCount" class="fs-3"></span>
 	</div>
@@ -15,30 +19,23 @@
 <table id="eventTable" class="table table-striped table-bordered">
 	<thead>
 		<tr>
-			<th><input class="form-check-input" type="checkbox" id="checkAll" onchange="setCheckAllVisibleChildElements(document.querySelector('table#eventTable'), this.checked)"></th>
+			<th><input class="form-check-input" type="checkbox" id="checkAll" onchange="setCheckAllVisibleChildElements(this.parentElement.parentElement.parentElement.parentElement.querySelector('tbody'), this.checked)"></th>
 			<th>
-				Id<div class="resizer"></div> @if(ViewBag.Filtration == true)
+				Id<div class="resizer"></div> 
+				@if(ViewBag.Filtration == true)
 				{
-					@await Component.InvokeAsync("TableFilterMenu", new
-						{
-							tableId = "eventTable",
-							columnIndex = "1",
-							filterOptions = Model.Select(e => e.Id.ToString()).Distinct(),
-							columnName = "Id"
-						})
+					TableFilterViewModelBuilder _filterBuilder1 = new("eventTable", "eventTableFilter", 1, "Id");
+					_filterBuilder1.Filtering(Model.Select(e => e.Id.ToString()).Distinct()).NumericRange().Sortable();
+					@await Component.InvokeAsync("TableFilterMenu", _filterBuilder1.Build())
 				}
 			</th>
 			<th>
 				Тип<div class="resizer"></div>
 				@if(ViewBag.Filtration == true)
 				{
-					@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "eventTable",
-						columnIndex = "2",
-						filterOptions = Model.Select(e => EventStringBuilder.EventTypeToString(e.EventType)).Distinct(),
-						columnName = "Тип"
-					})
+					TableFilterViewModelBuilder _filterBuilder = new("eventTable", "eventTableFilter", 2, "Тип");
+					_filterBuilder.Filtering(Model.Select(e => EventStringBuilder.EventTypeToString(e.EventType)).Distinct()).Sortable();
+					@await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
 				}
 				
 			</th>
@@ -46,13 +43,9 @@
 				Дата и Время<div class="resizer"></div>
 				@if (ViewBag.Filtration == true)
 				{
-					@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "eventTable",
-						columnIndex = "3",
-						filterOptions = Model.Select(e => e.DateTime.ToString()).Distinct(),
-						columnName = "Дата и время"
-					})
+					TableFilterViewModelBuilder _filterBuilder = new("eventTable", "eventTableFilter", 3, "Дата и время");
+					_filterBuilder.Sortable().DateRange();
+					@await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
 				}
 				
 			</th>
@@ -60,13 +53,9 @@
 				Ответственный
 				@if (ViewBag.Filtration == true)
 				{
-					@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "eventTable",
-						columnIndex = "4",
-						filterOptions = ViewBag.DistinctEmployeNames,
-						columnName = "Сотрудник"
-					})
+					TableFilterViewModelBuilder _filterBuilder = new("eventTable", "eventTableFilter", 4, "Сотрудник");
+					_filterBuilder.Filtering(ViewBag.DistinctEmployeNames).Sortable();
+					@await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
 				}
 				
 			</th>
@@ -104,11 +93,9 @@
 </table>
 
 <script>
-	let eventFilterMenu = new TableFilterMenu("eventTable", [1, 2, 3, 4]);
-
+	
 	window.addEventListener('load', function () {
-		eventFilterMenu.bindButtons();
-		eventFilterMenu.updateRowsCount();
+		eventTableFilter.build();
 	});
 
 	makeResizable(document.querySelector('table#eventTable'));

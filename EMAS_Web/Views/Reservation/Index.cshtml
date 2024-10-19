@@ -20,7 +20,10 @@
             <th>Id</th>
             <th>Дата начала</th>
             <th>Комментарий</th>
-            <th></th>
+            @if (ViewBag.HasPermission)
+            {
+                <th></th>
+            }
             <th></th>
         </tr>
     </thead>
@@ -31,13 +34,15 @@
                 <td>@item.Id</td>
                 <td>@item.DateTime</td>
                 <td>@item.Comment</td>
-
-                <td>
-                    <form asp-controller="Reservation" asp-action="Confirm" method="get">
-                        <input type="hidden" name="reservedEventId" value="@item.Id" />
-                        <button type="submit" class="btn btn-primary">Закончить</button>
-                    </form>
-                </td>
+                @if (ViewBag.HasPermission)
+                {
+                    <td>
+                        <form asp-controller="Reservation" asp-action="Confirm" method="get">
+                            <input type="hidden" name="reservedEventId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary">Закончить</button>
+                        </form>
+                    </td>
+                }
                 <td>
                     <form asp-controller="Archive" asp-action="ObjectsInEvent" method="get">
                         <input type="hidden" name="eventId" value="@item.Id" />

@@ -1,7 +1,9 @@
 ﻿using EMAS_Web.Filters;
 using Microsoft.AspNetCore.Mvc;
+using Model;
 using Model.Event;
 using Service.Connection;
+using Service.Connection.DataAccess.Query;
 
 namespace EMAS_Web.Controllers
 {
@@ -17,9 +19,27 @@ namespace EMAS_Web.Controllers
 
         [HttpGet]
         [LocationFilter]
+        [AllowSpecialLocationId]
         public IActionResult Index(int locationId)
         {
-            return View(_dataBaseClient.SelectReservationOn(locationId));
+            IEnumerable<ReservedEvent> activeReservations;
+            
+            if (locationId == LocationFilter.SpecialLocationId)
+            {
+                ViewBag.HasPermission = false;
+                QueryBuilder queryBuilder = new();
+                queryBuilder.LazyInit<ReservedEvent>().Where($"{nameof(ReserveEndedEvent)}.{nameof(ReserveEndedEvent.Id)}", "IS", null);
+                activeReservations = _dataBaseClient.SelectEvent<ReservedEvent>(queryBuilder);
+            }
+            else
+            {
+                activeReservations = _dataBaseClient.SelectReservationOn(locationId);
+                ViewBag.HasPermission = _dataBaseClient.SelectByIds<Employee>([(int)HttpContext.Session.GetInt32("UserId")], nameof(Employee.Id)).First().Permissions
+                .Where(x => x.LocationId == locationId)
+                .Where(x => x.PermissionType == Model.Enum.PermissionType.DeliveryAccess)
+                .Any();
+            }
+            return View(activeReservations);
         }
 
         [HttpGet]
@@ -82,7 +102,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpGet]
-        [LocationFilter]
         public IActionResult Confirm(long reservedEventId)
         {
             var reservedEventToConfirm = _dataBaseClient.SelectEventsByIds<ReservedEvent>([reservedEventId]).First();
@@ -94,7 +113,6 @@ namespace EMAS_Web.Controllers
         }
 
         [HttpPost]
-        [LocationFilter]
         public IActionResult Confirm(long reservedEventId, string comment, DateTime dateTime, bool isDecomissioned)
         {
 			var reservedEventToConfirm = _dataBaseClient.SelectEventsByIds<ReservedEvent>([reservedEventId]).First();

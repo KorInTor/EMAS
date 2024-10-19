@@ -1,17 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EMAS_Web.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EMAS_Web.Components
 {
     public class TableFilterMenuViewComponent : ViewComponent
     {
-        public IViewComponentResult Invoke(string tableId, string columnIndex, IEnumerable<string> filterOptions, string columnName)
+        public IViewComponentResult Invoke(TableFilterViewModel filterViewModel)
         {
-            ViewBag.TableId = tableId;
-            ViewBag.ColumnIndex = columnIndex;
-            ViewBag.FilterOptions = filterOptions;
-            ViewBag.ColumnName = columnName;
-
-			return View();
+			return View(filterViewModel);
         }
     }
 }

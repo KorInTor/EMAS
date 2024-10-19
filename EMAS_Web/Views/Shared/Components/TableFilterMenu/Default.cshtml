@@ -1,48 +1,87 @@
-﻿<button class="btn btn-outline-dark p-2 rounded-1 dropdown-toggle" data-bs-toggle="dropdown" data-bs-target="#filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-bs-auto-close="outside"></button>
+﻿@model TableFilterViewModel
 
-<div class="dropdown-menu filter-dropdown pt-0" id="filterMenu_@(ViewBag.TableId)_@(ViewBag.ColumnIndex)" data-column-index="@ViewBag.ColumnIndex" style="width: 500px;">
+<button class="btn btn-outline-dark p-2 rounded-1 dropdown-toggle" data-bs-toggle="dropdown" data-bs-target="#filterMenu_@(Model.TableId)_@(Model.ColumnIndex)" data-bs-auto-close="outside"></button>
+
+<div class="dropdown-menu filter-dropdown pt-0" id="filterMenu_@(Model.TableId)_@(Model.ColumnIndex)" data-column-index="@Model.ColumnIndex" style="width: 500px;">
 
 	<div class="p-2 rounded-top bg-dark">
-		<span class="text-white">Фильтры для</span> <span class="fw-bold text-white">@ViewBag.ColumnName</span>
+		<span class="text-white">Фильтры для</span> <span class="fw-bold text-white">@Model.ColumnHeader</span>
 	</div>
-
-	<div class="container gap-3 ps-0">
-		<div class="col p-2 position-relative start-0">
-			<button class="btn btn-outline-primary sort-desc" >Сортировать по убыванию ↓</button>
+	@if (Model.IsSorting)
+	{	
+		<div class="card m-2 sorting">
+				<div class="container gap-3 ps-0">
+				<div class="col p-2 position-relative start-0">
+					<input type="radio" class="btn-check sort-desc" id="@(Model.TableId)_@(Model.ColumnIndex)_descRadio" name="@(Model.TableId)_sorter" value="@(Model.ColumnIndex)" />
+					<label class="btn btn-outline-primary" for="@(Model.TableId)_@(Model.ColumnIndex)_descRadio">Сортировать по убыванию ↓</label>
+				</div>
+				<div class="col p-2  position-relative start-0">
+					<input type="radio" class="btn-check sort-asc" id="@(Model.TableId)_@(Model.ColumnIndex)_ascRadio" name="@(Model.TableId)_sorter" value="@(Model.ColumnIndex)" />
+					<label class="btn btn-outline-primary" for="@(Model.TableId)_@(Model.ColumnIndex)_ascRadio">Сортировать по возрастанию ↑</label>
+				</div>
+			</div>
 		</div>
-		<div class="col p-2  position-relative start-0">
-			<button class="btn btn-outline-primary sort-asc" >Сортировать по возрастанию ↑</button>
+	}
+	@if (Model.IsFiltering)
+	{
+		<div class="card m-2">
+			<div class="p-3">
+				<span> Поиск значений</span>
+				<input type="text" class="form-control" id="filter_searchBar" oninput="filterList(this.value, this.parentElement.parentElement.querySelector('div.filter-options'))">
+			</div>
+			<div class="p-3">
+				<input type="checkbox" id="filterList_checkAll" class="form-check-input" onchange="setCheckAllVisibleChildElements(this.parentElement.parentElement.querySelector('div.filter-options'), this.checked)">
+				<label class="form-check-label" for="filterList_checkAll">
+					Выбрать все
+				</label>
+			</div>
+			<div class="overflow-auto card m-2 filter-options" style="height: 200px;">
+				<ul class="list-group list-group-flush">
+					@foreach (string filterOption in Model.uniqueValues)
+					{
+						<li class="list-group-item">
+							<input type="checkbox" value="@filterOption" id="filterList_@Html.Encode(filterOption)" class="form-check-input filter-value">
+							<label class="form-check-label" for="filterList_@Html.Encode(filterOption)">
+								@filterOption
+							</label>
+						</li>
+					}
+				</ul>
+			</div>
 		</div>
-	</div>
-	<div class="card m-2">
-		<div class="p-3">
-			<span> Поиск значений</span>
-			<input type="text" class="form-control" id="filter_searchBar" oninput="filterList(this.value, this.parentElement.parentElement.querySelector('div.filter-options'))">
+	}
+	@if (Model.IsDateRange)
+	{
+		<div class="card m-2 dateRange">
+			<div class="input-group mb-3">
+				<span class="input-group-text" id="@(Model.TableId)_@(Model.ColumnIndex)_MinSpan">от</span>
+				<input type="date" class="form-control rangeMin dateRange" aria-describedby="@(Model.TableId)_@(Model.ColumnIndex)_MinSpan" id="@(Model.TableId)_@(Model.ColumnIndex)_MinValue">
+			</div>
+			<div class="input-group mb-3">
+				<span class="input-group-text" id="@(Model.TableId)_@(Model.ColumnIndex)_MaxSpan">до</span>
+				<input type="date" class="form-control rangeMax dateRange" aria-describedby="@(Model.TableId)_@(Model.ColumnIndex)_MaxSpan" id="@(Model.TableId)_@(Model.ColumnIndex)_MaxValue">
+			</div>
 		</div>
-		<div class="p-3">
-			<input type="checkbox" id="filterList_checkAll" class="form-check-input" onchange="setCheckAllVisibleChildElements(this.parentElement.parentElement.querySelector('div.filter-options'), this.checked)">
-			<label class="form-check-label" for="filterList_checkAll">
-				Выбрать все
-			</label>
+	}
+	@if (Model.IsNumericRange)
+	{
+		<div class="card m-2 numRange">
+			<div class="input-group mb-3">
+				<span class="input-group-text" id="@(Model.TableId)_@(Model.ColumnIndex)_MinSpan">от</span>
+				<input type="number" class="form-control rangeMin numRange" aria-describedby="@(Model.TableId)_@(Model.ColumnIndex)_MinSpan" id="@(Model.TableId)_@(Model.ColumnIndex)_MinValue">
+			</div>
+			<div class="input-group mb-3">
+				<span class="input-group-text" id="@(Model.TableId)_@(Model.ColumnIndex)_MaxSpan">до</span>
+				<input type="number" class="form-control rangeMax numRange" aria-describedby="@(Model.TableId)_@(Model.ColumnIndex)_MaxSpan" id="@(Model.TableId)_@(Model.ColumnIndex)_MaxValue">
+			</div>
 		</div>
-		<div class="overflow-auto card m-2 filter-options" style="height: 200px;">
-			<ul class="list-group list-group-flush">
-				@foreach (string filterOption in ViewBag.FilterOptions)
-				{
-					<li class="list-group-item">
-						<input type="checkbox" value="@filterOption" id="filterList_@Html.Encode(filterOption)" class="form-check-input filter-value">
-						<label class="form-check-label" for="filterList_@Html.Encode(filterOption)">
-							@filterOption
-						</label>
-					</li>
-				}
-			</ul>
-		</div>
-	</div>
+	}
 	<div class="p-1">
-		<button class="btn btn-secondary" id="cancelFilter_@(ViewBag.TableId)" data-column="id"">Отменить</button>
-		<button class="btn btn-primary apply-filter" id="applyFilter_@(ViewBag.TableId)" data-column="id">
-			Применить
-		</button>
+		<button class="btn btn-secondary" id="cancelFilter_@(Model.TableId)">Отменить</button>
+		<button class="btn btn-primary apply-filter" id="applyFilter_@(Model.TableId)">Применить</button>
 	</div>
 </div>
+
+<script>
+	@(Model.TableFilterObject).addNewMenu(document.getElementById('filterMenu_@(Model.TableId)_@(Model.ColumnIndex)'));
+</script>

@@ -22,7 +22,7 @@
     <Content Update="wwwroot\js\storableObjectScripts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="wwwroot\js\TableFilterMenu.js">
+    <Content Update="wwwroot\js\dynamicTableFilter.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\js\tableResizer.js">

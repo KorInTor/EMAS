@@ -1,137 +1,146 @@
 ﻿@model IEnumerable<Model.Equipment>
 @using Service.Connection
 
-<div class="fs-3 m-3">
-	Количество найденных позиций = <span id="equipmentTable_visibleRowsCount" class="fs-3"></span>
-</div>
 
-@{int columnIndex = 1;}
+
+@if (ViewBag.Filtration == true)
+{
+	<div class="fs-3 m-3">
+		Количество найденных позиций = <span id="equipmentTable_visibleRowsCount" class="fs-3"></span>
+	</div>
+	<script>
+		const equipmentTableFilter = new TableFilter("equipmentTable");
+	</script>
+}
 
 <table id="equipmentTable" class="table table-striped table-bordered">
 	<thead>
-		<tr>
-			<th><input class="form-check-input" type="checkbox" id="checkAll" onchange="setCheckAllVisibleChildElements(document.querySelector('table#equipmentTable'), this.checked)"></th>
-			<th>
-				Id<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.Id.ToString()).Distinct().ToList(),
-						columnName = "Id"
-					})
-			</th>
-			<th>
-				Тип<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.Type).Distinct().ToList(),
-						columnName = "Тип"
-					})
-			</th>
-			<th>
-				Марка<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.Name).Distinct().ToList(),
-						columnName = "Марка"
-					})
-			</th>
-			<th>
-				Производитель<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.Manufacturer).Distinct().ToList(),
-						columnName = "Производитель"
-					})
-			</th>
-			<th>
-				Единицы Измерения<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.Units).Distinct().ToList(),
-						columnName = "Единицы Измерения"
-					})
-			</th>
-			<th>
-				Предел<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.Limit).Distinct().ToList(),
-						columnName = "Предел измерения"
-					})
-			</th>
-			<th>
-				Класс Точности<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.AccuracyClass).Distinct().ToList(),
-						columnName = "Класс Точности"
-					})
-			</th>
-			<th>
-				Заводской номер<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.FactoryNumber).Distinct().ToList(),
-						columnName = "Заводской номер"
-					})
-			</th>
-			<th>
-				Регистрационный номер<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.RegistrationNumber).Distinct().ToList(),
-						columnName = "Регистрационный номер"
-					})
-			</th>
-			<th>
-				Статус<div class="resizer"></div>
-				@await Component.InvokeAsync("TableFilterMenu", new
-					{
-						tableId = "equipmentTable",
-						columnIndex = columnIndex++.ToString(),
-						filterOptions = Model.Select(e => e.Status).Distinct().ToList(),
-						columnName = "Статус"
-					})
-			</th>
-			<th>
-				Описание<div class="resizer"></div>
-				@{columnIndex++;}
-			</th>
-			@if (ViewBag.LastEvents != null)
-			{
-				<th>
-					С момента последнего изменения <div class="resizer"></div>
-				</th>
-			}
-			<th>
-			</th>
-			@if (ViewBag.EquipmentEdit != null)
-			{
-				if (ViewBag.EquipmentEdit)
-				{
-					<th>
-					</th>
-				}
-			}
-		</tr>
+        <tr>
+            <th>
+                <input class="form-check-input" type="checkbox" id="checkAll" onchange="setCheckAllVisibleChildElements(document.querySelector('table#equipmentTable'), this.checked)">
+            </th>
+
+            <th>
+                Id<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 1, "Id");
+                    _filterBuilder.Filtering(Model.Select(e => e.Id.ToString()).Distinct()).NumericRange().Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Тип<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 2, "Тип");
+                    _filterBuilder.Filtering(Model.Select(e => e.Type).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Марка<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 3, "Марка");
+                    _filterBuilder.Filtering(Model.Select(e => e.Name).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Производитель<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 4, "Производитель");
+                    _filterBuilder.Filtering(Model.Select(e => e.Manufacturer).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Единицы Измерения<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 5, "Единицы Измерения");
+                    _filterBuilder.Filtering(Model.Select(e => e.Units).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Предел<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 6, "Предел");
+                    _filterBuilder.Filtering(Model.Select(e => e.Limit).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Класс Точности<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 7, "Класс Точности");
+                    _filterBuilder.Filtering(Model.Select(e => e.AccuracyClass).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Заводской номер<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 8, "Заводской номер");
+                    _filterBuilder.Filtering(Model.Select(e => e.FactoryNumber).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Регистрационный номер<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 9, "Регистрационный номер");
+                    _filterBuilder.Filtering(Model.Select(e => e.RegistrationNumber).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Статус<div class="resizer"></div>
+                @if (ViewBag.Filtration == true)
+                {
+                    TableFilterViewModelBuilder _filterBuilder = new("equipmentTable", "equipmentTableFilter", 10, "Статус");
+                    _filterBuilder.Filtering(Model.Select(e => e.Status).Distinct()).Sortable();
+                    @await Component.InvokeAsync("TableFilterMenu", _filterBuilder.Build())
+                }
+            </th>
+
+            <th>
+                Описание<div class="resizer"></div>
+            </th>
+
+            @if (ViewBag.LastEvents != null)
+            {
+                <th>
+                    С момента последнего изменения <div class="resizer"></div>
+                </th>
+            }
+
+            <th></th>
+
+            @if (ViewBag.EquipmentEdit != null)
+            {
+                if (ViewBag.EquipmentEdit)
+                {
+                    <th></th>
+                }
+            }
+        </tr>
 	</thead>
 	<tbody class="table w-100 table-group-divider">
 		@foreach (var item in Model)
@@ -180,11 +189,8 @@
 </table>
 
 <script>
-	let equipmentFilterMenu = new TableFilterMenu("equipmentTable", [1, 2, 3, 4, 5, 6, 7]);
-	
 	window.addEventListener('load', function () {
-		equipmentFilterMenu.bindButtons();
-		equipmentFilterMenu.updateRowsCount();
+        equipmentTableFilter.build();
 	});
 
 	makeResizable(document.querySelector('table#equipmentTable'));

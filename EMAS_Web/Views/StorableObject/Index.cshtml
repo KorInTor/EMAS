@@ -2,10 +2,10 @@
 @model IEnumerable<Model.IStorableObject>
 
 <script src="~/js/storableObjectScripts.js"></script>
-<script src="~/js/TableFilterMenu.js"></script>
-<script src="~/js/tableResizer.js"></script>
 
 @{
+    ViewBag.Filtration = true;
+
     IEnumerable<Model.Permission> currentPermissions = (IEnumerable<Model.Permission>)ViewBag.PermissionList;
     ViewBag.EquipmentEdit = currentPermissions.Any(x => x.PermissionType == PermissionType.EquipmentEdit);
     ViewBag.MaterialEdit = currentPermissions.Any(x => x.PermissionType == PermissionType.MaterialsEdit);
