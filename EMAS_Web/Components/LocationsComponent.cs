@@ -7,9 +7,8 @@ namespace EMAS_Web.Components
     [ViewComponent]
     public class LocationsComponent : ViewComponent
     {
-        public IViewComponentResult Invoke(int? currentLocationId)
+        public IViewComponentResult Invoke()
         {
-            ViewBag.CurrentLocationId = currentLocationId;
             return View("LocationSwitch", DataBaseClient.GetInstance().SelectNamedLocations());
         }
     }

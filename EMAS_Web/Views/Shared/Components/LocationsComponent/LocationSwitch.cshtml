@@ -1,75 +1,37 @@
 ﻿@model Dictionary<int,string>
 
-<script>
-    function updateId(newId) {
-        document.querySelectorAll('.locationLink').forEach(link => {
-            link.href = link.href.replace(/locationId=\d+/, 'locationId=' + newId);
-        });
-    }
-
-    function switchLocationIfPossible(locationId) {
-        const urlParams = new URLSearchParams(window.location.search);
-
-        if (urlParams.has('locationId')) {
-            const locationIdParam = urlParams.get('locationId');
-
-            if (!isNaN(locationIdParam) && Number.isInteger(Number(locationIdParam))) {
-                urlParams.set('locationId', locationId);
-                window.location.search = urlParams.toString();
-            }
-        }
-    }
-</script>
-
+<script src="~/js/locationSwitchManager.js"></script>
 
 <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-    @if (ViewBag.CurrentLocationId != null && ViewBag.CurrentLocationId == EMAS_Web.Filters.LocationFilter.SpecialLocationId)
-    {
-        <input type="radio" class="btn-check" name="locationPicker" id="locationRadio_@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)" autocomplete="off" onclick="updateId('@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)'); switchLocationIfPossible(@(EMAS_Web.Filters.LocationFilter.SpecialLocationId));" checked>
-        <label class="btn btn-outline-primary" for="locationRadio_@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)">Все</label>
-    }
-    else
-    {
-        <input type="radio" class="btn-check" name="locationPicker" id="locationRadio_@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)" autocomplete="off" onclick="updateId('@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)'); switchLocationIfPossible(@(EMAS_Web.Filters.LocationFilter.SpecialLocationId));">
-        <label class="btn btn-outline-primary" for="locationRadio_@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)">Все</label>
-    }
-
+    <input type="radio" class="btn-check" name="locationPicker" id="locationRadio_@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)" autocomplete="off" onclick="updateId(this.value); switchLocationIfPossible(this.value);" value="@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)">
+    <label class="btn btn-outline-primary" for="locationRadio_@(EMAS_Web.Filters.LocationFilter.SpecialLocationId)">Все</label>
     @foreach (KeyValuePair<int,string> location in Model)
     {
-        if (ViewBag.CurrentLocationId != null && ViewBag.CurrentLocationId == location.Key)
-        {
-            <input type="radio" class="btn-check" name="locationPicker" id="locationRadio_@(location.Key)" autocomplete="off" onclick="updateId('@(location.Key)'); switchLocationIfPossible(@(location.Key));" checked>
-        }
-        else
-        {
-            <input type="radio" class="btn-check" name="locationPicker" id="locationRadio_@(location.Key)" autocomplete="off" onclick="updateId('@(location.Key)'); switchLocationIfPossible(@(location.Key));">
-        }
+        <input type="radio" class="btn-check" name="locationPicker" id="locationRadio_@(location.Key)" autocomplete="off" onclick="updateId(this.value); switchLocationIfPossible(this.value);" value="@(location.Key)">
         <label class="btn btn-outline-primary" for="locationRadio_@(location.Key)">@location.Value</label>
     }
 </div>
 
 
-@{
-    int id = 0;
-    if (ViewBag.CurrentLocationId != null)
-        id = ViewBag.CurrentLocationId;
+<ul class="navbar-nav flex-grow-1">
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark locationLink" asp-controller="StorableObject" asp-action="Index" asp-route-locationId="0">Склад</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark locationLink" asp-controller="Delivery" asp-action="Index" asp-route-locationId="0">Доставки</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark locationLink" asp-controller="Reservation" asp-action="Index" asp-route-locationId="0">Резерв</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark locationLink" asp-controller="Archive" asp-action="Index" asp-route-locationId="0">Архив</a>
+    </li>
+</ul>
 
-    <ul class="navbar-nav flex-grow-1">
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-controller="StorableObject" asp-action="Index" asp-route-locationId="@id">Склад</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-controller="Delivery" asp-action="Index" asp-route-locationId="@id">Доставки</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-controller="Reservation" asp-action="Index" asp-route-locationId="@id">Резерв</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark locationLink" asp-controller="Archive" asp-action="Index" asp-route-locationId="@id">Архив</a>
-        </li>
-    </ul>
-}
+<script>
+    initLocationSwitch();
+</script>
 

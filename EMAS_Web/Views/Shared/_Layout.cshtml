@@ -19,7 +19,7 @@
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <link rel="stylesheet" href="~/EMAS_Web.styles.css" asp-append-version="true" />
-
+    <script src="~/js/coockieManager.js"></script>
     @* Обработчик событий *@
     @if (Context.Session.GetString("UserFullname") != null)
     {
@@ -59,14 +59,7 @@
                 
                 @if (Context.Session.GetString("UserFullname") != null)
                 {
-                    int? locationId = null;
-
-                    @if (Int32.TryParse(Context.Request.Query["locationId"].ToString(), out int id))
-                    {
-                        locationId = id;
-                    }
-
-                    @await Component.InvokeAsync("LocationsComponent", new { currentLocationId = locationId })
+                    @await Component.InvokeAsync("LocationsComponent")
 
                     @if (Context.Session.GetInt32("Admin") == 1)
                     {
