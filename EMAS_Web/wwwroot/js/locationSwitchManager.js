@@ -1,5 +1,5 @@
 function setLocationState(locationIdValue) {
-    setCookie("activeLocationId", locationIdValue, 3)
+    setCookie("activeLocationId", locationIdValue, 3);
 }
 
 function getLocationState() {
@@ -41,4 +41,15 @@ function initLocationSwitch() {
         }
     });
 
+    const selectedLocationRadio = document.querySelector('input[name="locationPicker"]:checked');
+    const locationNameSpan = document.getElementById('currentLocation');
+    if (selectedLocationRadio) {
+        const selectedLocationLabel = document.querySelector(`label[for="${selectedLocationRadio.id}"]`);
+        if (selectedLocationLabel) {
+            locationNameSpan.textContent = selectedLocationLabel.textContent;
+        }
+    }
+    else {
+        locationNameSpan.textContent = "";
+    }
 }

@@ -2,6 +2,31 @@
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
+document.addEventListener('DOMContentLoaded', function () {
+    const locationSelectorButton = document.getElementById('locationSelectorButton');
+    const locationSelectorMenu = document.getElementById('locationSelector');
+
+    function updateMenuPosition() {
+        const rect = locationSelectorButton.getBoundingClientRect();
+        locationSelectorMenu.style.top = `${rect.bottom + 10}px`;
+        locationSelectorMenu.style.left = `${rect.left}px`;
+    }
+
+    let resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            updateMenuPosition();
+        }
+    });
+
+    resizeObserver.observe(locationSelectorButton);
+
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition);
+
+    updateMenuPosition();
+});
+
+
 
 function setOnlyOneElementVisible(elemntToSetVisible, elementsToHide) {
     elementsToHide.forEach(element => {
@@ -15,6 +40,11 @@ function setDisplayNone(element, isNone) {
         setDisplayNone(child, isNone);
     }
     element.style.setProperty('display', isNone ? 'none' : '', 'important');
+}
+
+function isElememntHidden(element) {
+    let style = window.getComputedStyle(element);
+    return style.display === "none";
 }
 
 function setDisplayNoneSingle(element, isNone) {
