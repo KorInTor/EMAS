@@ -9,7 +9,7 @@
 		Количество найденных позиций = <span id="equipmentTable_visibleRowsCount" class="fs-3"></span>
 	</div>
 	<script>
-		const equipmentTableFilter = new TableFilter("equipmentTable");
+		let equipmentTableFilter = new TableFilter("equipmentTable");
 	</script>
 }
 
@@ -190,8 +190,29 @@
 
 <script>
 	window.addEventListener('load', function () {
-        equipmentTableFilter.build();
+        let isDataSaved = getCookie('equipmentTableFilter');
+        if (isDataSaved) {
+            equipmentTableFilter.filterOptions = getCookie('equipmentTableFilter!filterOptions');
+            console.log(equipmentTableFilter.filterOptions);
+            equipmentTableFilter.rangeOptions = getCookie('equipmentTableFilter!rangeOptions');
+            console.log(equipmentTableFilter.rangeOptions);
+
+            equipmentTableFilter.divMenus.forEach(divMenu => {
+                equipmentTableFilter.revertChanges.bind(equipmentTableFilter)(divMenu);
+            });
+            equipmentTableFilter.build();
+            equipmentTableFilter.filterTableWithParameters();
+        }
+        else{
+            equipmentTableFilter.build();
+        }
 	});
 
 	makeResizable(document.querySelector('table#equipmentTable'));
+
+    window.addEventListener('beforeunload', (event) => {
+        setCookie('equipmentTableFilter', 1, 3);
+        setCookie('equipmentTableFilter!filterOptions', equipmentTableFilter.filterOptions, 3);
+        setCookie('equipmentTableFilter!rangeOptions', equipmentTableFilter.rangeOptions, 3);
+    });
 </script>

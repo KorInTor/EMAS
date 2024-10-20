@@ -23,10 +23,10 @@ class TableFilter {
             this.filterOptions.set(columnIndex, []);
         }
         if (divMenu.querySelector('div.dateRange')) {
-            this.rangeOptions.set(columnIndex, []);
+            this.rangeOptions.set(columnIndex, [new Date(-8640000000000000), new Date(8640000000000000)]);
         }
         if (divMenu.querySelector('div.numRange')) {
-            this.rangeOptions.set(columnIndex, []);
+            this.rangeOptions.set(columnIndex, [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]);
         }
         this.divMenus.push(divMenu);
     }
@@ -85,7 +85,7 @@ class TableFilter {
     }
 
 
-    revertChagnes(divMenu) {
+    revertChanges(divMenu) {
         const columnIndex = parseInt(divMenu.dataset.columnIndex);
         if (this.filterOptions.has(columnIndex)) {
             const checkBoxes = Array.from(divMenu.querySelectorAll('input[type=checkbox].filter-value'));
@@ -98,14 +98,20 @@ class TableFilter {
                 if (filterValues.length === 0) {
                     matches = false;
                 } else {
-                    matches = filterValues.some(filterValue => checkBox.value === filterValue.toLowerCase());
+                    matches = filterValues.some(filterValue => checkBox.value.toLowerCase() === filterValue.toLowerCase());
                 }
                 checkBox.checked = matches;
             });
         }
         if (this.rangeOptions.has(columnIndex)) {
-            divMenu.querySelector('input.rangeMin').value = rangeOptions.get(columnIndex)[0].toISOString().split('T')[0];
-            divMenu.querySelector('input.rangeMax').value = rangeOptions.get(columnIndex)[1].toISOString().split('T')[0];
+            if (this.rangeOptions.get(columnIndex)[0] instanceof Date) {
+                divMenu.querySelector('input.rangeMin').value = this.rangeOptions.get(columnIndex)[0].toISOString().split('T')[0];
+                divMenu.querySelector('input.rangeMax').value = this.rangeOptions.get(columnIndex)[1].toISOString().split('T')[0];
+            }
+            if (typeof this.rangeOptions.get(columnIndex)[0] === "number") {
+                divMenu.querySelector('input.rangeMin').value = this.rangeOptions.get(columnIndex)[0];
+                divMenu.querySelector('input.rangeMax').value = this.rangeOptions.get(columnIndex)[1];
+            }
         }
     }
 
@@ -259,7 +265,7 @@ class TableFilter {
             });
 
             cancelButton.addEventListener('click', () => {
-                this.revertChagnes(dropdown);
+                this.revertChanges(dropdown);
                 this.closeFilterDropdown(dropdown);
             });
         });
