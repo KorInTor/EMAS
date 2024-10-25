@@ -149,8 +149,18 @@
 
 <script>
 	window.addEventListener('load', function () {
-		materialTableFilter.build();
+        
+        materialTableFilter.build();
+        if(loadSavedFilterData(materialTableFilter)){
+            console.log(materialTableFilter);
+            materialTableFilter.divMenus.forEach(divMenu => { revertChanges(divMenu, materialTableFilter) });
+            filterTableWithParameters(materialTableFilter);
+        }
 	});
 
 	makeResizable(document.querySelector('table#materialTable'));
+
+	window.addEventListener('beforeunload', (event) => {
+		saveFilterData(materialTableFilter);
+	});
 </script>

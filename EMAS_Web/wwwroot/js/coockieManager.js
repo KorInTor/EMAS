@@ -16,26 +16,26 @@ function setCookie(name, value, days) {
     document.cookie = name + "=" + encodeURIComponent(value || "") + expires + "; path=/";
 }
 
-function getCookie(name) {
+function getCookie(name, returnJson = false) {
+    const MAP_PREFIX = "Map:";
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
+
     if (parts.length === 2) {
         let jsonValue = decodeURIComponent(parts.pop().split(';').shift());
 
+        if (returnJson) {
+            return jsonValue;
+        }
+
         try {
-            if (jsonValue.length >= 4 && jsonValue.substring(0, 4) === "Map:") {
-                jsonValue = jsonValue.substring("Map:".length);
-                let parsedValue = JSON.parse(jsonValue);
+            if (jsonValue.startsWith(MAP_PREFIX)) {
+                jsonValue = jsonValue.substring(MAP_PREFIX.length);
+                const parsedValue = JSON.parse(jsonValue);
                 return new Map(parsedValue);
             }
 
-            let parsedValue = JSON.parse(jsonValue);
-
-            if (Array.isArray(parsedValue)) {
-                return parsedValue;
-            }
-
-            return parsedValue;
+            return JSON.parse(jsonValue);
 
         } catch (error) {
             console.error('Ошибка при парсинге cookie:', error);
@@ -43,8 +43,6 @@ function getCookie(name) {
     }
     return null;
 }
-
-
 
 function deleteCookie(name) {
     document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
